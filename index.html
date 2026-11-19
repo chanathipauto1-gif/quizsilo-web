@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.23.03</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.00.13</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -343,6 +343,15 @@
         <p class="text-xs text-slate-500 mt-1 leading-relaxed">
           เปลี่ยนเอกสารหรือภาพถ่ายข้อสอบ ให้กลายเป็นโจทย์พร้อมฝึกทำทันที
         </p>
+      </div>
+
+      <!-- Quota Status Banner for Upload Page -->
+      <div id="upload-quota-status-box" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="upload-quota-tier-badge" class="px-2.5 py-0.5 rounded-full font-extrabold text-[10px] bg-brand-50 text-brand-700 border border-brand-200 shrink-0">👑 Super Admin</span>
+          <span id="upload-quota-info-text" class="text-slate-700 font-bold truncate">โควต้าคงเหลือ: ไม่จำกัด (Unlimited 🚀)</span>
+        </div>
+        <span id="upload-quota-count-pill" class="text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-200 text-slate-500 rounded-lg shrink-0">โควต้าตลอดชีพ</span>
       </div>
 
       <div>
@@ -751,6 +760,23 @@
     <!-- ================= หน้าที่ 5: My Dashboard (แดชบอร์ดสถิติส่วนบุคคล) ================= -->
 <section id="page-dashboard" class="space-y-6">
 
+  <!-- Guest Quota & Login Encouragement Banner -->
+  <div id="dash-guest-quota-banner" class="hidden p-4 rounded-3xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+    <div class="flex items-center gap-3.5">
+      <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0 shadow-2xs">📢</div>
+      <div>
+        <div class="font-extrabold text-amber-950 text-sm flex items-center gap-2">
+          <span>คุณกำลังใช้งานในโหมดผู้เยี่ยมชม (Guest Tier)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-bold">โควต้า 3 ไฟล์ / 100 ข้อ</span>
+        </div>
+        <div class="text-xs text-amber-800 font-medium mt-0.5">เข้าสู่ระบบเพื่อเริ่มบันทึกสถิติผลสอบถาวร และรับโควต้าอัปโหลดเพิ่มเป็น 10 ไฟล์ (500 ข้อ)</div>
+      </div>
+    </div>
+    <button onclick="handleGoogleLogin()" class="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer">
+      เข้าสู่ระบบด้วย Google
+    </button>
+  </div>
+
   <!-- Hero Welcome Card -->
   <div class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
     <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -786,6 +812,35 @@
           <i data-lucide="refresh-cw" id="dash-refresh-icon" class="w-3.5 h-3.5"></i>
           <span class="hidden sm:inline">รีเฟรช</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tier & Quota Status Card (แสดงข้อมูลระดับ Tier และจำนวนโควต้าคงเหลือ) -->
+  <div id="dash-tier-quota-card" class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div id="dash-tier-icon-wrap" class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+        👑
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500 font-medium">ระดับของคุณ:</span>
+          <span id="dash-tier-name-badge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-brand-50 text-brand-700 border border-brand-200">👑 Super Admin</span>
+        </div>
+        <div id="dash-quota-summary-text" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">
+          โควต้าอัปโหลด: ไม่จำกัด (Unlimited 🚀)
+        </div>
+      </div>
+    </div>
+
+    <!-- Quota Progress Bar for Member & Guest -->
+    <div id="dash-quota-progress-container" class="flex-1 max-w-md w-full space-y-1.5 hidden">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-600">
+        <span id="dash-quota-files-text">ไฟล์คงเหลือ: 10/10 ไฟล์</span>
+        <span id="dash-quota-questions-text">ข้อคงเหลือ: 500/500 ข้อ</span>
+      </div>
+      <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
+        <div id="dash-quota-progress-bar" class="h-full bg-brand-500 transition-all duration-500 rounded-full" style="width: 0%"></div>
       </div>
     </div>
   </div>
@@ -1054,8 +1109,23 @@
     </div>
   </div>
 
-  <!-- 4 Top KPI Metric Cards -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+  <!-- Admin Navigation Tabs: [สถิติสมาชิกและภาพรวม] & [บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)] -->
+  <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+    <button id="admin-tab-btn-stats" onclick="switchAdminTab('stats')" class="px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer">
+      <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+      <span>📊 สถิติสมาชิกและภาพรวม</span>
+    </button>
+    <button id="admin-tab-btn-logs" onclick="switchAdminTab('logs')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer">
+      <i data-lucide="history" class="w-4 h-4"></i>
+      <span>🕒 บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: สถิติสมาชิกและภาพรวม (Stats Content) -->
+  <div id="admin-tab-content-stats" class="space-y-6">
+
+    <!-- 4 Top KPI Metric Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     
     <!-- KPI 1: สมาชิกทั้งหมด -->
     <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
@@ -1191,17 +1261,65 @@
             <th class="py-3 px-3 text-center">สถิติฝึกซ้อม</th>
             <th class="py-3 px-3 text-center">อัปโหลด</th>
             <th class="py-3 px-3">หมวดที่ทำบ่อยสุด</th>
+            <th class="py-3 px-3 text-center">สิทธิ์ / ตำแหน่ง</th>
             <th class="py-3 px-4 text-center">รายละเอียด</th>
           </tr>
         </thead>
         <tbody id="admin-users-table-body" class="divide-y divide-slate-100 text-slate-700">
           <tr>
-            <td colspan="7" class="py-12 text-center text-slate-400">กำลังโหลดรายชื่อผู้ใช้...</td>
+            <td colspan="8" class="py-12 text-center text-slate-400">กำลังโหลดรายชื่อผู้ใช้...</td>
           </tr>
         </tbody>
       </table>
     </div>
 
+  </div>
+  </div><!-- End of TAB 1: admin-tab-content-stats -->
+
+  <!-- TAB 2: บันทึกความเคลื่อนไหวข้อสอบ (Audit Log Content) -->
+  <div id="admin-tab-content-logs" class="hidden space-y-6">
+    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+      <!-- Toolbar -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="scroll-text" class="w-4 h-4 text-brand-600"></i>
+            <span>บันทึกความเคลื่อนไหวข้อสอบ (Exam Audit Logs)</span>
+          </h3>
+          <p class="text-[11px] text-slate-500 mt-0.5">ประวัติการเพิ่ม, การลบ และการรีเซทสถิติชุดข้อสอบ เรียงตามลำดับเวลาล่าสุด</p>
+        </div>
+        <button onclick="loadAdminAuditLogs(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 shadow-2xs transition-all cursor-pointer">
+          <i data-lucide="refresh-cw" id="admin-logs-refresh-icon" class="w-3.5 h-3.5"></i>
+          <span>รีเฟรชบันทึก</span>
+        </button>
+      </div>
+
+      <!-- Audit Logs Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100/70 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <th class="py-3 px-4 w-36">วันเวลา</th>
+              <th class="py-3 px-3 min-w-[160px]">ผู้ใช้งาน / ดำเนินการ</th>
+              <th class="py-3 px-3 text-center w-28">การกระทำ</th>
+              <th class="py-3 px-3 min-w-[200px]">ชุดข้อสอบ</th>
+              <th class="py-3 px-3 text-center w-24">จำนวนข้อ</th>
+              <th class="py-3 px-4">รายละเอียด</th>
+            </tr>
+          </thead>
+          <tbody id="admin-logs-table-body" class="divide-y divide-slate-100 text-slate-700">
+            <tr>
+              <td colspan="6" class="py-12 text-center text-slate-400">
+                <div class="flex flex-col items-center justify-center space-y-2">
+                  <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-brand-500"></i>
+                  <span>กำลังโหลดบันทึกความเคลื่อนไหว...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 </section>
@@ -2574,6 +2692,24 @@ const adapterImpl = {
           queueJob.status = 'COMPLETED';
           queueJob.totalQuestions = questionsToInsert.length;
           queueJob.errorMessage = `สกัดสำเร็จ ${questionsToInsert.length} ข้อ (ไปตรวจทานที่หน้าแดชบอร์ด)`;
+
+          if (typeof window.recordUserUploadUsage === 'function') {
+            window.recordUserUploadUsage(filesArray.length, questionsToInsert.length, currentUserProfile);
+          }
+
+          adapterImpl.logActivity({
+            action: 'UPLOAD_BATCH',
+            user_id: userId,
+            user_name: currentUserProfile?.name || 'ผู้ใช้',
+            user_avatar: currentUserProfile?.avatar || '👤',
+            user_role: currentUserProfile?.role || 'member',
+            batch_id: batchId,
+            batch_name: finalBatchName,
+            batch_category: finalCategory,
+            question_count: questionsToInsert.length,
+            details: 'สกัดข้อสอบสำเร็จผ่าน AI'
+          });
+
           if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
           if (typeof window.loadBatches === 'function') window.loadBatches(true);
 
@@ -2869,17 +3005,143 @@ const adapterImpl = {
     }
   },
 
-  // 10. Delete Batch
-  deleteExamBatch: async function(batchId) {
+  // 10. Delete Batch (By Owner or Admin)
+  deleteExamBatch: async function(batchId, userProfile) {
     try {
-      if (!sbClient) return;
-      await sbClient.from('questions').delete().eq('batch_id', batchId);
-      await sbClient.from('batches').delete().eq('id', batchId);
-      if (this._successHandler) this._successHandler({ success: true });
-      return { success: true };
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const resp = await fetch('/api/batch-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ batchId, userProfile })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (this._successHandler) this._successHandler(data);
+            return data;
+          }
+        } catch (e) {
+          console.warn('/api/batch-delete error:', e);
+        }
+      }
+
+      if (sbClient) {
+        await sbClient.from('questions').delete().eq('batch_id', batchId);
+        await sbClient.from('exam_attempts').delete().eq('batch_id', batchId);
+        await sbClient.from('batches').delete().eq('id', batchId);
+      }
+      const res = { success: true };
+      if (this._successHandler) this._successHandler(res);
+      return res;
     } catch (err) {
       if (this._failureHandler) this._failureHandler(err);
     }
+  },
+  deleteMyBatch: function(batchId, userProfile) {
+    return this.deleteExamBatch(batchId, userProfile);
+  },
+
+  // 10.1 Reset Batch Statistics (Super Admin Only)
+  resetBatchStats: async function(batchId, adminProfile) {
+    try {
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const resp = await fetch('/api/admin-reset-stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ batchId, adminProfile })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (this._successHandler) this._successHandler(data);
+            return data;
+          }
+        } catch (e) {
+          console.warn('/api/admin-reset-stats error:', e);
+        }
+      }
+
+      if (sbClient) {
+        await sbClient.from('exam_attempts').delete().eq('batch_id', batchId);
+      }
+      const res = { success: true, message: 'ล้างสถิติเรียบร้อยแล้ว' };
+      if (this._successHandler) this._successHandler(res);
+      return res;
+    } catch (err) {
+      if (this._failureHandler) this._failureHandler(err);
+    }
+  },
+
+  // 10.2 Set User Role (Super Admin Only)
+  setUserRole: async function(targetUserId, newRole) {
+    try {
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const resp = await fetch('/api/admin-set-role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetUserId, newRole })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (this._successHandler) this._successHandler(data);
+            return data;
+          }
+        } catch (e) {
+          console.warn('/api/admin-set-role error:', e);
+        }
+      }
+
+      if (sbClient) {
+        await sbClient.from('profiles').update({ role: newRole }).eq('id', targetUserId);
+      }
+      const res = { success: true, role: newRole };
+      if (this._successHandler) this._successHandler(res);
+      return res;
+    } catch (err) {
+      if (this._failureHandler) this._failureHandler(err);
+    }
+  },
+
+  // 10.3 Activity Logs (Exam Audit Log)
+  getActivityLogs: async function() {
+    try {
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const resp = await fetch('/api/activity-logs');
+          if (resp.ok) {
+            const data = await resp.json();
+            if (this._successHandler) this._successHandler(data);
+            return data;
+          }
+        } catch (e) {
+          console.warn('/api/activity-logs error:', e);
+        }
+      }
+
+      const res = { success: true, logs: [] };
+      if (this._successHandler) this._successHandler(res);
+      return res;
+    } catch (err) {
+      if (this._failureHandler) this._failureHandler(err);
+    }
+  },
+
+  logActivity: async function(payload) {
+    try {
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        await fetch('/api/activity-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+    } catch (e) {}
   },
 
   // 11. Save Virtual Batch to Library
@@ -3283,10 +3545,19 @@ Object.defineProperty(window.google.script, 'run', {
       if (dropName) dropName.textContent = name;
       if (dropEmail) dropEmail.textContent = currentUserProfile.email || '';
       if (dropRole) {
-        dropRole.textContent = currentUserProfile.role === 'admin' ? 'ผู้ดูแลระบบ 👑' : 'ผู้ฝึกซ้อม';
-        dropRole.className = currentUserProfile.role === 'admin' 
-          ? 'text-[9px] text-amber-600 font-extrabold uppercase tracking-wider mt-0.5'
-          : 'text-[9px] text-brand-600 font-extrabold uppercase tracking-wider mt-0.5';
+        if (currentUserProfile.role === 'admin') {
+          dropRole.textContent = '👑 Super Admin (Unlimited)';
+          dropRole.className = 'text-[9px] text-amber-600 font-extrabold uppercase tracking-wider mt-0.5';
+        } else if (currentUserProfile.role === 'assistant_admin') {
+          dropRole.textContent = '⭐ ผู้ช่วย Admin (Unlimited)';
+          dropRole.className = 'text-[9px] text-indigo-600 font-extrabold uppercase tracking-wider mt-0.5';
+        } else if (currentUserProfile.isGuest) {
+          dropRole.textContent = '👤 ผู้เยี่ยมชม (โควต้า 3 ไฟล์ / 100 ข้อ)';
+          dropRole.className = 'text-[9px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5';
+        } else {
+          dropRole.textContent = '🎓 สมาชิกทั่วไป (โควต้า 10 ไฟล์ / 500 ข้อ)';
+          dropRole.className = 'text-[9px] text-brand-600 font-extrabold uppercase tracking-wider mt-0.5';
+        }
       }
 
       const effectiveAvatar = currentUserProfile.avatarUrl || ((currentUserProfile.avatar && currentUserProfile.avatar.startsWith('http')) ? currentUserProfile.avatar : null);
@@ -3314,12 +3585,14 @@ Object.defineProperty(window.google.script, 'run', {
 
     const tabAdmin = document.getElementById('tab-admin');
     if (tabAdmin) {
-      if (currentUserProfile && currentUserProfile.role === 'admin') {
+      if (currentUserProfile && (currentUserProfile.role === 'admin' || currentUserProfile.role === 'assistant_admin')) {
         tabAdmin.classList.remove('hidden');
       } else {
         tabAdmin.classList.add('hidden');
       }
     }
+
+    updateUserTierAndQuotaUI();
 
     if (window.lucide) lucide.createIcons();
   }
@@ -3598,8 +3871,8 @@ Object.defineProperty(window.google.script, 'run', {
       if (tabAdmin) tabAdmin.classList.add(...inactiveClasses);
       loadUserDashboard();
     } else if (page === 'admin') {
-      if (!currentUserProfile || currentUserProfile.role !== 'admin') {
-        showToast('warning', 'เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถเข้าถึงหน้านี้ได้ครับ');
+      if (!currentUserProfile || (currentUserProfile.role !== 'admin' && currentUserProfile.role !== 'assistant_admin')) {
+        showToast('warning', 'เฉพาะผู้ดูแลระบบและผู้ช่วย Admin เท่านั้นที่สามารถเข้าถึงหน้านี้ได้ครับ');
         switchPage('library');
         return;
       }
@@ -3758,16 +4031,21 @@ Object.defineProperty(window.google.script, 'run', {
       if (heroName) heroName.textContent = currentUserProfile.name || 'ผู้ฝึกซ้อม';
       if (heroBadge) {
         if (currentUserProfile.role === 'admin') {
-          heroBadge.textContent = 'ADMIN 👑';
+          heroBadge.textContent = 'SUPER ADMIN 👑';
           heroBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-900 shadow-sm tracking-wide uppercase';
+        } else if (currentUserProfile.role === 'assistant_admin') {
+          heroBadge.textContent = 'ผู้ช่วย ADMIN ⭐';
+          heroBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-200 text-indigo-950 shadow-sm tracking-wide uppercase';
         } else if (currentUserProfile.isGuest) {
           heroBadge.textContent = 'ผู้เยี่ยมชม (Guest)';
           heroBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 border border-white/30 tracking-wide uppercase';
         } else {
-          heroBadge.textContent = 'ผู้ฝึกซ้อม';
+          heroBadge.textContent = 'สมาชิกทั่วไป 🎓';
           heroBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 border border-white/30 tracking-wide uppercase';
         }
       }
+
+      updateUserTierAndQuotaUI();
 
       if (adminToggleBox) {
         if (currentUserProfile.role === 'admin') {
@@ -4004,6 +4282,8 @@ Object.defineProperty(window.google.script, 'run', {
              <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> รอตรวจ (${b.verifiedSummary || '0/' + b.totalQuestions})
            </span>`;
 
+      const deleteBtn = `<button onclick="confirmDeleteMyBatch('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="ลบชุดข้อสอบนี้"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+
       const actionBtn = isVerified
         ? `<div class="inline-flex items-center gap-1.5">
              <button onclick="startExam('${b.batchId}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
@@ -4012,10 +4292,14 @@ Object.defineProperty(window.google.script, 'run', {
              <button onclick="openReviewMode('${b.batchId}')" class="p-1.5 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all cursor-pointer" title="ตรวจสอบและแก้ไข (Review)">
                <i data-lucide="pen-line" class="w-4 h-4"></i>
              </button>
+             ${deleteBtn}
            </div>`
-        : `<button onclick="openReviewMode('${b.batchId}')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
-             <i data-lucide="pen-line" class="w-3.5 h-3.5"></i> <span>ตรวจเฉลย (Review)</span>
-           </button>`;
+        : `<div class="inline-flex items-center gap-1.5">
+             <button onclick="openReviewMode('${b.batchId}')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+               <i data-lucide="pen-line" class="w-3.5 h-3.5"></i> <span>ตรวจเฉลย (Review)</span>
+             </button>
+             ${deleteBtn}
+           </div>`;
 
       const cleanCat = b.batchCategory ? b.batchCategory.split('|')[0].trim() : 'ทั่วไป';
 
@@ -4543,24 +4827,223 @@ Object.defineProperty(window.google.script, 'run', {
     });
   }
 
-  function confirmResetStats(batchId, batchName) {
-    if (currentUserProfile && currentUserProfile.role !== 'admin') {
-      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะผู้ดูแลระบบ (Admin 👑) เท่านั้นที่สามารถล้างสถิติชุดข้อสอบได้', 'warning');
-      return;
-    }
+  function confirmDeleteMyBatch(batchId, batchName) {
     Swal.fire({
-      title: 'ล้างสถิติคะแนน?',
-      text: `ต้องการล้างประวัติและสถานะทำค้างของชุด "${batchName}" ใช่หรือไม่?`,
+      title: 'ลบชุดข้อสอบของคุณ?',
+      html: `คุณกำลังจะลบชุดข้อสอบ <b>"${escapeHtml(batchName)}"</b> พร้อมคำถามและประวัติทั้งหมดออกจากระบบอย่างถาวร<br><br><span class="text-xs text-rose-500 font-bold">⚠️ การกระทำนี้ไม่สามารถย้อนคืนได้</span>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      confirmButtonText: 'ใช่, ล้างสถิติ',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'ใช่, ลบชุดข้อสอบนี้ถาวร',
       cancelButtonText: 'ยกเลิก'
     }).then(res => {
       if (res.isConfirmed) {
-        google.script.run.withSuccessHandler(() => loadBatches(true)).resetBatchStats(batchId);
+        Swal.fire({ title: 'กำลังลบชุดข้อสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run
+          .withSuccessHandler(r => {
+            showToast('success', '🗑️ ลบชุดข้อสอบเรียบร้อยแล้ว');
+            loadBatches(true);
+            loadUserDashboard(true);
+          })
+          .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message, 'error'))
+          .deleteMyBatch(batchId, currentUserProfile);
       }
     });
+  }
+
+  function confirmResetStats(batchId, batchName) {
+    if (!currentUserProfile || currentUserProfile.role !== 'admin') {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะ Super Admin (Admin 👑) เท่านั้นที่สามารถล้างสถิติชุดข้อสอบได้', 'warning');
+      return;
+    }
+    Swal.fire({
+      title: 'ล้างสถิติชุดข้อสอบ?',
+      html: `ต้องการล้างประวัติการทำ, ผู้เคยทำ, คะแนน และสถานะทำค้างของชุด <b>"${escapeHtml(batchName)}"</b> ใช่หรือไม่?<br><br><span class="text-xs text-rose-500 font-bold">⚠️ ข้อมูลสถิติของชุดนี้จะหายไปจากประวัติของผู้ใช้ทุกคนเหมือนชุดที่เพิ่งอัปโหลดใหม่</span>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'ใช่, ล้างสถิติทั้งหมด',
+      cancelButtonText: 'ยกเลิก'
+    }).then(res => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังล้างสถิติ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+          removeProfileDraft(batchId);
+          localStorage.removeItem('QUIZSILO_RESUME_' + batchId);
+        } catch (e) {}
+
+        google.script.run
+          .withSuccessHandler(() => {
+            Swal.fire('ล้างสถิติเรียบร้อย!', 'ชุดข้อสอบกลับสู่สถานะยังไม่มีใครทำ และอัปเดตสถิติทั่วทั้งระบบแล้ว', 'success');
+            loadBatches(true);
+            loadUserDashboard(true);
+          })
+          .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message, 'error'))
+          .resetBatchStats(batchId, currentUserProfile);
+      }
+    });
+  }
+
+  // ==========================================
+  // Tier & Lifetime Upload Quota Engine
+  // ==========================================
+  function getUserTierInfo(userProfile) {
+    if (!userProfile || userProfile.isGuest) {
+      return {
+        tierId: 'guest',
+        name: 'ผู้เยี่ยมชม (Guest)',
+        badgeText: '👤 ผู้เยี่ยมชม',
+        badgeCls: 'bg-slate-100 text-slate-700 border-slate-300',
+        maxFiles: 3,
+        maxQuestions: 100,
+        isUnlimited: false
+      };
+    }
+    if (userProfile.role === 'admin') {
+      return {
+        tierId: 'admin',
+        name: 'Super Admin',
+        badgeText: '👑 Super Admin',
+        badgeCls: 'bg-amber-100 text-amber-900 border-amber-300',
+        maxFiles: Infinity,
+        maxQuestions: Infinity,
+        isUnlimited: true
+      };
+    }
+    if (userProfile.role === 'assistant_admin') {
+      return {
+        tierId: 'assistant_admin',
+        name: 'ผู้ช่วย Admin',
+        badgeText: '⭐ ผู้ช่วย Admin',
+        badgeCls: 'bg-indigo-100 text-indigo-900 border-indigo-300',
+        maxFiles: Infinity,
+        maxQuestions: Infinity,
+        isUnlimited: true
+      };
+    }
+    return {
+      tierId: 'member',
+      name: 'สมาชิกทั่วไป',
+      badgeText: '🎓 สมาชิกทั่วไป',
+      badgeCls: 'bg-brand-50 text-brand-700 border-brand-200',
+      maxFiles: 10,
+      maxQuestions: 500,
+      isUnlimited: false
+    };
+  }
+
+  function getUserLifetimeUsage(userProfile) {
+    if (!userProfile) return { files: 0, questions: 0 };
+    const storageKey = userProfile.isGuest ? 'QUIZSILO_GUEST_LIFETIME_USAGE' : ('QUIZSILO_LIFETIME_USAGE_' + (userProfile.uuid || 'user'));
+    let usage = { files: 0, questions: 0 };
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) usage = JSON.parse(raw);
+    } catch (e) {}
+
+    // Synchronize with user's existing batches if higher
+    if (Array.isArray(allBatches) && allBatches.length > 0) {
+      const myBatches = allBatches.filter(b => isOwner(b));
+      const totalQ = myBatches.reduce((sum, b) => sum + (b.totalQuestions || 0), 0);
+      if (myBatches.length > usage.files) usage.files = myBatches.length;
+      if (totalQ > usage.questions) usage.questions = totalQ;
+    }
+    return usage;
+  }
+
+  function recordUserUploadUsage(fileCount, questionCount, userProfile) {
+    if (!userProfile) return;
+    const storageKey = userProfile.isGuest ? 'QUIZSILO_GUEST_LIFETIME_USAGE' : ('QUIZSILO_LIFETIME_USAGE_' + (userProfile.uuid || 'user'));
+    const usage = getUserLifetimeUsage(userProfile);
+    usage.files += (fileCount || 0);
+    usage.questions += (questionCount || 0);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(usage));
+    } catch (e) {}
+    updateUserTierAndQuotaUI();
+  }
+
+  function updateUserTierAndQuotaUI() {
+    const prof = currentUserProfile;
+    const tier = getUserTierInfo(prof);
+    const usage = getUserLifetimeUsage(prof);
+
+    // 1. Dashboard Guest Banner
+    const guestBanner = document.getElementById('dash-guest-quota-banner');
+    if (guestBanner) {
+      if (prof && prof.isGuest) guestBanner.classList.remove('hidden');
+      else guestBanner.classList.add('hidden');
+    }
+
+    // 2. Dashboard Tier & Quota Card
+    const tierIconWrap = document.getElementById('dash-tier-icon-wrap');
+    const tierNameBadge = document.getElementById('dash-tier-name-badge');
+    const quotaSummaryText = document.getElementById('dash-quota-summary-text');
+    const progressContainer = document.getElementById('dash-quota-progress-container');
+    const filesText = document.getElementById('dash-quota-files-text');
+    const questionsText = document.getElementById('dash-quota-questions-text');
+    const progressBar = document.getElementById('dash-quota-progress-bar');
+
+    if (tierNameBadge) {
+      tierNameBadge.textContent = tier.badgeText;
+      tierNameBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold border ' + tier.badgeCls;
+    }
+    if (tierIconWrap) {
+      tierIconWrap.textContent = tier.tierId === 'admin' ? '👑' : (tier.tierId === 'assistant_admin' ? '⭐' : (tier.tierId === 'guest' ? '👤' : '🎓'));
+    }
+
+    if (tier.isUnlimited) {
+      if (quotaSummaryText) quotaSummaryText.textContent = 'โควต้าอัปโหลด: ไม่จำกัด (Unlimited 🚀)';
+      if (progressContainer) progressContainer.classList.add('hidden');
+    } else {
+      const remFiles = Math.max(0, tier.maxFiles - usage.files);
+      const remQuestions = Math.max(0, tier.maxQuestions - usage.questions);
+      if (quotaSummaryText) {
+        quotaSummaryText.textContent = `โควต้าคงเหลือ: อีก ${remFiles} ไฟล์ (${remQuestions} ข้อ)`;
+      }
+      if (progressContainer) {
+        progressContainer.classList.remove('hidden');
+        if (filesText) filesText.textContent = `ไฟล์คงเหลือ: ${remFiles}/${tier.maxFiles} ไฟล์`;
+        if (questionsText) questionsText.textContent = `ข้อคงเหลือ: ${remQuestions}/${tier.maxQuestions} ข้อ`;
+        if (progressBar) {
+          const filePct = (usage.files / tier.maxFiles) * 100;
+          const qPct = (usage.questions / tier.maxQuestions) * 100;
+          const maxPct = Math.min(100, Math.max(filePct, qPct));
+          progressBar.style.width = maxPct + '%';
+          progressBar.className = maxPct >= 100 ? 'h-full bg-rose-500 transition-all duration-500 rounded-full' : (maxPct >= 80 ? 'h-full bg-amber-500 transition-all duration-500 rounded-full' : 'h-full bg-brand-500 transition-all duration-500 rounded-full');
+        }
+      }
+    }
+
+    // 3. Upload Page Quota Status Box
+    const upTierBadge = document.getElementById('upload-quota-tier-badge');
+    const upInfoText = document.getElementById('upload-quota-info-text');
+    const upCountPill = document.getElementById('upload-quota-count-pill');
+    if (upTierBadge) {
+      upTierBadge.textContent = tier.badgeText;
+      upTierBadge.className = 'px-2.5 py-0.5 rounded-full font-extrabold text-[10px] border ' + tier.badgeCls;
+    }
+    if (upInfoText) {
+      if (tier.isUnlimited) {
+        upInfoText.textContent = 'โควต้าอัปโหลด: ไม่จำกัด (Unlimited 🚀)';
+        upInfoText.className = 'text-slate-700 font-bold truncate';
+      } else {
+        const remFiles = Math.max(0, tier.maxFiles - usage.files);
+        const remQuestions = Math.max(0, tier.maxQuestions - usage.questions);
+        if (remFiles <= 0 || remQuestions <= 0) {
+          upInfoText.textContent = '⚠️ โควต้าการอัปโหลดสะสมเต็มแล้ว';
+          upInfoText.className = 'text-rose-600 font-extrabold truncate';
+        } else {
+          upInfoText.textContent = `โควต้าคงเหลือ: อัปโหลดได้อีก ${remFiles} ไฟล์ (${remQuestions} ข้อ)`;
+          upInfoText.className = 'text-slate-700 font-bold truncate';
+        }
+      }
+    }
+    if (upCountPill) {
+      if (tier.isUnlimited) upCountPill.textContent = 'ไม่จำกัด';
+      else upCountPill.textContent = `${usage.files}/${tier.maxFiles} ไฟล์`;
+    }
   }
 
   /* ------------------------------------------------------------
@@ -4631,6 +5114,33 @@ Object.defineProperty(window.google.script, 'run', {
     if (selectedFiles.length === 0) {
       Swal.fire('กรุณาเลือกไฟล์', 'โปรดเลือกไฟล์อย่างน้อย 1 ไฟล์', 'warning');
       return;
+    }
+
+    // Quota Gate Check
+    const tier = getUserTierInfo(currentUserProfile);
+    if (!tier.isUnlimited) {
+      const usage = getUserLifetimeUsage(currentUserProfile);
+      const remFiles = Math.max(0, tier.maxFiles - usage.files);
+      const remQuestions = Math.max(0, tier.maxQuestions - usage.questions);
+      if (remFiles <= 0 || remQuestions <= 0) {
+        if (currentUserProfile && currentUserProfile.isGuest) {
+          Swal.fire({
+            title: 'โควต้าผู้เยี่ยมชมเต็มแล้ว',
+            html: `ผู้เยี่ยมชมสามารถอัปโหลดได้สูงสุด 3 ไฟล์ หรือ 100 ข้อ<br><br><b>โปรดเข้าสู่ระบบด้วย Google เพื่อรับโควต้าเพิ่มเป็น 10 ไฟล์ (500 ข้อ) และเริ่มบันทึกสถิติผลสอบถาวร</b>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'เข้าสู่ระบบด้วย Google',
+            cancelButtonText: 'ปิด'
+          }).then(res => { if (res.isConfirmed) handleGoogleLogin(); });
+        } else {
+          Swal.fire('โควต้าอัปโหลดเต็มแล้ว', `คุณใช้โควต้าอัปโหลดสะสมครบแล้ว (${tier.maxFiles} ไฟล์ หรือ ${tier.maxQuestions} ข้อ)`, 'warning');
+        }
+        return;
+      }
+      if (selectedFiles.length > remFiles) {
+        Swal.fire('เลือกไฟล์เกินโควต้า', `คุณเหลือโควต้าอัปโหลดอีกเพียง ${remFiles} ไฟล์เท่านั้น (คุณเลือกมา ${selectedFiles.length} ไฟล์)`, 'warning');
+        return;
+      }
     }
 
     const btn = document.getElementById('btn-submit-upload');
@@ -6694,7 +7204,7 @@ Object.defineProperty(window.google.script, 'run', {
     if (!tbody) return;
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้ที่ค้นหา</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้ที่ค้นหา</td></tr>';
       return;
     }
 
@@ -6719,7 +7229,7 @@ Object.defineProperty(window.google.script, 'run', {
               <div class="min-w-0">
                 <div class="font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                   <span>${escapeHtml(u.name)}</span>
-                  ${u.role === 'admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-amber-100 text-amber-800 font-extrabold rounded">ADMIN</span>' : ''}
+                  ${u.role === 'admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-amber-100 text-amber-800 font-extrabold rounded">ADMIN</span>' : (u.role === 'assistant_admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-indigo-100 text-indigo-800 font-bold rounded">ผู้ช่วย</span>' : '')}
                 </div>
                 <div class="text-[10px] text-slate-400 truncate">${escapeHtml(u.email)}</div>
               </div>
@@ -6744,6 +7254,18 @@ Object.defineProperty(window.google.script, 'run', {
           </td>
           <td class="py-3 px-3">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${escapeHtml(u.targetExams.split(' ')[0] || 'ทั่วไป')}</span>
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${u.role === 'admin' 
+              ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">👑 Super Admin</span>'
+              : (currentUserProfile && currentUserProfile.role === 'admin'
+                  ? (u.role === 'assistant_admin'
+                      ? `<button onclick="changeUserRole('${u.id}', '${escapeHtml(u.name)}', 'student')" class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all cursor-pointer shadow-2xs" title="คลิกเพื่อปลดเป็นสมาชิกทั่วไป">⭐ ผู้ช่วย Admin (ปลด)</button>`
+                      : `<button onclick="changeUserRole('${u.id}', '${escapeHtml(u.name)}', 'assistant_admin')" class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition-all cursor-pointer shadow-2xs" title="คลิกเพื่อแต่งตั้งเป็นผู้ช่วย Admin">+ ตั้งเป็นผู้ช่วย ⭐</button>`
+                    )
+                  : (u.role === 'assistant_admin' ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">⭐ ผู้ช่วย Admin</span>' : '<span class="text-slate-400 text-[10px]">สมาชิกทั่วไป 🎓</span>')
+                )
+            }
           </td>
           <td class="py-3 px-3 text-center whitespace-nowrap">
             <button onclick="showAdminUserDetails('${u.id}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors cursor-pointer" title="ดูรายละเอียดผู้ใช้">
@@ -6798,6 +7320,161 @@ Object.defineProperty(window.google.script, 'run', {
   }
 
   window.showAdminUserDetails = showAdminUserDetails;
+
+  // ==========================================
+  // Admin Role Management (Super Admin Only)
+  // ==========================================
+  function changeUserRole(userId, userName, newRole) {
+    if (!currentUserProfile || currentUserProfile.role !== 'admin') {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะ Super Admin เท่านั้นที่สามารถเปลี่ยนบทบาทผู้ใช้ได้', 'warning');
+      return;
+    }
+    const roleLabels = {
+      'admin': 'Super Admin 👑',
+      'assistant_admin': 'ผู้ช่วย Admin ⭐',
+      'student': 'สมาชิกทั่วไป 🎓'
+    };
+    const targetLabel = roleLabels[newRole] || newRole;
+    Swal.fire({
+      title: 'ปรับเปลี่ยนบทบาทผู้ใช้?',
+      html: `ต้องการเปลี่ยนบทบาทของ <b>"${escapeHtml(userName)}"</b> เป็น <span class="font-extrabold text-indigo-600">${targetLabel}</span> ใช่หรือไม่?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'ยืนยันเปลี่ยนตำแหน่ง',
+      cancelButtonText: 'ยกเลิก'
+    }).then(res => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังปรับปรุงบทบาท...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run
+          .withSuccessHandler(r => {
+            showToast('success', `อัปเดตบทบาทของ "${userName}" เป็น ${targetLabel} เรียบร้อยแล้ว`);
+            loadAdminConsoleData(true);
+          })
+          .withFailureHandler(err => {
+            Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error');
+          })
+          .setUserRole(userId, newRole);
+      }
+    });
+  }
+
+  // ==========================================
+  // Admin Tabs & Audit Log Navigation
+  // ==========================================
+  let currentAdminTab = 'stats';
+  function switchAdminTab(tab) {
+    currentAdminTab = tab;
+    const btnStats = document.getElementById('admin-tab-btn-stats');
+    const btnLogs = document.getElementById('admin-tab-btn-logs');
+    const contentStats = document.getElementById('admin-tab-content-stats');
+    const contentLogs = document.getElementById('admin-tab-content-logs');
+
+    if (tab === 'stats') {
+      if (btnStats) btnStats.className = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer';
+      if (btnLogs) btnLogs.className = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer';
+      if (contentStats) contentStats.classList.remove('hidden');
+      if (contentLogs) contentLogs.classList.add('hidden');
+    } else {
+      if (btnStats) btnStats.className = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer';
+      if (btnLogs) btnLogs.className = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer';
+      if (contentStats) contentStats.classList.add('hidden');
+      if (contentLogs) contentLogs.classList.remove('hidden');
+      loadAdminAuditLogs();
+    }
+  }
+
+  function loadAdminAuditLogs(force = false) {
+    const icon = document.getElementById('admin-logs-refresh-icon');
+    if (icon) icon.classList.add('animate-spin');
+
+    const tbody = document.getElementById('admin-logs-table-body');
+    if (tbody && force) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-12 text-center text-slate-400">
+            <div class="flex flex-col items-center justify-center space-y-2">
+              <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-brand-500"></i>
+              <span>กำลังโหลดบันทึกความเคลื่อนไหว...</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (icon) icon.classList.remove('animate-spin');
+        renderAdminAuditLogs(res && res.logs ? res.logs : []);
+      })
+      .withFailureHandler(err => {
+        if (icon) icon.classList.remove('animate-spin');
+        console.error('loadAdminAuditLogs error:', err);
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-rose-500 text-xs">โหลดบันทึกไม่สำเร็จ: ${err.message || err}</td></tr>`;
+        }
+      })
+      .getActivityLogs();
+  }
+
+  function renderAdminAuditLogs(logs) {
+    const tbody = document.getElementById('admin-logs-table-body');
+    if (!tbody) return;
+
+    if (!logs || logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="py-12 text-center text-slate-400">ยังไม่มีบันทึกความเคลื่อนไหวข้อสอบในระบบ</td></tr>';
+      return;
+    }
+
+    const actionBadgeMap = {
+      'UPLOAD_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">➕ เพิ่มข้อสอบ</span>',
+      'DELETE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">🗑️ ลบข้อสอบ</span>',
+      'RESET_STATS': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">🧹 ล้างสถิติ</span>'
+    };
+
+    tbody.innerHTML = logs.map(item => {
+      const timeStr = item.created_at ? new Date(item.created_at).toLocaleString('th-TH') : '-';
+      const badge = actionBadgeMap[item.action] || `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(item.action || 'ACTIVITY')}</span>`;
+      const avatarHtml = item.user_avatar && item.user_avatar.startsWith('http')
+        ? `<img src="${item.user_avatar}" class="w-6 h-6 rounded-full border border-slate-200 object-cover" alt="avatar">`
+        : `<div class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px]">👤</div>`;
+
+      return `
+        <tr class="hover:bg-slate-50/70 transition-colors">
+          <td class="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">${timeStr}</td>
+          <td class="py-3 px-3">
+            <div class="flex items-center gap-2">
+              ${avatarHtml}
+              <div class="min-w-0">
+                <div class="font-bold text-slate-900 truncate">${escapeHtml(item.user_name || 'ผู้ใช้')}</div>
+                <div class="text-[10px] text-slate-400 capitalize">${escapeHtml(item.user_role || 'member')}</div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">${badge}</td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-800 truncate max-w-xs" title="${escapeHtml(item.batch_name || '-')}">${escapeHtml(item.batch_name || '-')}</div>
+            <div class="text-[10px] text-slate-400">${escapeHtml(item.batch_category || 'ทั่วไป')}</div>
+          </td>
+          <td class="py-3 px-3 text-center font-bold text-slate-700 whitespace-nowrap">${(item.question_count || 0).toLocaleString()} ข้อ</td>
+          <td class="py-3 px-4 text-slate-600 text-[11px]">${escapeHtml(item.details || '-')}</td>
+        </tr>
+      `;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Global Window Expose
+  window.changeUserRole = changeUserRole;
+  window.switchAdminTab = switchAdminTab;
+  window.loadAdminAuditLogs = loadAdminAuditLogs;
+  window.renderAdminAuditLogs = renderAdminAuditLogs;
+  window.confirmDeleteMyBatch = confirmDeleteMyBatch;
+  window.confirmResetStats = confirmResetStats;
+  window.updateUserTierAndQuotaUI = updateUserTierAndQuotaUI;
 </script>
 
 
