@@ -35,8 +35,27 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ success: false, error: bErr });
     }
 
-    // 2. Insert Questions in chunks of 50
-    const qList = Array.isArray(questions) ? questions : [];
+    // 2. Sanitize and Insert Questions in chunks of 50
+    const rawList = Array.isArray(questions) ? questions : [];
+    const qList = rawList.map(q => ({
+      id: q.id,
+      batch_id: q.batch_id,
+      question_no: q.question_no,
+      question_text: q.question_text,
+      choice_a: q.choice_a || '',
+      choice_b: q.choice_b || '',
+      choice_c: q.choice_c || '',
+      choice_d: q.choice_d || '',
+      choice_e: q.choice_e || '',
+      choice_f: q.choice_f || '',
+      choice_g: q.choice_g || '',
+      choice_h: q.choice_h || '',
+      answer: q.answer || 'ก',
+      explanation: q.explanation || '',
+      is_free_question: q.is_free_question || false,
+      source_type: q.source_type || 'เฉลยไฟล์'
+    }));
+
     for (let i = 0; i < qList.length; i += 50) {
       const chunk = qList.slice(i, i + 50);
       const qRes = await fetch(`${SUPABASE_URL}/rest/v1/questions`, {
