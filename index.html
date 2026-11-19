@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.22.15</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.22.17</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -3404,47 +3404,48 @@ Object.defineProperty(window.google.script, 'run', {
       return;
     }
 
+    const cardsHtml = activeDrafts.map(d => {
+      return '<div class="bg-white/95 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-amber-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-all">' +
+        '<div class="space-y-1.5 flex-1">' +
+          '<div class="flex items-center gap-2 flex-wrap">' +
+            '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white tracking-wide">ทำค้างไว้</span>' +
+            '<h4 class="text-sm sm:text-base font-bold text-slate-900">' + escapeHtml(d.batchName) + '</h4>' +
+          '</div>' +
+          '<div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">' +
+            '<span>ทำไปแล้ว <b class="text-slate-800">' + d.answered + '</b> / ' + d.total + ' ข้อ</span>' +
+            '<span class="text-amber-600 font-bold">• เหลืออีก ' + d.remaining + ' ข้อ</span>' +
+            '<span>• เวลาที่ใช้: ' + d.timeStr + '</span>' +
+          '</div>' +
+          '<div class="w-full sm:w-80 bg-slate-100 h-2 rounded-full overflow-hidden mt-2">' +
+            '<div class="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-300" style="width: ' + d.percent + '%"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-2 shrink-0 self-end md:self-center">' +
+          '<button onclick="discardExamDraft(\'' + d.batchId + '\')" class="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer">' +
+            'ล้าง / เริ่มใหม่' +
+          '</button>' +
+          '<button onclick="startExam(\'' + d.batchId + '\')" class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer">' +
+            '<i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>' +
+            '<span>ทำต่อจากที่ค้างไว้</span>' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
     container.classList.remove('hidden');
-    container.innerHTML = `
-      <div class="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-300/80 rounded-3xl p-5 sm:p-6 shadow-xs">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <span class="p-1.5 bg-amber-500 text-white rounded-xl flex items-center justify-center text-sm shadow-xs font-bold">⚡</span>
-            <h3 class="text-sm sm:text-base font-extrabold text-slate-800">ชุดข้อสอบที่กำลังทำค้างไว้ (In-Progress)</h3>
-          </div>
-          <span class="text-xs font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">\${activeDrafts.length} ชุด</span>
-        </div>
-        <div class="space-y-3">
-          \${activeDrafts.map(d => `
-            <div class="bg-white/95 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-amber-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-all">
-              <div class="space-y-1.5 flex-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white tracking-wide">ทำค้างไว้</span>
-                  <h4 class="text-sm sm:text-base font-bold text-slate-900">\${escapeHtml(d.batchName)}</h4>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                  <span>ทำไปแล้ว <b class="text-slate-800">\${d.answered}</b> / \${d.total} ข้อ</span>
-                  <span class="text-amber-600 font-bold">• เหลืออีก \${d.remaining} ข้อ</span>
-                  <span>• เวลาที่ใช้: \${d.timeStr}</span>
-                </div>
-                <div class="w-full sm:w-80 bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-                  <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-300" style="width: \${d.percent}%"></div>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
-                <button onclick="discardExamDraft('\${d.batchId}')" class="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer">
-                  ล้าง / เริ่มใหม่
-                </button>
-                <button onclick="startExam('\${d.batchId}')" class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer">
-                  <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
-                  <span>ทำต่อจากที่ค้างไว้</span>
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
+    container.innerHTML = 
+      '<div class="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-300/80 rounded-3xl p-5 sm:p-6 shadow-xs">' +
+        '<div class="flex items-center justify-between mb-4">' +
+          '<div class="flex items-center gap-2">' +
+            '<span class="p-1.5 bg-amber-500 text-white rounded-xl flex items-center justify-center text-sm shadow-xs font-bold">⚡</span>' +
+            '<h3 class="text-sm sm:text-base font-extrabold text-slate-800">ชุดข้อสอบที่กำลังทำค้างไว้ (In-Progress)</h3>' +
+          '</div>' +
+          '<span class="text-xs font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">' + activeDrafts.length + ' ชุด</span>' +
+        '</div>' +
+        '<div class="space-y-3">' +
+          cardsHtml +
+        '</div>' +
+      '</div>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
