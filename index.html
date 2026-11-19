@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.22.17</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.23.03</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -296,7 +296,7 @@
             <th class="py-3 px-2.5 w-20 text-center">เจ้าของ</th>
             <th class="py-3 px-2.5 w-36 sm:w-44 text-center">หมวดหมู่</th>
             <th class="py-3 px-2 text-center w-16">จำนวนข้อ</th>
-            <th class="py-3 px-3 w-36 sm:w-44 text-center">ผู้ฝึกซ้อม</th>
+            <th class="py-3 px-3 w-36 sm:w-44 text-center">ผู้ที่เคยทำ</th>
             <th class="py-3 px-3 text-center w-36">การจัดการ</th>
           </tr>
         </thead>
@@ -1810,6 +1810,57 @@ const adapterImpl = {
         }
       } catch (pe) {}
 
+      // Get attempted profiles per batch (Call serverless API /api/batch-attempts or fallback to direct query)
+      let batchAttemptsMap = {};
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const atResp = await fetch('/api/batch-attempts');
+          if (atResp.ok) {
+            const atData = await atResp.json();
+            if (atData && atData.batchAttempts) {
+              batchAttemptsMap = atData.batchAttempts;
+            }
+          }
+        } catch (atErr) {
+          console.warn('Could not fetch /api/batch-attempts:', atErr);
+        }
+      }
+
+      // Direct fallback if batchAttemptsMap is empty
+      if (Object.keys(batchAttemptsMap).length === 0) {
+        try {
+          const { data: attempts } = await sbClient.from('exam_attempts').select('batch_id, user_id, score, total_questions, percent');
+          if (attempts && attempts.length > 0) {
+            const attUids = [...new Set(attempts.map(a => a.user_id).filter(Boolean))];
+            let attProfMap = { ...profileMap };
+            if (attUids.length > 0) {
+              const { data: aProfs } = await sbClient.from('profiles').select('id, nickname, display_name, avatar').in('id', attUids);
+              (aProfs || []).forEach(p => { attProfMap[p.id] = p; });
+            }
+            attempts.forEach(a => {
+              if (!a.batch_id || !a.user_id) return;
+              if (!batchAttemptsMap[a.batch_id]) batchAttemptsMap[a.batch_id] = [];
+              const exists = batchAttemptsMap[a.batch_id].find(x => x.userId === a.user_id);
+              const p = attProfMap[a.user_id];
+              const scorePct = Number(a.percent || 0).toFixed(0) + '%';
+              const scoreTxt = `${a.score || 0}/${a.total_questions || 0}`;
+              if (!exists) {
+                batchAttemptsMap[a.batch_id].push({
+                  userId: a.user_id,
+                  name: p?.nickname || p?.display_name || 'ผู้ใช้',
+                  avatar: p?.avatar || '👤',
+                  percent: scorePct,
+                  scoreText: scoreTxt
+                });
+              }
+            });
+          }
+        } catch (directErr) {
+          console.warn('Direct attempt query fallback info:', directErr.message);
+        }
+      }
+
       const mapped = (data || []).map((b, idx) => {
         const uploader = profileMap[b.user_id];
         const sourceFileIds = Array.isArray(b.source_files) ? b.source_files.map(f => f.id) : [];
@@ -1841,7 +1892,7 @@ const adapterImpl = {
             avatar: (uploader?.avatar && uploader.avatar.startsWith('http')) ? uploader.avatar : (uploader?.avatar || '👤'),
             name: uploader?.nickname || uploader?.display_name || 'ระบบส่วนกลาง'
           },
-          attemptedProfiles: []
+          attemptedProfiles: batchAttemptsMap[b.id] || []
         };
       });
 
@@ -1857,32 +1908,50 @@ const adapterImpl = {
   getQuestionsByBatch: async function(batchId) {
     try {
       if (!sbClient) throw new Error('sbClient is not initialized');
+
+      // Fetch batch verification status
+      let isBatchVerified = false;
+      try {
+        const { data: bData } = await sbClient.from('batches').select('id, is_verified').eq('id', batchId).single();
+        if (bData && bData.is_verified) {
+          isBatchVerified = true;
+        }
+      } catch (be) {
+        console.warn('Could not read batch verification state:', be.message);
+      }
+
       const { data, error } = await sbClient.from('questions').select('*').eq('batch_id', batchId).order('question_no', { ascending: true });
       if (error) throw error;
 
-      const mapped = (data || []).map((q, idx) => ({
-        row: idx + 1,
-        id: q.id,
-        qNo: String(q.question_no || (idx + 1)),
-        batchId: q.batch_id,
-        category: '',
-        text: q.question_text,
-        a: q.choice_a || '',
-        b: q.choice_b || '',
-        c: q.choice_c || '',
-        d: q.choice_d || '',
-        e: q.choice_e || '',
-        f: q.choice_f || '',
-        g: q.choice_g || '',
-        h: q.choice_h || '',
-        answer: q.answer || 'ก',
-        sourceType: q.source_type || 'เฉลยไฟล์',
-        explanation: q.explanation || '',
-        lastResult: '',
-        userChoice: '',
-        isVerified: q.is_verified !== undefined ? Boolean(q.is_verified) : (q.source_type === 'เฉลยไฟล์' || q.source_type === 'เฉลยจากไฟล์' || q.source_type === 'ยืนยันแล้ว'),
-        isFreeQuestion: q.is_free_question || false
-      }));
+      const mapped = (data || []).map((q, idx) => {
+        // If batch is already verified, all questions are verified.
+        // If batch is unverified (newly uploaded), questions default to UNVERIFIED (false)
+        // unless explicitly marked as 'ยืนยันแล้ว'.
+        const isQVerified = isBatchVerified ? true : (q.source_type === 'ยืนยันแล้ว');
+        return {
+          row: idx + 1,
+          id: q.id,
+          qNo: String(q.question_no || (idx + 1)),
+          batchId: q.batch_id,
+          category: '',
+          text: q.question_text,
+          a: q.choice_a || '',
+          b: q.choice_b || '',
+          c: q.choice_c || '',
+          d: q.choice_d || '',
+          e: q.choice_e || '',
+          f: q.choice_f || '',
+          g: q.choice_g || '',
+          h: q.choice_h || '',
+          answer: q.answer || 'ก',
+          sourceType: q.source_type || 'เฉลยไฟล์',
+          explanation: q.explanation || '',
+          lastResult: '',
+          userChoice: '',
+          isVerified: isQVerified,
+          isFreeQuestion: q.is_free_question || false
+        };
+      });
       if (this._successHandler) this._successHandler(mapped);
       return mapped;
     } catch (err) {
@@ -2048,6 +2117,23 @@ const adapterImpl = {
   // 5. Admin Console Statistics & User Insights
   getAdminConsoleStats: async function() {
     try {
+      // 1. Try Vercel Serverless Function first (Bypasses RLS with Service Role Key)
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const sResp = await fetch('/api/admin-stats');
+          if (sResp.ok) {
+            const res = await sResp.json();
+            if (res && res.success) {
+              if (this._successHandler) this._successHandler(res);
+              return res;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('/api/admin-stats failed, falling back to direct client query:', apiErr);
+        }
+      }
+
       if (!sbClient) throw new Error('sbClient is not initialized');
 
       // Fetch Profiles
@@ -2567,25 +2653,219 @@ const adapterImpl = {
     return await adapterImpl.getJobQueueStatus.apply(this, arguments);
   },
 
-  // 9. Categories for Custom Quiz
-  getCustomQuizCategories: async function() {
+  // 9. Categories for Verified Custom / Random Quiz
+  getAvailableVerifiedCategories: async function(userProfile, sourceScope) {
     try {
-      if (!sbClient) return;
-      const { data, error } = await sbClient.from('batches').select('batch_category, total_questions');
-      if (error) throw error;
-      const map = {};
-      (data || []).forEach(b => {
-        const cat = (b.batch_category || 'ทั่วไป').split('|')[0].trim();
-        map[cat] = (map[cat] || 0) + (b.total_questions || 0);
+      if (!sbClient) throw new Error('sbClient is not initialized');
+      const isMyUploads = sourceScope === 'my_uploads' && userProfile;
+      const userId = (userProfile && !userProfile.isGuest && userProfile.uuid) ? userProfile.uuid : null;
+
+      let bQuery = sbClient.from('batches').select('id, batch_name, batch_category, total_questions, is_verified, user_id').eq('is_verified', true);
+      if (isMyUploads && userId) {
+        bQuery = bQuery.eq('user_id', userId);
+      }
+
+      const { data: verifiedBatches, error: bErr } = await bQuery;
+      if (bErr) throw bErr;
+
+      if (!verifiedBatches || verifiedBatches.length === 0) {
+        const emptyRes = { success: true, categories: [], totalVerified: 0 };
+        if (this._successHandler) this._successHandler(emptyRes);
+        return emptyRes;
+      }
+
+      const catMap = {};
+      let totalVerified = 0;
+      verifiedBatches.forEach(b => {
+        const cat = (b.batch_category || 'ทั่วไป').split('|')[0].trim() || 'ทั่วไป';
+        const qCount = b.total_questions || 0;
+        catMap[cat] = (catMap[cat] || 0) + qCount;
+        totalVerified += qCount;
       });
-      const categories = Object.keys(map).map(k => ({ name: k, count: map[k] }));
-      const totalVerified = Object.values(map).reduce((a, b) => a + b, 0);
-      const res = { success: true, categories, totalVerified };
+
+      const categories = Object.keys(catMap).map(k => ({
+        name: k,
+        count: catMap[k]
+      })).sort((a, b) => b.count - a.count);
+
+      const res = { success: true, categories: categories, totalVerified: totalVerified };
       if (this._successHandler) this._successHandler(res);
       return res;
     } catch (err) {
-      console.error('getCustomQuizCategories error:', err);
-      if (this._failureHandler) this._failureHandler(err);
+      console.error('getAvailableVerifiedCategories error:', err);
+      const fail = { success: false, message: err.message, categories: [], totalVerified: 0 };
+      if (this._failureHandler) this._failureHandler(fail);
+      return fail;
+    }
+  },
+  getCustomQuizCategories: async function(userProfile, sourceScope) {
+    return await this.getAvailableVerifiedCategories(userProfile, sourceScope);
+  },
+
+  // 10. Generate Advanced Random Exam
+  generateAdvancedRandomExam: async function(selectedCategories, requestedCount, isQuickRandom, sourceScope, userProfile) {
+    try {
+      if (!sbClient) throw new Error('sbClient is not initialized');
+      const isMyUploads = sourceScope === 'my_uploads' && userProfile;
+      const userId = (userProfile && !userProfile.isGuest && userProfile.uuid) ? userProfile.uuid : null;
+
+      let bQuery = sbClient.from('batches').select('id, batch_name, batch_category, is_verified, user_id').eq('is_verified', true);
+      if (isMyUploads && userId) {
+        bQuery = bQuery.eq('user_id', userId);
+      }
+
+      const { data: verifiedBatches, error: bErr } = await bQuery;
+      if (bErr) throw bErr;
+
+      if (!verifiedBatches || verifiedBatches.length === 0) {
+        const emptyMsg = isMyUploads
+          ? 'ไม่พบข้อสอบที่ผ่านการ Review ในชุดที่คุณอัปโหลด กรุณาตรวจทานข้อสอบอย่างน้อย 1 ชุด'
+          : 'ไม่พบข้อสอบที่ผ่านการ Review ในคลัง กรุณาตรวจทานข้อสอบในหน้า Review & Edit อย่างน้อย 1 ชุด';
+        const fail = { success: false, error: 'NO_VERIFIED_QUESTIONS', message: emptyMsg };
+        if (this._failureHandler) this._failureHandler(fail);
+        return fail;
+      }
+
+      const selectedCatSet = new Set((selectedCategories || []).map(c => String(c).trim().toLowerCase()));
+      const batchMap = {};
+      const targetBatchIds = [];
+
+      verifiedBatches.forEach(b => {
+        const cleanCat = (b.batch_category || 'ทั่วไป').split('|')[0].trim();
+        let match = false;
+        if (isQuickRandom || selectedCatSet.size === 0) {
+          match = true;
+        } else {
+          const lower = cleanCat.toLowerCase();
+          for (const sc of selectedCatSet) {
+            if (sc === 'all' || lower.includes(sc) || sc.includes(lower)) {
+              match = true;
+              break;
+            }
+          }
+        }
+        if (match) {
+          batchMap[b.id] = { ...b, cleanCat };
+          targetBatchIds.push(b.id);
+        }
+      });
+
+      if (targetBatchIds.length === 0) {
+        const fail = {
+          success: false,
+          error: 'NO_VERIFIED_QUESTIONS',
+          message: 'ไม่พบข้อสอบในหมวดหมู่วิชาที่เลือกที่ผ่านการตรวจสอบแล้ว'
+        };
+        if (this._failureHandler) this._failureHandler(fail);
+        return fail;
+      }
+
+      // Fetch all questions from eligible verified batches
+      const { data: questions, error: qErr } = await sbClient.from('questions').select('*').in('batch_id', targetBatchIds);
+      if (qErr) throw qErr;
+
+      if (!questions || questions.length === 0) {
+        const fail = {
+          success: false,
+          error: 'NO_VERIFIED_QUESTIONS',
+          message: 'ไม่พบรายการคำถามในชุดข้อสอบที่เลือก'
+        };
+        if (this._failureHandler) this._failureHandler(fail);
+        return fail;
+      }
+
+      // Map candidates
+      const candidateQuestions = questions.map((q, idx) => {
+        const bInfo = batchMap[q.batch_id] || {};
+        return {
+          row: idx + 1,
+          id: q.id,
+          origQNo: String(q.question_no || (idx + 1)),
+          batchId: q.batch_id,
+          originBatchId: q.batch_id,
+          originBatchName: bInfo.batch_name || 'ชุดข้อสอบ',
+          category: bInfo.cleanCat || 'ทั่วไป',
+          text: q.question_text,
+          a: q.choice_a || '',
+          b: q.choice_b || '',
+          c: q.choice_c || '',
+          d: q.choice_d || '',
+          e: q.choice_e || '',
+          f: q.choice_f || '',
+          g: q.choice_g || '',
+          h: q.choice_h || '',
+          answer: q.answer || 'ก',
+          sourceType: q.source_type || 'เฉลยไฟล์',
+          explanation: q.explanation || '',
+          isVerified: true,
+          isFreeQuestion: q.is_free_question || false
+        };
+      });
+
+      // Fisher-Yates Shuffle
+      for (let i = candidateQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = candidateQuestions[i];
+        candidateQuestions[i] = candidateQuestions[j];
+        candidateQuestions[j] = temp;
+      }
+
+      // Slice target count
+      const targetCount = Math.min(Math.max(parseInt(requestedCount, 10) || 20, 1), candidateQuestions.length);
+      const chosenQuestions = candidateQuestions.slice(0, targetCount);
+
+      // Re-index question numbers 1..N
+      chosenQuestions.forEach((q, idx) => {
+        q.qNo = String(idx + 1);
+      });
+
+      // Calculate source composition
+      const compMap = {};
+      chosenQuestions.forEach(q => {
+        const bName = q.originBatchName || ('ชุดรหัส #' + String(q.originBatchId).slice(-4));
+        compMap[bName] = (compMap[bName] || 0) + 1;
+      });
+
+      const sourceCompositionArray = Object.keys(compMap).map(name => ({
+        batchName: name,
+        count: compMap[name],
+        percent: ((compMap[name] / chosenQuestions.length) * 100).toFixed(1)
+      })).sort((a, b) => b.count - a.count);
+
+      const now = new Date();
+      const createdAtFormatted = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+      const virtualBatchId = 'VIRTUAL-' + now.getTime();
+
+      let catLabel = 'รวมทุกวิชา';
+      if (!isQuickRandom && selectedCategories && selectedCategories.length > 0) {
+        catLabel = selectedCategories.length <= 2 ? selectedCategories.join(', ') : `${selectedCategories[0]} และอื่นๆ (${selectedCategories.length} วิชา)`;
+      }
+
+      const batchName = isQuickRandom
+        ? `ชุดสุ่มด่วนรวมทุกวิชา (${chosenQuestions.length} ข้อ)`
+        : `ชุดสุ่มฝึกซ้อม: ${catLabel} (${chosenQuestions.length} ข้อ)`;
+
+      const res = {
+        success: true,
+        batchId: virtualBatchId,
+        batchName: batchName,
+        batchCategory: catLabel,
+        totalQuestions: chosenQuestions.length,
+        createdAtFormatted: createdAtFormatted,
+        createdAt: now.toISOString(),
+        sourceSummary: sourceCompositionArray,
+        questions: chosenQuestions,
+        isVirtual: true,
+        availablePoolCount: candidateQuestions.length
+      };
+
+      if (this._successHandler) this._successHandler(res);
+      return res;
+    } catch (err) {
+      console.error('generateAdvancedRandomExam error:', err);
+      const fail = { success: false, message: 'เกิดข้อผิดพลาดในการสุ่ม: ' + err.message };
+      if (this._failureHandler) this._failureHandler(fail);
+      return fail;
     }
   },
 
@@ -2746,7 +3026,7 @@ const adapterImpl = {
           choice_g: q.g || '',
           choice_h: q.h || '',
           answer: q.answer,
-          source_type: isVer ? 'เฉลยไฟล์' : (q.sourceType || 'รอตรวจ'),
+          source_type: isVer ? 'ยืนยันแล้ว' : (q.sourceType || 'รอตรวจ'),
           is_free_question: q.isFree || (q.answer === 'FREE')
         };
 
@@ -3993,7 +4273,7 @@ Object.defineProperty(window.google.script, 'run', {
       const draft = getProfileDraft(b.batchId);
       const hasDraft = draft && draft.answers && Object.keys(draft.answers).length > 0; 
 
-      // คอลัมน์ "ผู้ฝึกซ้อม" (Overlapping Avatars)
+      // คอลัมน์ "ผู้ที่เคยทำ" (Overlapping Avatars)
       let profilesHtml = '';
       if (b.attemptedProfiles && b.attemptedProfiles.length > 0) {
         const maxShow = 4;
@@ -4001,12 +4281,16 @@ Object.defineProperty(window.google.script, 'run', {
         const extra = b.attemptedProfiles.length - maxShow;
         profilesHtml = `
           <div class="flex items-center -space-x-2 overflow-hidden py-1">
-            ${shown.map(p => `
-              <div class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border-2 border-slate-200 shadow-2xs text-xs cursor-help transition-transform hover:scale-120 hover:z-20 shrink-0" 
+            ${shown.map(p => {
+              const avContent = (p.avatar && p.avatar.startsWith('http'))
+                ? `<img src="${p.avatar}" class="w-full h-full rounded-full object-cover" alt="avatar">`
+                : (p.avatar || '👤');
+              return `
+              <div class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border-2 border-slate-200 shadow-2xs text-xs cursor-help transition-transform hover:scale-120 hover:z-20 shrink-0 overflow-hidden" 
                    title="${escapeHtml(p.name)} (${p.scoreText || p.percent})">
-                ${p.avatar}
-              </div>
-            `).join('')}
+                ${avContent}
+              </div>`;
+            }).join('')}
             ${extra > 0 ? `
               <div class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 border-2 border-white text-[10px] font-bold text-slate-600 shrink-0" title="และอีก ${extra} คน">
                 +${extra}
@@ -5388,7 +5672,7 @@ Object.defineProperty(window.google.script, 'run', {
               <input type="text" value="${escapeHtml(q.category)}" class="text-xs px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-600 w-28 sm:w-32 review-q-cat" placeholder="หมวดหมู่">
               <label class="flex items-center gap-1 cursor-pointer select-none" title="ตรวจสอบแล้ว">
                 <input type="checkbox" class="review-verify-cb w-4 h-4 accent-emerald-600 cursor-pointer" ${q.isVerified ? 'checked' : ''} onchange="toggleVerifyItem(${idx})">
-                <span class="review-verify-label text-[11px] font-semibold ${q.isVerified ? 'text-sky-600 font-bold' : 'text-slate-400'}">ตรวจแล้ว</span>
+                <span class="review-verify-label text-[11px] font-semibold ${q.isVerified ? 'text-sky-600 font-bold' : 'text-slate-400'}">${q.isVerified ? 'ตรวจแล้ว' : 'ยังไม่ตรวจ'}</span>
               </label>
             </div>
           </div>
@@ -5490,6 +5774,7 @@ Object.defineProperty(window.google.script, 'run', {
       item.className = 'p-4 rounded-2xl border transition-all space-y-3 review-question-item border-sky-400 bg-sky-50/40';
       if (labelSpan) {
         labelSpan.className = 'review-verify-label text-[11px] font-bold text-sky-600';
+        labelSpan.textContent = 'ตรวจแล้ว';
       }
       if (btn) {
         btn.className = 'relative h-8 rounded-lg font-bold text-xs bg-sky-500 text-white border-sky-600 border hover:opacity-90 transition-all shadow-sm';
@@ -5497,6 +5782,7 @@ Object.defineProperty(window.google.script, 'run', {
     } else {
       if (labelSpan) {
         labelSpan.className = 'review-verify-label text-[11px] font-semibold text-slate-400';
+        labelSpan.textContent = 'ยังไม่ตรวจ';
       }
       const q = currentQuestions && currentQuestions[idx] ? currentQuestions[idx] : null;
       const meta = getSourceFlagMeta(q ? q.sourceType : '');
