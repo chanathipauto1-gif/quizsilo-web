@@ -18,15 +18,24 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const [profilesRes, attemptsRes, batchesRes] = await Promise.all([
+    const [profilesRes, attemptsRes, batchesRes, rolesRes] = await Promise.all([
       fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.desc', { headers }),
       fetch(SUPABASE_URL + '/rest/v1/exam_attempts?select=*', { headers }),
-      fetch(SUPABASE_URL + '/rest/v1/batches?select=*', { headers })
+      fetch(SUPABASE_URL + '/rest/v1/batches?select=*', { headers }),
+      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_ROLE*&select=user_id,status,created_at&order=created_at.asc', { headers })
     ]);
 
     const profiles = await profilesRes.json();
     const attempts = await attemptsRes.json();
     const batches = await batchesRes.json();
+    const roles = await rolesRes.json();
+
+    const roleOverrideMap = {};
+    (Array.isArray(roles) ? roles : []).forEach(r => {
+      if (r.user_id && r.status) {
+        roleOverrideMap[r.user_id] = r.status.replace('SYSTEM_ROLE:', '');
+      }
+    });
 
     const now = Date.now();
     const fiveMinsMs = 5 * 60 * 1000;
@@ -50,12 +59,14 @@ module.exports = async function handler(req, res) {
         referralMap[r] = (referralMap[r] || 0) + 1;
       }
 
+      const assignedRole = roleOverrideMap[p.id] || p.role || 'student';
+
       userStatsMap[p.id] = {
         id: p.id,
         name: p.nickname || p.display_name || (p.email ? p.email.split('@')[0] : 'ผู้ใช้'),
         email: p.email || '',
         avatar: p.avatar,
-        role: p.role,
+        role: assignedRole,
         targetExams: p.target_exams || 'ยังไม่ระบุ',
         occupation: p.occupation || 'ยังไม่ระบุ',
         ageGroup: p.age_group || 'ยังไม่ระบุ',

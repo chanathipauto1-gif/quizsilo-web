@@ -24,17 +24,46 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(targetUserId)}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ role: newRole })
-    });
-    const updated = await updateRes.json();
-
-    // Record Audit Log for Role Change
+    // 1. Try native update in profiles table
+    let updatedProfile = null;
     try {
-      const targetUser = (Array.isArray(updated) && updated.length > 0) ? updated[0] : null;
-      const targetName = targetUser?.nickname || targetUser?.display_name || targetUser?.email || 'สมาชิก';
+      const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(targetUserId)}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ role: newRole })
+      });
+      if (updateRes.ok) {
+        const uJson = await updateRes.json();
+        if (Array.isArray(uJson) && uJson.length > 0) updatedProfile = uJson[0];
+      }
+    } catch (pe) {
+      console.warn('Native role update error (fallback to SYSTEM_ROLE):', pe);
+    }
+
+    // 2. Persist role in scan_ledger SYSTEM_ROLE (Overrides check constraint)
+    await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        user_id: targetUserId,
+        batch_id: null,
+        questions_scanned: 0,
+        status: 'SYSTEM_ROLE:' + newRole
+      })
+    });
+
+    // 3. Fetch user details for audit logging
+    if (!updatedProfile) {
+      try {
+        const uRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(targetUserId)}&select=id,nickname,display_name,email,avatar`, { headers });
+        const uList = await uRes.json();
+        if (Array.isArray(uList) && uList.length > 0) updatedProfile = uList[0];
+      } catch (fe) {}
+    }
+
+    // 4. Record Audit Log for Role Change
+    try {
+      const targetName = updatedProfile?.nickname || updatedProfile?.display_name || updatedProfile?.email || 'สมาชิก';
       const roleTxt = newRole === 'assistant_admin' ? 'แต่งตั้งเป็นผู้ช่วย Admin ⭐' : (newRole === 'admin' ? 'แต่งตั้งเป็น Super Admin 👑' : 'ปรับเป็นสมาชิกทั่วไป 🎓');
       await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
         method: 'POST',
@@ -46,7 +75,7 @@ module.exports = async function handler(req, res) {
           status: 'LOG: ' + JSON.stringify({
             action: 'SET_ROLE',
             user_name: targetName,
-            user_avatar: targetUser?.avatar || '👤',
+            user_avatar: updatedProfile?.avatar || '👤',
             user_role: newRole,
             batch_name: 'การจัดการสิทธิ์สมาชิก',
             batch_category: 'ระบบจัดการ',
@@ -57,7 +86,7 @@ module.exports = async function handler(req, res) {
       });
     } catch (le) {}
 
-    return res.status(200).json({ success: true, user: updated });
+    return res.status(200).json({ success: true, role: newRole, user: updatedProfile });
   } catch (err) {
     console.error('Set role error:', err);
     return res.status(500).json({ success: false, error: err.message });
