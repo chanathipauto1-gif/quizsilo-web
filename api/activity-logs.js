@@ -72,16 +72,29 @@ module.exports = async function handler(req, res) {
         try {
           const jsonStr = statusStr.replace(/^(LOG: |RESET_STATS: )/, '');
           const parsed = JSON.parse(jsonStr);
+          const uName = parsed.user_name || profMap[item.user_id]?.nickname || profMap[item.user_id]?.display_name || 'ผู้ใช้';
+          const uAvatar = parsed.user_avatar || profMap[item.user_id]?.avatar || '👤';
+          const uRole = parsed.user_role || profMap[item.user_id]?.role || 'member';
+          const bName = parsed.batch_name || 'ชุดข้อสอบ';
+          const bCat = parsed.batch_category || 'ทั่วไป';
+          const qCount = parsed.question_count || item.questions_scanned || 0;
           logs.push({
             id: item.id,
             timestamp: item.created_at,
-            userName: parsed.user_name || profMap[item.user_id]?.nickname || profMap[item.user_id]?.display_name || 'ผู้ใช้',
-            userAvatar: parsed.user_avatar || profMap[item.user_id]?.avatar || '👤',
-            userRole: parsed.user_role || profMap[item.user_id]?.role || 'member',
+            created_at: item.created_at,
+            userName: uName,
+            user_name: uName,
+            userAvatar: uAvatar,
+            user_avatar: uAvatar,
+            userRole: uRole,
+            user_role: uRole,
             action: parsed.action || 'ACTIVITY',
-            batchName: parsed.batch_name || 'ชุดข้อสอบ',
-            category: parsed.batch_category || 'ทั่วไป',
-            questionCount: parsed.question_count || item.questions_scanned || 0,
+            batchName: bName,
+            batch_name: bName,
+            category: bCat,
+            batch_category: bCat,
+            questionCount: qCount,
+            question_count: qCount,
             details: parsed.details || ''
           });
         } catch (e) {}
@@ -91,16 +104,29 @@ module.exports = async function handler(req, res) {
     // Synthesize created batches as UPLOAD logs if not already logged
     (Array.isArray(batches) ? batches : []).forEach(b => {
       const u = profMap[b.user_id];
+      const uName = u?.nickname || u?.display_name || 'ผู้ใช้';
+      const uAvatar = u?.avatar || '👤';
+      const uRole = u?.role || 'member';
+      const bName = b.batch_name || 'ชุดข้อสอบ';
+      const bCat = b.batch_category || 'ทั่วไป';
+      const qCount = b.total_questions || 0;
       logs.push({
         id: 'BATCH-LOG-' + b.id,
         timestamp: b.created_at,
-        userName: u?.nickname || u?.display_name || 'ผู้ใช้',
-        userAvatar: u?.avatar || '👤',
-        userRole: u?.role || 'member',
+        created_at: b.created_at,
+        userName: uName,
+        user_name: uName,
+        userAvatar: uAvatar,
+        user_avatar: uAvatar,
+        userRole: uRole,
+        user_role: uRole,
         action: 'UPLOAD_BATCH',
-        batchName: b.batch_name || 'ชุดข้อสอบ',
-        category: b.batch_category || 'ทั่วไป',
-        questionCount: b.total_questions || 0,
+        batchName: bName,
+        batch_name: bName,
+        category: bCat,
+        batch_category: bCat,
+        questionCount: qCount,
+        question_count: qCount,
         details: 'นำเข้าชุดข้อสอบใหม่สู่ระบบ'
       });
     });
