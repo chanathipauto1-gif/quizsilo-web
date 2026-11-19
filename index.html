@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.21.46</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 19.11.22.15</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -250,9 +250,9 @@
     <div>
       <h1 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
         <i data-lucide="library" class="w-5 h-5 text-brand-600"></i>
-        คลังชุดข้อสอบของคุณ
+        คลังชุดข้อสอบทั้งหมด
       </h1>
-      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">เลือกชุดข้อสอบเพื่อเริ่มฝึกฝน ทบทวนจุดอ่อน และเรียนรู้จากคำอธิบาย AI</p>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5">ข้อสอบทั้งหมดเป็นข้อสอบที่ผู้ใช้ verify แล้ว</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
@@ -868,6 +868,9 @@
     </div>
 
   </div>
+
+  <!-- Zone: ชุดข้อสอบที่กำลังทำค้างไว้ (In-Progress) -->
+  <div id="dash-in-progress-container" class="hidden"></div>
 
   <!-- Segmented Switcher for Sub-tabs -->
   <div class="flex justify-center my-2 sm:my-3">
@@ -1817,6 +1820,7 @@ const adapterImpl = {
         return {
           rowIndex: idx + 1,
           batchId: b.id,
+          userId: b.user_id,
           batchName: b.batch_name,
           createdAt: new Date(b.created_at).toLocaleDateString('th-TH'),
           rawCreatedAt: b.created_at,
@@ -1887,100 +1891,158 @@ const adapterImpl = {
     }
   },
 
-  // 3. Save Exam Attempt
-  saveExamAttempt: async function(resultData, currentUserProfile) {
+  // 3. Save / Record Exam Attempt
+  recordExamAttempt: async function(batchIdOrResultData, resultsOrProfile, timeStr, userProfile, batchName) {
     try {
       if (!sbClient) throw new Error('sbClient is not initialized');
-      const userId = (currentUserProfile && !currentUserProfile.isGuest && currentUserProfile.uuid) ? currentUserProfile.uuid : null;
-      if (!userId) {
-        if (this._successHandler) this._successHandler({ success: true, message: 'บันทึกคะแนนในเครื่องสำเร็จ (Guest)' });
+      let batchId = batchIdOrResultData;
+      let uId = null;
+      let bName = batchName || 'ชุดข้อสอบ';
+      let correct = 0;
+      let total = 0;
+      let pct = 0;
+      let timeSpent = timeStr || '-';
+      let answersJson = {};
+
+      if (typeof batchIdOrResultData === 'object' && batchIdOrResultData !== null) {
+        // Called with (resultData, currentUserProfile)
+        const rd = batchIdOrResultData;
+        const prof = resultsOrProfile;
+        uId = (prof && !prof.isGuest && prof.uuid) ? prof.uuid : null;
+        batchId = rd.batchId;
+        bName = rd.batchName || 'ชุดข้อสอบ';
+        correct = rd.score || 0;
+        total = rd.totalQuestions || 0;
+        pct = parseFloat(rd.percentage) || 0;
+        timeSpent = rd.timeSpentStr || '-';
+        answersJson = rd.userAnswers || {};
+      } else {
+        // Called with (batchId, results, timeStr, userProfile, batchName)
+        const prof = userProfile;
+        uId = (prof && !prof.isGuest && prof.uuid) ? prof.uuid : null;
+        const results = Array.isArray(resultsOrProfile) ? resultsOrProfile : [];
+        total = results.length;
+        correct = results.filter(r => r.isCorrect).length;
+        pct = total > 0 ? parseFloat(((correct / total) * 100).toFixed(1)) : 0;
+        answersJson = results;
+      }
+
+      if (!uId) {
+        if (this._successHandler) this._successHandler({ success: true, message: 'Guest attempt ignored' });
         return { success: true };
       }
 
       const { data, error } = await sbClient.from('exam_attempts').insert({
-        user_id: userId,
-        batch_id: resultData.batchId,
-        batch_name: resultData.batchName,
-        score: resultData.score,
-        total_questions: resultData.totalQuestions,
-        percent: resultData.percentage,
-        time_spent_seconds: resultData.timeSpentSeconds || 0,
-        time_spent_str: resultData.timeSpentStr || '-',
-        answers_json: resultData.userAnswers || {}
+        user_id: uId,
+        batch_id: batchId,
+        batch_name: bName,
+        score: correct,
+        total_questions: total,
+        percent: pct,
+        time_spent_str: timeSpent,
+        answers_json: answersJson
       }).select().single();
 
       if (error) throw error;
-      if (this._successHandler) this._successHandler({ success: true, id: data.id });
-      return { success: true, id: data.id };
+      const res = { success: true, id: data ? data.id : null };
+      if (this._successHandler) this._successHandler(res);
+      return res;
     } catch (err) {
-      console.error('saveExamAttempt error:', err);
+      console.error('recordExamAttempt error:', err);
       if (this._failureHandler) this._failureHandler(err);
     }
   },
+  saveExamAttempt: function(...args) {
+    return this.recordExamAttempt(...args);
+  },
 
-  // 4. Get User Dashboard Data
-  getUserDashboardData: async function(userProfile) {
+  // 4. Get User Dashboard Statistics
+  getUserDashboardStats: async function(userProfile, scope = 'personal') {
     try {
-      if (!sbClient || !userProfile || userProfile.isGuest || !userProfile.uuid) {
-        const emptyRes = {
-          totalAttempts: 0,
-          totalQuestionsDone: 0,
-          avgScorePercent: 0,
-          bestBatchName: '-',
-          recentHistory: []
-        };
-        if (this._successHandler) this._successHandler(emptyRes);
-        return emptyRes;
+      if (!sbClient) throw new Error('sbClient not ready');
+      const isAdmin = userProfile && userProfile.role === 'admin';
+      const isAllScope = isAdmin && scope === 'all';
+      const userId = (userProfile && !userProfile.isGuest && userProfile.uuid) ? userProfile.uuid : null;
+
+      let query = sbClient.from('exam_attempts').select('*, profiles(display_name, nickname, avatar)').order('created_at', { ascending: false });
+      if (!isAllScope) {
+        if (!userId) {
+          const empty = {
+            success: true,
+            stats: { totalAttempts: 0, totalQuestionsDone: 0, avgAccuracy: '0.0%', avgTimeStr: '-' },
+            recentAttempts: []
+          };
+          if (this._successHandler) this._successHandler(empty);
+          return empty;
+        }
+        query = query.eq('user_id', userId);
       }
 
-      const { data: attempts, error } = await sbClient
-        .from('exam_attempts')
-        .select('*')
-        .eq('user_id', userProfile.uuid)
-        .order('created_at', { ascending: false });
-
+      const { data: attempts, error } = await query;
       if (error) throw error;
 
-      const totalAttempts = attempts ? attempts.length : 0;
+      const totalAttempts = (attempts || []).length;
       let totalQuestionsDone = 0;
-      let totalPercentSum = 0;
-      let bestPercent = -1;
-      let bestBatchName = '-';
+      let totalCorrect = 0;
+      let totalTimeMinutes = 0;
+      let timeCount = 0;
 
-      const recentHistory = (attempts || []).slice(0, 10).map((a, idx) => {
-        totalQuestionsDone += (a.total_questions || 0);
-        totalPercentSum += Number(a.percent || 0);
-        if (Number(a.percent || 0) > bestPercent) {
-          bestPercent = Number(a.percent || 0);
-          bestBatchName = a.batch_name;
+      const recentAttempts = (attempts || []).map(a => {
+        const totalQ = a.total_questions || 0;
+        const score = a.score || 0;
+        const wrong = Math.max(0, totalQ - score);
+        totalQuestionsDone += totalQ;
+        totalCorrect += score;
+
+        const timeStr = a.time_spent_str || '-';
+        if (timeStr && timeStr !== '-') {
+          const parts = timeStr.split(':');
+          if (parts.length === 2) {
+            const m = parseInt(parts[0], 10) || 0;
+            const s = parseInt(parts[1], 10) || 0;
+            totalTimeMinutes += m + (s / 60);
+            timeCount++;
+          }
         }
 
+        const prof = a.profiles;
         return {
-          row: idx + 1,
+          batchId: a.batch_id,
           batchName: a.batch_name,
-          date: new Date(a.created_at).toLocaleDateString('th-TH') + ' ' + new Date(a.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-          score: a.score + '/' + a.total_questions,
-          percent: Number(a.percent).toFixed(1) + '%',
-          timeSpent: a.time_spent_str || '-'
+          createdAt: new Date(a.created_at).toLocaleDateString('th-TH') + ' ' + new Date(a.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+          rawCreatedAt: a.created_at,
+          correct: score,
+          wrong: wrong,
+          percent: Number(a.percent || 0).toFixed(1) + '%',
+          timeSpent: timeStr,
+          userName: prof?.nickname || prof?.display_name || 'ผู้ใช้',
+          avatar: prof?.avatar || '👤'
         };
       });
 
-      const avgScorePercent = totalAttempts > 0 ? (totalPercentSum / totalAttempts).toFixed(1) : 0;
+      const avgAccuracy = totalQuestionsDone > 0 ? ((totalCorrect / totalQuestionsDone) * 100).toFixed(1) + '%' : '0.0%';
+      const avgTimeStr = timeCount > 0 ? (totalTimeMinutes / timeCount).toFixed(1) + ' นาที' : '-';
 
       const res = {
-        totalAttempts: totalAttempts,
-        totalQuestionsDone: totalQuestionsDone,
-        avgScorePercent: avgScorePercent,
-        bestBatchName: bestBatchName,
-        recentHistory: recentHistory
+        success: true,
+        stats: {
+          totalAttempts: totalAttempts,
+          totalQuestionsDone: totalQuestionsDone,
+          avgAccuracy: avgAccuracy,
+          avgTimeStr: avgTimeStr
+        },
+        recentAttempts: recentAttempts
       };
 
       if (this._successHandler) this._successHandler(res);
       return res;
     } catch (err) {
-      console.error('getUserDashboardData error:', err);
+      console.error('getUserDashboardStats error:', err);
       if (this._failureHandler) this._failureHandler(err);
     }
+  },
+  getUserDashboardData: function(...args) {
+    return this.getUserDashboardStats(...args);
   },
 
   // 5. Admin Console Statistics & User Insights
@@ -2357,19 +2419,16 @@ const adapterImpl = {
             if (hasFileAns) {
               finalAns = normalizedFileAns || 'ก';
               if (!validChoices.includes(finalAns) && finalAns !== 'FREE') {
-                // กรณี 4: ช้อยส์ผิดปกติ
+                // กรณี: ช้อยส์ผิดปกติ
                 sourceType = '[INVALID] เฉลยไม่ตรงช้อยส์ (' + finalAns + ')';
-              } else if (normalizedAiAns && normalizedAiAns !== finalAns) {
-                // กรณี 3: เฉลยขัดแย้งกับ AI Solver
-                sourceType = 'AI แนะนำต่างจากไฟล์ (AI แนะนำ: ' + normalizedAiAns + ')';
               } else {
-                // กรณี 1: เฉลยสมบูรณ์
+                // กรณี: เฉลยสมบูรณ์ เชื่อถือเฉลยจากไฟล์ 100% (ไม่ตอบแข่งเพื่อลด Anomaly Flag ผิดพลาด)
                 sourceType = 'เฉลยไฟล์';
               }
             } else {
-              // กรณี 2: ไม่มีเฉลยในเอกสาร
+              // กรณี: ไม่มีเฉลยในเอกสาร ให้ AI ช่วยตอบ
               finalAns = normalizedAiAns || 'ก';
-              sourceType = 'AI ช่วยตอบ';
+              sourceType = 'ไม่มีเฉลยในเอกสาร (AI ช่วยตอบ)';
             }
 
             return {
@@ -2428,12 +2487,12 @@ const adapterImpl = {
           // Complete Job
           queueJob.status = 'COMPLETED';
           queueJob.totalQuestions = questionsToInsert.length;
-          queueJob.errorMessage = `สกัดสำเร็จ ${questionsToInsert.length} ข้อ (รอตรวจทาน)`;
+          queueJob.errorMessage = `สกัดสำเร็จ ${questionsToInsert.length} ข้อ (ไปตรวจทานที่หน้าแดชบอร์ด)`;
           if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
           if (typeof window.loadBatches === 'function') window.loadBatches(true);
 
           if (typeof showToast === 'function') {
-            showToast('success', `🎉 สกัดข้อสอบ "${finalBatchName}" สำเร็จ (${questionsToInsert.length} ข้อ)! กรุณาตรวจทานเฉลยก่อนเริ่มสอบ`);
+            showToast('success', `🎉 สกัดข้อสอบ "${finalBatchName}" สำเร็จ (${questionsToInsert.length} ข้อ)! กรุณาไปตรวจทานใน "ชุดข้อสอบของฉัน" ที่หน้าแดชบอร์ด`, 6000);
           }
 
         } catch (taskErr) {
@@ -2844,7 +2903,13 @@ Object.defineProperty(window.google.script, 'run', {
 
   function saveProfileDraft(batchId, stateObj) {
     if (!currentUserProfile || !currentUserProfile.uuid || !batchId) return;
-    localStorage.setItem('qs_session_' + currentUserProfile.uuid + '_' + batchId, JSON.stringify(stateObj));
+    try {
+      const enriched = Object.assign({}, stateObj, {
+        batchId: batchId,
+        lastUpdated: new Date().toISOString()
+      });
+      localStorage.setItem('qs_session_' + currentUserProfile.uuid + '_' + batchId, JSON.stringify(enriched));
+    } catch(e) {}
   }
 
   function clearProfileDraft(batchId) {
@@ -2852,11 +2917,29 @@ Object.defineProperty(window.google.script, 'run', {
     localStorage.removeItem('qs_session_' + currentUserProfile.uuid + '_' + batchId);
   }
 
+  function discardExamDraft(batchId) {
+    Swal.fire({
+      title: 'ล้างการทำข้อสอบค้างไว้?',
+      text: 'คุณต้องการล้างคำตอบที่บันทึกไว้ในชุดนี้ และเริ่มทำใหม่ตั้งแต่ข้อแรกหรือไม่?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ล้างและเริ่มใหม่',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#e11d48'
+    }).then(res => {
+      if (res.isConfirmed) {
+        clearProfileDraft(batchId);
+        showToast('info', 'ล้างคำตอบเรียบร้อยแล้ว');
+        renderInProgressExams();
+      }
+    });
+  }
+
   function isOwner(batch) {
     if (!batch || !currentUserProfile) return false;
     if (currentUserProfile.role === 'admin') return true;
     if (currentUserProfile.isGuest) return false;
-    if (batch.userId && batch.userId === currentUserProfile.uuid) return true;
+    if (batch.userId && currentUserProfile.uuid && String(batch.userId).trim() === String(currentUserProfile.uuid).trim()) return true;
     return false;
   }
 
@@ -3264,6 +3347,108 @@ Object.defineProperty(window.google.script, 'run', {
   }
 
   // ==========================================
+  // In-Progress Exams Logic (ทำค้างไว้)
+  // ==========================================
+  function renderInProgressExams() {
+    const container = document.getElementById('dash-in-progress-container');
+    if (!container) return;
+    if (!currentUserProfile || currentUserProfile.isGuest || !currentUserProfile.uuid) {
+      container.innerHTML = '';
+      container.classList.add('hidden');
+      return;
+    }
+
+    const prefix = 'qs_session_' + currentUserProfile.uuid + '_';
+    const activeDrafts = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) {
+        try {
+          const raw = localStorage.getItem(key);
+          const data = JSON.parse(raw);
+          const batchId = key.replace(prefix, '');
+          const ansKeys = Object.keys(data.answers || {});
+          if (ansKeys.length > 0) {
+            const batch = (allBatches || []).find(b => b.batchId === batchId);
+            const totalQ = (batch && batch.totalQuestions) || data.totalQuestions || 0;
+            const bName = (batch && batch.batchName) || data.batchName || `ชุดข้อสอบ #${batchId.slice(-4)}`;
+            const remaining = Math.max(0, totalQ - ansKeys.length);
+
+            // คำนวณเวลาที่ใช้ไปแล้ว
+            let timeStr = '-';
+            if (data.seconds) {
+              const m = Math.floor(data.seconds / 60);
+              const s = data.seconds % 60;
+              timeStr = `${m}:${String(s).padStart(2, '0')} นาที`;
+            }
+
+            activeDrafts.push({
+              batchId: batchId,
+              batchName: bName,
+              answered: ansKeys.length,
+              total: totalQ,
+              remaining: remaining,
+              timeStr: timeStr,
+              percent: totalQ > 0 ? Math.round((ansKeys.length / totalQ) * 100) : 0,
+              lastUpdated: data.lastUpdated ? new Date(data.lastUpdated).toLocaleDateString('th-TH') + ' ' + new Date(data.lastUpdated).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-'
+            });
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (activeDrafts.length === 0) {
+      container.innerHTML = '';
+      container.classList.add('hidden');
+      return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = `
+      <div class="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-300/80 rounded-3xl p-5 sm:p-6 shadow-xs">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-1.5 bg-amber-500 text-white rounded-xl flex items-center justify-center text-sm shadow-xs font-bold">⚡</span>
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-800">ชุดข้อสอบที่กำลังทำค้างไว้ (In-Progress)</h3>
+          </div>
+          <span class="text-xs font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">\${activeDrafts.length} ชุด</span>
+        </div>
+        <div class="space-y-3">
+          \${activeDrafts.map(d => `
+            <div class="bg-white/95 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-amber-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-xs transition-all">
+              <div class="space-y-1.5 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white tracking-wide">ทำค้างไว้</span>
+                  <h4 class="text-sm sm:text-base font-bold text-slate-900">\${escapeHtml(d.batchName)}</h4>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <span>ทำไปแล้ว <b class="text-slate-800">\${d.answered}</b> / \${d.total} ข้อ</span>
+                  <span class="text-amber-600 font-bold">• เหลืออีก \${d.remaining} ข้อ</span>
+                  <span>• เวลาที่ใช้: \${d.timeStr}</span>
+                </div>
+                <div class="w-full sm:w-80 bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                  <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-300" style="width: \${d.percent}%"></div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+                <button onclick="discardExamDraft('\${d.batchId}')" class="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer">
+                  ล้าง / เริ่มใหม่
+                </button>
+                <button onclick="startExam('\${d.batchId}')" class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer">
+                  <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
+                  <span>ทำต่อจากที่ค้างไว้</span>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  // ==========================================
   // My Dashboard Logic
   // ==========================================
   function loadUserDashboard(forceRefresh = false) {
@@ -3313,8 +3498,9 @@ Object.defineProperty(window.google.script, 'run', {
       }
     }
 
-    // เรนเดอร์ตารางชุดข้อสอบของฉัน
+    // เรนเดอร์ตารางชุดข้อสอบของฉัน และชุดที่ทำค้างไว้
     renderMyBatches();
+    renderInProgressExams();
     if (allBatches.length === 0 || forceRefresh) {
       loadBatches(false);
     }
@@ -4299,7 +4485,7 @@ Object.defineProperty(window.google.script, 'run', {
 
       let actionHtml = `<span class="text-xs text-slate-400">—</span>`;
       if (item.status === 'COMPLETED') {
-        actionHtml = `<button onclick="openReviewMode('${item.batchId}')" class="px-2.5 py-1 text-xs font-bold bg-sky-50 text-sky-700 border border-sky-300 hover:bg-sky-100 rounded-lg shadow-2xs transition-all flex items-center gap-1 mx-auto cursor-pointer" title="ตรวจสอบและแก้ไขเฉลย"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> ตรวจทาน</button>`;
+        actionHtml = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full"><i data-lucide="check-circle-2" class="w-3 h-3"></i> สกัดสำเร็จ</span>`;
       }
 
       return `
@@ -4444,6 +4630,8 @@ Object.defineProperty(window.google.script, 'run', {
     }
     if (currentExamBatch && !currentExamBatch.isVirtual) {
       saveProfileDraft(currentExamBatch.batchId, {
+        batchName: currentExamBatch.batchName,
+        totalQuestions: currentQuestions.length,
         answers: userAnswers,
         seconds: examSecondsElapsed,
         currentIndex: currentQuestionIndex,
@@ -4451,8 +4639,8 @@ Object.defineProperty(window.google.script, 'run', {
       });
     }
     stopExamTimer();
-    showToast('info', '⏸️ พักการทำข้อสอบแล้ว คุณสามารถกลับมาทำต่อได้ตลอดเวลา');
-    switchPage('library');
+    showToast('info', '⏸️ พักการทำข้อสอบแล้ว คุณสามารถทำต่อจากหน้าแดชบอร์ดได้ตลอดเวลา');
+    switchPage('dashboard');
     loadBatches(false);
   }
 
@@ -4678,6 +4866,8 @@ Object.defineProperty(window.google.script, 'run', {
     
     if (currentExamBatch && !currentExamBatch.isVirtual) {
       saveProfileDraft(currentExamBatch.batchId, {
+        batchName: currentExamBatch.batchName,
+        totalQuestions: currentQuestions.length,
         answers: userAnswers,
         seconds: examSecondsElapsed,
         currentIndex: currentQuestionIndex,
@@ -4700,6 +4890,8 @@ Object.defineProperty(window.google.script, 'run', {
     
     if (currentExamBatch && !currentExamBatch.isVirtual) {
       saveProfileDraft(currentExamBatch.batchId, {
+        batchName: currentExamBatch.batchName,
+        totalQuestions: currentQuestions.length,
         answers: userAnswers,
         seconds: examSecondsElapsed,
         currentIndex: currentQuestionIndex,
