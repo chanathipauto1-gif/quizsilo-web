@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.01.14</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.01.44</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -1770,9 +1770,20 @@ window.signOutUser = async function() {
 async function syncAuthWithProfile(authUser) {
   currentSupabaseUser = authUser;
   if (!authUser) {
-    // Guest mode
+    // Guest mode with persistent device ID
+    let guestDeviceId = '';
+    try {
+      guestDeviceId = localStorage.getItem('quizsilo_guest_device_id') || '';
+      if (!guestDeviceId) {
+        guestDeviceId = 'GUEST-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+        localStorage.setItem('quizsilo_guest_device_id', guestDeviceId);
+      }
+    } catch (e) {
+      guestDeviceId = 'GUEST-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+    }
+
     currentUserProfile = {
-      uuid: 'GUEST-' + Math.random().toString(36).substring(2, 9),
+      uuid: guestDeviceId,
       name: 'ผู้ใช้ทั่วไป (Guest)',
       email: '',
       avatar: '👤',
@@ -1920,9 +1931,40 @@ const adapterImpl = {
   // 1. Get Batches
   getExamBatches: async function() {
     try {
-      if (!sbClient) throw new Error('sbClient is not initialized');
-      const { data, error } = await sbClient.from('batches').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
+      let data = null;
+      let profileMap = {};
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+
+      if (isHttp) {
+        try {
+          const bResp = await fetch('/api/batches-list');
+          if (bResp.ok) {
+            const bJson = await bResp.json();
+            if (bJson && bJson.success && Array.isArray(bJson.batches)) {
+              data = bJson.batches;
+              profileMap = bJson.profileMap || {};
+            }
+          }
+        } catch (bErr) {
+          console.warn('/api/batches-list failed, falling back to direct client query:', bErr);
+        }
+      }
+
+      if (!data) {
+        if (!sbClient) throw new Error('sbClient is not initialized');
+        const { data: directData, error } = await sbClient.from('batches').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        data = directData;
+
+        // Get uploader profiles
+        try {
+          const uids = [...new Set((data || []).map(b => b.user_id).filter(Boolean))];
+          if (uids.length > 0) {
+            const { data: profs } = await sbClient.from('profiles').select('id, nickname, display_name, avatar').in('id', uids);
+            (profs || []).forEach(p => { profileMap[p.id] = p; });
+          }
+        } catch (pe) {}
+      }
 
       // Cache source_files in memory
       (data || []).forEach(b => {
@@ -1932,16 +1974,6 @@ const adapterImpl = {
           });
         }
       });
-
-      // Get uploader profiles
-      let profileMap = {};
-      try {
-        const uids = [...new Set((data || []).map(b => b.user_id).filter(Boolean))];
-        if (uids.length > 0) {
-          const { data: profs } = await sbClient.from('profiles').select('id, nickname, display_name, avatar').in('id', uids);
-          (profs || []).forEach(p => { profileMap[p.id] = p; });
-        }
-      } catch (pe) {}
 
       // Get attempted profiles per batch (Call serverless API /api/batch-attempts or fallback to direct query)
       let batchAttemptsMap = {};
@@ -3320,6 +3352,27 @@ const adapterImpl = {
   // 13. Review & Edit: Save Reviewed Questions and Finalize Batch
   saveReviewedQuestions: async function(batchId, updatedData, verifiedRows, extraMeta) {
     try {
+      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+      if (isHttp) {
+        try {
+          const prof = window.currentUserProfile || (typeof currentUserProfile !== 'undefined' ? currentUserProfile : null);
+          const sResp = await fetch('/api/batch-review-save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ batchId, updatedData, verifiedRows, extraMeta, userProfile: prof })
+          });
+          if (sResp.ok) {
+            const sData = await sResp.json();
+            if (sData && sData.success) {
+              if (this._successHandler) this._successHandler(sData);
+              return sData;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('/api/batch-review-save failed, falling back to direct client update:', apiErr);
+        }
+      }
+
       if (!sbClient) throw new Error('sbClient is not initialized');
 
       const verifiedSet = new Set((verifiedRows || []).map(r => String(r)));
@@ -3555,7 +3608,8 @@ Object.defineProperty(window.google.script, 'run', {
         return false;
       }
     }
-    if (batch.userId && currentUserProfile.uuid && String(batch.userId).trim() === String(currentUserProfile.uuid).trim()) return true;
+    const bUid = batch.userId || batch.user_id;
+    if (bUid && currentUserProfile.uuid && String(bUid).trim() === String(currentUserProfile.uuid).trim()) return true;
     return false;
   }
 
@@ -4905,7 +4959,7 @@ Object.defineProperty(window.google.script, 'run', {
             }
           })
           .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message, 'error'))
-          .deleteExamBatch(batchId);
+          .deleteExamBatch(batchId, currentUserProfile);
       }
     });
   }
@@ -7520,7 +7574,8 @@ Object.defineProperty(window.google.script, 'run', {
       'UPLOAD_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">➕ เพิ่มข้อสอบ</span>',
       'DELETE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">🗑️ ลบข้อสอบ</span>',
       'RESET_STATS': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">🧹 ล้างสถิติ</span>',
-      'SET_ROLE': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">👑 ปรับสิทธิ์</span>'
+      'SET_ROLE': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">👑 ปรับสิทธิ์</span>',
+      'VERIFY_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">🔍 ตรวจเฉลย</span>'
     };
 
     tbody.innerHTML = logs.map(item => {

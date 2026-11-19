@@ -39,11 +39,14 @@ module.exports = async function handler(req, res) {
 
     // 5. Record deletion in scan_ledger as Audit Log
     try {
+      const uName = userProfile?.nickname || userProfile?.name || 'ผู้ใช้';
+      const uAvatar = userProfile?.avatar || '👤';
+      const uRole = userProfile?.role || 'member';
       const logPayload = {
         action: 'DELETE_BATCH',
-        user_name: userProfile?.name || 'ผู้ใช้',
-        user_avatar: userProfile?.avatar || '👤',
-        user_role: userProfile?.role || 'member',
+        user_name: uName,
+        user_avatar: uAvatar,
+        user_role: uRole,
         batch_id: batchId,
         batch_name: batchInfo?.batch_name || 'ชุดข้อสอบ',
         batch_category: batchInfo?.batch_category || 'ทั่วไป',
@@ -55,7 +58,7 @@ module.exports = async function handler(req, res) {
         headers,
         body: JSON.stringify({
           user_id: userProfile?.uuid || null,
-          batch_id: batchId,
+          batch_id: null,
           questions_scanned: batchInfo?.total_questions || 0,
           status: 'LOG: ' + JSON.stringify(logPayload)
         })
