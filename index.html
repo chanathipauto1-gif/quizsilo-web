@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QuizSilo - เพื่อนคู่คิดคนเตรียมสอบและคลังข้อสอบ AI</title>
-  <!-- Google Fonts: Prompt -->
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts: Prompt & Mali (Warm Handwriting) -->
+  <link href="https://fonts.googleapis.com/css2?family=Mali:ital,wght@0,500;0,600;0,700;1,500&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -17,7 +17,10 @@
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Prompt', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+            hand: ['Mali', 'cursive']
+          },
           colors: {
             brand: {
               50: '#eef2ff',
@@ -43,6 +46,8 @@
       color: #1e293b;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+    .font-hand { font-family: 'Mali', cursive; }
     }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -96,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.18.55</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.22.42</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -148,6 +153,10 @@
                 <button onclick="openOnboardingModal(true); closeProfileDropdown();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-700 flex items-center gap-2 transition-colors">
                   <i data-lucide="user-cog" class="w-4 h-4 text-indigo-600"></i>
                   <span>✏️ ข้อมูลส่วนตัว & เป้าหมายสอบ</span>
+                </button>
+                <button onclick="switchPage('about'); closeProfileDropdown();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2 transition-colors">
+                  <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                  <span>✨ เกี่ยวกับเรา (About Us)</span>
                 </button>
                 <div class="border-t border-slate-100 my-1"></div>
                 <button onclick="signOutUser(); closeProfileDropdown();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors">
@@ -1856,6 +1865,227 @@
 
 </section>
 
+    <!-- ================= หน้าที่ 7: เกี่ยวกับเรา (About Us - Open Beta Edition) ================= -->
+<section id="page-about" class="hidden space-y-5 sm:space-y-7 pb-12 max-w-4xl mx-auto">
+
+  <!-- Top Action Bar -->
+  <div class="flex items-center justify-between pb-1">
+    <button onclick="switchPage('library')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer group">
+      <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5"></i>
+      <span>ย้อนกลับไปคลังข้อสอบ</span>
+    </button>
+    <div class="flex items-center gap-1.5">
+      <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200/80">
+        ✨ Open Beta
+      </span>
+      <span class="text-[11px] font-medium text-slate-400 font-mono">BETA 2026</span>
+    </div>
+  </div>
+
+  <!-- 1. ปณิธานของเรา -->
+  <div class="relative overflow-hidden bg-gradient-to-r from-brand-700 via-indigo-700 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg">
+    <div class="absolute -right-10 -top-10 w-44 h-44 bg-amber-400/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -left-10 -bottom-10 w-44 h-44 bg-brand-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-2xl mx-auto text-center space-y-3">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 border border-white/20 text-amber-300 text-xs sm:text-sm font-semibold">
+        <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+        <span class="font-hand tracking-wide">ปณิธานของเรา</span>
+      </div>
+      <h1 class="font-hand text-xl sm:text-3xl font-bold tracking-tight leading-snug">
+        “สร้างระบบซ้อมสอบที่แฟร์ และช่วยคนเตรียมสอบได้จริง”
+      </h1>
+      <p class="text-xs sm:text-sm text-indigo-100/95 leading-relaxed">
+        เราเชื่อว่าเทคโนโลยี AI ควรเข้ามาช่วยลดภาระและเวลาที่สูญเปล่าของคนเตรียมสอบ QuizSilo จึงตั้งใจเป็น <strong class="text-white">คลังข้อสอบกลางจากพลังชุมชน</strong> ที่รวมโจทย์คุณภาพและเครื่องมือซ้อมสอบเสมือนจริงไว้ในที่เดียว เพื่อให้ทั้งบัณฑิตจบใหม่ นักเรียนและติวเตอร์ สามารถพัฒนาศักยภาพได้อย่างเต็มที่และยั่งยืน
+      </p>
+    </div>
+  </div>
+
+  <!-- 2. ถึงเพื่อนที่เตรียมสอบทุกคน -->
+  <div class="bg-gradient-to-br from-brand-50/90 via-white to-amber-50/60 rounded-3xl border border-brand-100/90 shadow-xs p-5 sm:p-7">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-center">
+      <div class="md:col-span-7 space-y-3 text-left">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-brand-200/80 text-brand-700 text-[11px] font-bold">
+          <i data-lucide="heart-handshake" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span>ถึงเพื่อนที่เตรียมสอบทุกคน</span>
+        </div>
+        <h2 class="font-hand text-lg sm:text-2xl font-bold text-slate-900 leading-snug">
+          “ความเหนื่อยจากการเตรียมสอบ
+          <span class="block bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-indigo-600 to-amber-600">
+            ไม่ควรต้องมาจากจัดการข้อสอบที่วุ่นวาย”
+          </span>
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          ไม่ว่าคุณจะกำลังสู้เพื่อสนามสอบครูผู้ช่วย ก.พ. ท้องถิ่น หรือเป็นนักเรียน เราอยากให้ QuizSilo เป็นผู้ช่วยส่วนตัวบนโต๊ะอ่านหนังสือ ที่ช่วยเก็บโจทย์ จับเวลา และอยู่เคียงข้างคุณในทุกคืนก่อนวันสอบจริง
+        </p>
+        <div class="pt-1">
+          <button onclick="switchPage('library')" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all cursor-pointer">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span>ลองเริ่มซ้อมทำข้อสอบเลย</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canva Hero Graphic Slot -->
+      <div class="md:col-span-5">
+        <!-- แทนที่ div ด้านล่างด้วย <img src="assets/about-hero.png" alt="QuizSilo" class="w-full aspect-[4/3] object-cover rounded-2xl"> -->
+        <div class="w-full aspect-[4/3] rounded-2xl bg-white/80 border-2 border-dashed border-brand-200 flex flex-col items-center justify-center p-4 text-center space-y-1.5">
+          <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+            <i data-lucide="image-plus" class="w-5 h-5"></i>
+          </div>
+          <div class="text-xs font-bold text-slate-700">ภาพประกอบจาก Canva</div>
+          <span class="text-[10px] text-slate-400">สัดส่วน 4:3 (1200×900 px)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. THE CREATOR -->
+  <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-7">
+    <div class="flex flex-col sm:flex-row items-center gap-5 sm:gap-6">
+      <!-- Creator Avatar Slot -->
+      <div class="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-2xl p-1.5 bg-slate-50 border border-slate-200">
+        <!-- แทนที่ div ด้านล่างด้วย <img src="assets/creator-profile.jpg" alt="ผู้พัฒนา QuizSilo" class="w-full h-full object-cover rounded-xl"> -->
+        <div class="w-full h-full rounded-xl bg-gradient-to-tr from-brand-100/70 to-amber-50 border border-dashed border-indigo-200 flex flex-col items-center justify-center text-center p-2">
+          <i data-lucide="user-round" class="w-6 h-6 text-brand-600 mb-1"></i>
+          <span class="text-[10px] font-bold text-slate-600 leading-tight">รูปผู้พัฒนา<br>(1:1)</span>
+        </div>
+        <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-0.5 bg-slate-900 text-white text-[10px] font-bold rounded-full shadow-xs">
+          Solo Founder
+        </span>
+      </div>
+
+      <!-- Creator Bio -->
+      <div class="space-y-2.5 text-center sm:text-left">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-brand-600">The Creator</span>
+          <h2 class="text-base sm:text-lg font-extrabold text-slate-900">
+            พัฒนาโดยนิสิตครู ปี 4 วัย 21 ปี จากคณะศึกษาศาสตร์ มศว
+          </h2>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          ผมเป็นคนหนึ่งที่อยู่กับแวดวงการศึกษาและเข้าใจหัวอกคนเตรียมสอบเป็นอย่างดี ทุกฟีเจอร์ที่ทุกคนเห็นใน QuizSilo ตั้งแต่หน้าตรวจเฉลยแบบแบ่งสองจอ ปุ่มพักการสอบ ไปจนถึงการสุ่มข้อสอบจากคลัง ล้วนเกิดจากการลองใช้งานจริงแล้วถามตัวเองว่า
+          <span class="font-hand text-brand-700 font-semibold text-sm sm:text-base inline-block mt-1">“ถ้าพรุ่งนี้ฉันต้องเข้าห้องสอบ ฉันอยากให้เว็บนี้ช่วยอะไรได้บ้าง”</span>
+        </p>
+        <div class="flex flex-wrap justify-center sm:justify-start gap-1.5 pt-0.5">
+          <span class="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-700">🎓 คณะศึกษาศาสตร์ มศว</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-700">💻 Solo Builder</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-700">💬 อ่านทุกฟีดแบ็กเอง</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. THE ORIGIN STORY -->
+  <article class="bg-slate-50/80 rounded-3xl border border-slate-200/90 p-5 sm:p-7 space-y-3.5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
+        <i data-lucide="feather" class="w-4 h-4"></i>
+      </div>
+      <div>
+        <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block leading-none">The Origin Story</span>
+        <h2 class="text-base sm:text-lg font-extrabold text-slate-900">จุดเริ่มต้นจากไฟล์ข้อสอบที่ไร้ระบบระเบียบ</h2>
+      </div>
+    </div>
+
+    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+      ทุกอย่างเริ่มจากความเบื่อหน่ายที่คนเตรียมสอบเจอกันประจำ ไฟล์ข้อสอบที่มี มันช่างไร้รูปแบบ บางอันเฉลยท้ายไฟล์ เฉลยอยู่ข้างล่างข้อ เป็นไฮไลท์บ้าง วงกลมบ้าง ทำผิดก็ไม่รู้ว่าผิดเพราะอะไรบ้าง เวลาที่เสียไปกับการนั่งจัดรูปแบบข้อสอบเองทีละข้อ ผมเลยค่อยๆ พัฒนาระบบขึ้นมา ให้ AI ช่วยแกะข้อสอบจากภาพและ PDF พร้อมออกแบบระบบคลังส่วนตัวและระบบตรวจสอบความถูกต้อง 3 ชั้น จากทั้ง AI ผู้ใช้งาน และผู้ดูแลระบบ เพื่อให้นำไปใช้ฝึกซ้อมได้จริงอย่างสบายใจ
+    </p>
+
+    <blockquote class="pl-4 py-3 pr-4 bg-white border-l-4 border-brand-500 rounded-r-2xl text-slate-700 font-medium text-xs sm:text-sm leading-relaxed shadow-2xs">
+      แค่ถ่ายรูปชีทหรือโยนไฟล์ PDF เข้าไป แล้วมีผู้ช่วยคอยแกะโจทย์ จับเวลา และอธิบายให้ฟังเวลาทำผิด — นั่นคือภาพแรกที่ทำให้ผมลงมือสร้างเว็บนี้ครับ
+    </blockquote>
+  </article>
+
+  <!-- 5. WHAT YOU GET — 4 สิ่งที่คุณจะได้รับจาก QuizSilo -->
+  <div class="space-y-3.5">
+    <div class="flex items-center justify-between px-1">
+      <div>
+        <span class="text-[10px] font-extrabold uppercase tracking-wider text-brand-600">What You Get</span>
+        <h2 class="text-base sm:text-xl font-extrabold text-slate-900">4 สิ่งที่คุณจะได้รับจาก QuizSilo</h2>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/70 flex items-center justify-center shrink-0">
+          <i data-lucide="zap" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-sm font-extrabold text-slate-900">สกัดข้อสอบในพริบตาจากไฟล์</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">โยน PDF หรือภาพถ่ายให้ AI แกะโจทย์พร้อมซ้อม และปรับแก้โจทย์-เฉลยเองได้ในคลังส่วนตัว</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 border border-brand-200/70 flex items-center justify-center shrink-0">
+          <i data-lucide="timer" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-sm font-extrabold text-slate-900">ซ้อมเสมือนจริง</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">จับเวลาจริง สุ่มข้อสอบคละวิชา ดูสถิติความแม่นยำ และกดถาม AI Tutor อธิบายเฉลยได้ทันที</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/70 flex items-center justify-center shrink-0">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-sm font-extrabold text-slate-900">ระบบคัดกรองเฉลยที่ไว้ใจได้</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">ตรวจเทียบไฟล์ต้นฉบับได้ 2 จอ และหากมีผู้ใช้แจ้งจุดผิดพลาด ระบบจะพักข้อสอบอัตโนมัติเพื่อรอตรวจสอบ</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/70 flex items-center justify-center shrink-0">
+          <i data-lucide="smartphone" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-sm font-extrabold text-slate-900">ใช้งานได้ทุกที่ทุกอุปกรณ์</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">ซ้อมต่อได้ไม่มีสะดุดทั้งคอมพิวเตอร์ iPad และมือถือ พร้อมบันทึกข้อที่ทำค้างไว้ให้อัตโนมัติ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. มาร่วมเป็นส่วนหนึ่งของ QuizSilo รุ่นบุกเบิก (Open Beta) -->
+  <div class="bg-white rounded-3xl border-2 border-brand-200/80 shadow-xs p-5 sm:p-7 text-center space-y-4 relative overflow-hidden">
+    <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 via-indigo-500 to-amber-400"></div>
+
+    <div class="max-w-xl mx-auto space-y-1.5 pt-1">
+      <h2 class="text-base sm:text-xl font-extrabold text-slate-900">
+        มาร่วมเป็นส่วนหนึ่งของ QuizSilo รุ่นบุกเบิก (Open Beta) ด้วยกันนะครับ
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+        ผมยังพัฒนาและเรียนรู้ไปพร้อมกับผู้ใช้งานทุกคน หากลองใช้แล้วติดขัดตรงไหน หรืออยากได้ฟีเจอร์อะไรเพิ่มเติม บอกผมได้เสมอ ทุกคำแนะนำของคุณมีส่วนช่วยทำให้ QuizSilo แข็งแรงขึ้นสำหรับคนเตรียมสอบรุ่นต่อๆ ไปครับ
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+      <button onclick="switchPage('library')" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all cursor-pointer">
+        <i data-lucide="book-open" class="w-4 h-4"></i>
+        <span>กลับไปคลังข้อสอบ</span>
+      </button>
+
+      <button onclick="switchPage('upload')" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300/80 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer">
+        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+        <span>ลองนำเข้าชีทข้อสอบ</span>
+      </button>
+
+      <a href="mailto:chanathipauto1@gmail.com?subject=Feedback%20QuizSilo%20Open%20Beta" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs sm:text-sm font-bold rounded-xl transition-all">
+        <i data-lucide="message-square-heart" class="w-4 h-4 text-brand-600"></i>
+        <span>ส่งข้อเสนอแนะ</span>
+      </a>
+    </div>
+
+    <p class="font-hand text-sm sm:text-base font-semibold text-brand-700 pt-2">
+      “เพราะข้อสอบที่ดีเป็นทรัพยากรที่ทุกคนควรเข้าถึงได้”
+    </p>
+  </div>
+
+</section>
+
   </main>
 
   <!-- Global Footer -->
@@ -1922,7 +2152,7 @@
             </a>
           </li>
           <li>
-            <a href="javascript:void(0)" onclick="openAboutUsModal()" class="text-amber-400 hover:text-amber-300 font-bold transition-colors flex items-center gap-2">
+            <a href="javascript:void(0)" onclick="switchPage('about')" class="text-amber-400 hover:text-amber-300 font-bold transition-colors flex items-center gap-2">
               <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
               <span>เกี่ยวกับเรา (About Us) ✨</span>
             </a>
@@ -5114,6 +5344,7 @@ if (typeof window !== 'undefined') {
     const pageReview = document.getElementById('page-review');
     const pageDash = document.getElementById('page-dashboard');
     const pageAdmin = document.getElementById('page-admin');
+    const pageAbout = document.getElementById('page-about');
     const tabLib = document.getElementById('tab-library');
     const tabUp = document.getElementById('tab-upload');
     const tabDash = document.getElementById('tab-dashboard');
@@ -5127,6 +5358,7 @@ if (typeof window !== 'undefined') {
     if (pageReview) pageReview.classList.add('hidden');
     if (pageDash) pageDash.classList.add('hidden');
     if (pageAdmin) pageAdmin.classList.add('hidden');
+    if (pageAbout) pageAbout.classList.add('hidden');
 
     const activeClasses = ['bg-brand-600', 'text-white', 'shadow-sm', 'shadow-brand-500/30', 'border-transparent'];
     const inactiveClasses = ['bg-white', 'text-slate-700', 'border', 'border-slate-200/80', 'shadow-sm'];
@@ -5202,7 +5434,17 @@ if (typeof window !== 'undefined') {
       mainNav.classList.remove('hidden');
       examIndicator.classList.add('hidden');
       if (pageReview) pageReview.classList.remove('hidden');
+    } else if (page === 'about') {
+      stopExamTimer();
+      mainNav.classList.remove('hidden');
+      examIndicator.classList.add('hidden');
+      if (pageAbout) pageAbout.classList.remove('hidden');
+      tabLib.classList.add(...inactiveClasses);
+      tabUp.classList.add(...inactiveClasses);
+      if (tabDash) tabDash.classList.add(...inactiveClasses);
+      if (tabAdmin && isAdminOrAssistant) tabAdmin.classList.add(...inactiveClasses);
     }
+    if (window.lucide) lucide.createIcons();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -10277,29 +10519,7 @@ if (typeof window !== 'undefined') {
   }
 
   function openAboutUsModal() {
-    Swal.fire({
-      title: 'เรื่องราวของ QuizSilo ✨',
-      html: `
-        <div class="text-left text-xs sm:text-sm text-slate-600 space-y-3.5 leading-relaxed p-1">
-          <div class="p-3 rounded-2xl bg-gradient-to-r from-brand-50 to-indigo-50 border border-brand-200 text-brand-900 font-semibold flex items-center gap-2.5">
-            <span class="text-xl">💌</span>
-            <span>เพื่อนคู่คิดคนเตรียมสอบ • พัฒนาด้วยใจเพื่อทุกคน</span>
-          </div>
-          <p>
-            <b>สวัสดีครับ!</b> จุดเริ่มต้นของ QuizSilo เกิดจากความตั้งใจที่อยากให้คนเตรียมสอบทุกคน มีพื้นที่ฝึกฝนข้อสอบที่สะดวก รวดเร็ว และไม่ต้องเสียเวลานั่งพิมพ์โจทย์เอง
-          </p>
-          <p>
-            เราผสานพลังของ <b>AI</b> เพื่อช่วยอ่านเอกสารชีทข้อสอบ พร้อมระบบจับเวลา วิเคราะห์จุดอ่อนรายข้อ และมีระบบชุมชนช่วยตรวจสอบเฉลย เพื่อสร้างคลังความรู้ที่ยั่งยืนและมีคุณภาพ
-          </p>
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs">
-            💡 <i>"หน้า About Us ฉบับเต็มพร้อมเรื่องราวและภาพประกอบจากผู้พัฒนา กำลังจัดทำในขั้นตอนต่อไปครับ โปรดติดตามเร็วๆ นี้!"</i>
-          </div>
-        </div>
-      `,
-      confirmButtonText: 'ร่วมเป็นส่วนหนึ่งของ QuizSilo 🚀',
-      confirmButtonColor: '#4f46e5',
-      showCloseButton: true
-    });
+    switchPage('about');
   }
 
   // Global Window Expose
