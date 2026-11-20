@@ -18,22 +18,38 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const [profilesRes, attemptsRes, batchesRes, rolesRes] = await Promise.all([
+    const [profilesRes, attemptsRes, batchesRes, rolesRes, quotasRes] = await Promise.all([
       fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.desc', { headers }),
       fetch(SUPABASE_URL + '/rest/v1/exam_attempts?select=*', { headers }),
       fetch(SUPABASE_URL + '/rest/v1/batches?select=*', { headers }),
-      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_ROLE*&select=user_id,status,created_at&order=created_at.asc', { headers })
+      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_ROLE*&select=user_id,status,created_at&order=created_at.asc', { headers }),
+      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_QUOTA*&select=user_id,status,created_at&order=created_at.asc', { headers })
     ]);
 
     const profiles = await profilesRes.json();
     const attempts = await attemptsRes.json();
     const batches = await batchesRes.json();
     const roles = await rolesRes.json();
+    const quotas = await quotasRes.json();
 
     const roleOverrideMap = {};
     (Array.isArray(roles) ? roles : []).forEach(r => {
       if (r.user_id && r.status) {
         roleOverrideMap[r.user_id] = r.status.replace('SYSTEM_ROLE:', '');
+      }
+    });
+
+    const quotaMap = {};
+    (Array.isArray(quotas) ? quotas : []).forEach(q => {
+      if (q.user_id && q.status) {
+        try {
+          const raw = q.status.replace('SYSTEM_QUOTA:', '');
+          const parsed = JSON.parse(raw);
+          quotaMap[q.user_id] = {
+            bonusFiles: Number(parsed.bonusFiles || 0),
+            bonusQuestions: Number(parsed.bonusQuestions || 0)
+          };
+        } catch (e) {}
       }
     });
 
@@ -67,6 +83,8 @@ module.exports = async function handler(req, res) {
         email: p.email || '',
         avatar: p.avatar,
         role: assignedRole,
+        bonusFiles: quotaMap[p.id]?.bonusFiles || 0,
+        bonusQuestions: quotaMap[p.id]?.bonusQuestions || 0,
         targetExams: p.target_exams || 'ยังไม่ระบุ',
         occupation: p.occupation || 'ยังไม่ระบุ',
         ageGroup: p.age_group || 'ยังไม่ระบุ',

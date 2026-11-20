@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.14.23</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.14.37</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -1265,13 +1265,12 @@
             <th class="py-3 px-3 text-center">สถิติฝึกซ้อม</th>
             <th class="py-3 px-3 text-center">อัปโหลด</th>
             <th class="py-3 px-3">หมวดที่ทำบ่อยสุด</th>
-            <th class="py-3 px-3 text-center">สิทธิ์ / ตำแหน่ง</th>
             <th class="py-3 px-4 text-center">รายละเอียด</th>
           </tr>
         </thead>
         <tbody id="admin-users-table-body" class="divide-y divide-slate-100 text-slate-700">
           <tr>
-            <td colspan="8" class="py-12 text-center text-slate-400">กำลังโหลดรายชื่อผู้ใช้...</td>
+            <td colspan="7" class="py-12 text-center text-slate-400">กำลังโหลดรายชื่อผู้ใช้...</td>
           </tr>
         </tbody>
       </table>
@@ -2016,6 +2015,32 @@ const AuthService = {
     return role;
   },
 
+  async resolveEffectiveQuota(profile) {
+    let bonusFiles = 0;
+    let bonusQuestions = 0;
+    if (!sbClient || !profile?.id) return { bonusFiles, bonusQuestions };
+
+    try {
+      const { data: quotaRecords } = await sbClient
+        .from('scan_ledger')
+        .select('status')
+        .eq('user_id', profile.id)
+        .like('status', 'SYSTEM_QUOTA:%')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (quotaRecords?.length > 0) {
+        const raw = quotaRecords[0].status.replace('SYSTEM_QUOTA:', '');
+        const p = JSON.parse(raw);
+        bonusFiles = Number(p.bonusFiles || 0);
+        bonusQuestions = Number(p.bonusQuestions || 0);
+      }
+    } catch {
+      // Ignore fallback lookup failure
+    }
+    return { bonusFiles, bonusQuestions };
+  },
+
   async syncAuthWithProfile(authUser) {
     currentSupabaseUser = authUser;
 
@@ -2072,6 +2097,7 @@ const AuthService = {
         const effectiveAvatar =
           profile.avatar?.startsWith('http') ? profile.avatar : googlePhotoUrl || '👤';
         const effectiveRole = await this.resolveEffectiveRole(profile);
+        const effectiveQuota = await this.resolveEffectiveQuota(profile);
 
         const mappedProfile = {
           uuid: profile.id,
@@ -2080,6 +2106,8 @@ const AuthService = {
           avatar: effectiveAvatar,
           avatarUrl: effectiveAvatar.startsWith('http') ? effectiveAvatar : null,
           role: effectiveRole,
+          bonusFiles: effectiveQuota.bonusFiles,
+          bonusQuestions: effectiveQuota.bonusQuestions,
           scanCredits: profile.scan_credits ?? 500,
           isGuest: false,
           nickname: profile.nickname || '',
@@ -3643,6 +3671,21 @@ const AdminAuditService = {
     }
   },
 
+  async setUserQuota(targetUserId, action, files, questions, adminProfile) {
+    try {
+      const activeAdmin = getActiveProfile(adminProfile);
+      const data = await fetchJsonApi('/api/admin-set-quota', {
+        method: 'POST',
+        body: { targetUserId, action, files, questions, adminProfile: activeAdmin }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to update quota');
+    } catch (err) {
+      console.error('setUserQuota error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
   async getActivityLogs() {
     try {
       try {
@@ -3708,6 +3751,7 @@ const adapterImpl = {
   getAdminConsoleStats: AdminAuditService.getAdminConsoleStats,
   resetBatchStats: AdminAuditService.resetBatchStats,
   setUserRole: AdminAuditService.setUserRole,
+  setUserQuota: AdminAuditService.setUserQuota,
   getActivityLogs: AdminAuditService.getActivityLogs,
   logActivity: AdminAuditService.logActivity
 };
@@ -5460,13 +5504,17 @@ if (typeof window !== 'undefined') {
         isUnlimited: true
       };
     }
+    const bonusFiles = Number(userProfile?.bonusFiles || 0);
+    const bonusQuestions = Number(userProfile?.bonusQuestions || 0);
     return {
       tierId: 'member',
       name: 'สมาชิกทั่วไป',
-      badgeText: '🎓 สมาชิกทั่วไป',
+      badgeText: bonusFiles > 0 ? `🎓 สมาชิกทั่วไป (+${bonusFiles} ไฟล์)` : '🎓 สมาชิกทั่วไป',
       badgeCls: 'bg-brand-50 text-brand-700 border-brand-200',
-      maxFiles: 10,
-      maxQuestions: 500,
+      maxFiles: 10 + bonusFiles,
+      maxQuestions: 500 + bonusQuestions,
+      bonusFiles: bonusFiles,
+      bonusQuestions: bonusQuestions,
       isUnlimited: false
     };
   }
@@ -7832,7 +7880,7 @@ if (typeof window !== 'undefined') {
     if (!tbody) return;
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้ที่ค้นหา</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้ที่ค้นหา</td></tr>';
       return;
     }
 
@@ -7857,7 +7905,7 @@ if (typeof window !== 'undefined') {
               <div class="min-w-0">
                 <div class="font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                   <span>${escapeHtml(u.name)}</span>
-                  ${u.role === 'admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-amber-100 text-amber-800 font-extrabold rounded">ADMIN</span>' : (u.role === 'assistant_admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-indigo-100 text-indigo-800 font-bold rounded">ผู้ช่วย</span>' : '')}
+                  ${u.role === 'admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-amber-100 text-amber-800 font-extrabold rounded">ADMIN</span>' : (u.role === 'assistant_admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-indigo-100 text-indigo-800 font-bold rounded">ผู้ช่วย</span>' : '<span class="text-[9px] px-1.5 py-0.2 bg-slate-100 text-slate-600 font-medium rounded">สมาชิก</span>')}
                 </div>
                 <div class="text-[10px] text-slate-400 truncate">${escapeHtml(u.email)}</div>
               </div>
@@ -7882,15 +7930,6 @@ if (typeof window !== 'undefined') {
           </td>
           <td class="py-3 px-3">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${escapeHtml(u.targetExams.split(' ')[0] || 'ทั่วไป')}</span>
-          </td>
-          <td class="py-3 px-3 text-center whitespace-nowrap">
-            ${u.role === 'admin' 
-              ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">👑 Super Admin</span>'
-              : (u.role === 'assistant_admin'
-                  ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">⭐ ผู้ช่วย Admin</span>'
-                  : '<span class="px-2.5 py-1 rounded-full text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200">สมาชิกทั่วไป 🎓</span>'
-                )
-            }
           </td>
           <td class="py-3 px-3 text-center whitespace-nowrap">
             <button onclick="showAdminUserDetails('${u.id}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors cursor-pointer" title="ดูรายละเอียดผู้ใช้">
@@ -7938,11 +7977,11 @@ if (typeof window !== 'undefined') {
             <div><span class="text-slate-500 font-medium">วันที่ลงทะเบียน:</span> <b class="text-slate-700 block mt-0.5">${u.createdAt}</b></div>
           </div>
           ${currentUserProfile && currentUserProfile.role === 'admin' && u.role !== 'admin' ? `
-            <div class="pt-3 border-t border-slate-200 flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border">
+            <div class="pt-2 border-t border-slate-200 flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
               <div>
-                <span class="text-slate-400 font-medium block text-[10px]">สิทธิ์ของผู้ใช้นี้:</span>
+                <span class="text-slate-400 font-medium block text-[10px]">สิทธิ์การดูแลระบบ:</span>
                 <span class="font-extrabold ${u.role === 'assistant_admin' ? 'text-indigo-700' : 'text-slate-700'} text-xs">
-                  ${u.role === 'assistant_admin' ? '⭐ ผู้ช่วย Admin' : '🎓 สมาชิกทั่วไป'}
+                  ${u.role === 'assistant_admin' ? '⭐ ผู้ช่วย Admin (โควต้าไม่จำกัด)' : '🎓 สมาชิกทั่วไป'}
                 </span>
               </div>
               ${u.role === 'assistant_admin' 
@@ -7950,11 +7989,39 @@ if (typeof window !== 'undefined') {
                 : `<button onclick="changeUserRole('${u.id}', '${escapeHtml(u.name)}', 'assistant_admin')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs">⭐ แต่งตั้งเป็นผู้ช่วย Admin</button>`
               }
             </div>
+
+            <!-- จัดการโควต้าอัปโหลด -->
+            <div class="space-y-2 bg-gradient-to-br from-amber-50/60 to-orange-50/40 p-3 rounded-xl border border-amber-200/80">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-600"></i>
+                  <span>จัดการโควต้าอัปโหลด</span>
+                </span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                  โควต้าพิเศษ: +${u.bonusFiles || 0} ไฟล์ (+${u.bonusQuestions || 0} ข้อ)
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-600">
+                สถานะปัจจุบัน: ใช้ไปแล้ว <b>${u.uploadBatches}</b> / <b>${10 + (u.bonusFiles || 0)}</b> ไฟล์ (<b>${u.uploadQuestions}</b> / <b>${500 + (u.bonusQuestions || 0)}</b> ข้อ)
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button onclick="adminAddUserQuota('${u.id}', '${escapeHtml(u.name)}', 5, 200)" class="py-1.5 px-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition-colors shadow-2xs flex items-center justify-center gap-1 cursor-pointer">
+                  <span>⚡ +5 ไฟล์ (+200 ข้อ)</span>
+                </button>
+                <button onclick="adminResetUserQuota('${u.id}', '${escapeHtml(u.name)}', ${u.uploadBatches}, ${u.uploadQuestions})" class="py-1.5 px-2 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-300 hover:border-rose-300 rounded-lg font-bold text-[11px] transition-colors shadow-2xs flex items-center justify-center gap-1 cursor-pointer">
+                  <span>🔄 รีเซ็ตโควต้าเต็ม</span>
+                </button>
+              </div>
+            </div>
           ` : ''}
         </div>
       `,
       confirmButtonText: 'ปิดหน้าต่าง',
-      confirmButtonColor: '#4f46e5'
+      confirmButtonColor: '#4f46e5',
+      customClass: { popup: 'rounded-3xl' },
+      didOpen: () => {
+        if (window.lucide) lucide.createIcons();
+      }
     });
   }
 
@@ -7995,6 +8062,73 @@ if (typeof window !== 'undefined') {
             Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error');
           })
           .setUserRole(userId, newRole);
+      }
+    });
+  }
+
+  // ==========================================
+  // Admin Quota Management (Super Admin Only)
+  // ==========================================
+  function adminAddUserQuota(userId, userName, addFiles, addQuestions) {
+    if (!currentUserProfile || currentUserProfile.role !== 'admin') {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะ Super Admin เท่านั้นที่สามารถเพิ่มโควต้าได้', 'warning');
+      return;
+    }
+    Swal.fire({
+      title: 'เพิ่มโควต้าพิเศษ?',
+      html: `ต้องการมอบโควต้าพิเศษ <b>+${addFiles} ไฟล์ (+${addQuestions} ข้อ)</b><br>ให้แก่คุณ <b>"${escapeHtml(userName)}"</b> ใช่หรือไม่?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#f59e0b',
+      confirmButtonText: '⚡ ยืนยันเพิ่มโควต้า',
+      cancelButtonText: 'ยกเลิก',
+      customClass: { popup: 'rounded-3xl' }
+    }).then(res => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run
+          .withSuccessHandler(r => {
+            if (r && r.success) {
+              showToast('success', `⚡ เพิ่มโควต้าพิเศษให้คุณ ${userName} เรียบร้อยแล้ว (+${addFiles} ไฟล์)`);
+              loadAdminConsoleData(true);
+            } else {
+              Swal.fire('เกิดข้อผิดพลาด', (r && r.error) || 'ไม่สามารถปรับโควต้าได้', 'error');
+            }
+          })
+          .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+          .setUserQuota(userId, 'ADD_QUOTA', addFiles, addQuestions, currentUserProfile);
+      }
+    });
+  }
+
+  function adminResetUserQuota(userId, userName, usedFiles, usedQuestions) {
+    if (!currentUserProfile || currentUserProfile.role !== 'admin') {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะ Super Admin เท่านั้นที่สามารถรีเซ็ตโควต้าได้', 'warning');
+      return;
+    }
+    Swal.fire({
+      title: 'รีเซ็ตโควต้าอัปโหลด?',
+      html: `ต้องการรีเซ็ตโควต้าให้คุณ <b>"${escapeHtml(userName)}"</b><br>เพื่อให้ได้รับสิทธิ์อัปโหลดเต็มจำนวน (10 ไฟล์ / 500 ข้อ) อีกครั้งใช่หรือไม่?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: '🔄 ยืนยันรีเซ็ตสิทธิ์',
+      cancelButtonText: 'ยกเลิก',
+      customClass: { popup: 'rounded-3xl' }
+    }).then(res => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run
+          .withSuccessHandler(r => {
+            if (r && r.success) {
+              showToast('success', `🔄 รีเซ็ตโควต้าให้คุณ ${userName} คืนสิทธิ์เต็มจำนวนแล้ว`);
+              loadAdminConsoleData(true);
+            } else {
+              Swal.fire('เกิดข้อผิดพลาด', (r && r.error) || 'ไม่สามารถรีเซ็ตโควต้าได้', 'error');
+            }
+          })
+          .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+          .setUserQuota(userId, 'RESET_QUOTA', usedFiles, usedQuestions, currentUserProfile);
       }
     });
   }
@@ -8077,7 +8211,8 @@ if (typeof window !== 'undefined') {
       'SHOW_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">👁️ แสดงชุดข้อสอบ</span>',
       'PIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">📌 ปักหมุดเด่น</span>',
       'UNPIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-50 text-slate-700 border border-slate-200">📌 ปลดหมุด</span>',
-      'RATE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⭐ รีวิวข้อสอบ</span>'
+      'RATE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⭐ รีวิวข้อสอบ</span>',
+      'SET_QUOTA': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⚡ ปรับโควต้า</span>'
     };
 
     tbody.innerHTML = logs.map(item => {
@@ -8132,6 +8267,8 @@ if (typeof window !== 'undefined') {
   window.toggleBatchFeatured = toggleBatchFeatured;
   window.toggleBatchVisibility = toggleBatchVisibility;
   window.openRatingModalAndExit = openRatingModalAndExit;
+  window.adminAddUserQuota = adminAddUserQuota;
+  window.adminResetUserQuota = adminResetUserQuota;
   window.updateUserTierAndQuotaUI = updateUserTierAndQuotaUI;
 </script>
 
