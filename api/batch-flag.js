@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
     // -------------------------------------------------------------
     if (flag === 'get_flags') {
       const [ledgerRes, batchesRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?status=like.FLAG_QUESTION*%2Cstatus=like.RESOLVE_FLAG*&select=*&order=created_at.desc&limit=150`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?or=(status.like.FLAG_QUESTION*,status.like.RESOLVE_FLAG*)&select=*&order=created_at.desc&limit=150`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/batches?select=id,batch_name,batch_category,source_files,total_questions,is_hidden&order=created_at.desc&limit=100`, { headers })
       ]);
 
