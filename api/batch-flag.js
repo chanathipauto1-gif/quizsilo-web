@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
         batchMap[b.id] = b;
         const sourceFiles = Array.isArray(b.source_files) ? b.source_files : [];
         const meta = sourceFiles.find(f => f && f._meta) || {};
-        if (Number(meta.flag_count) > 10 || meta.auto_hidden) {
+        if (Number(meta.flag_count) >= 10 || meta.auto_hidden) {
           autoHiddenBatches.push({
             batchId: b.id,
             batchName: b.batch_name,
@@ -394,7 +394,7 @@ module.exports = async function handler(req, res) {
     // -------------------------------------------------------------
     if (flag === 'report_question') {
       const currentFlagCount = (Number(currentMeta.flag_count) || 0) + 1;
-      const willAutoHide = currentFlagCount > 10;
+      const willAutoHide = currentFlagCount >= 10;
 
       const updatedMeta = {
         ...currentMeta,

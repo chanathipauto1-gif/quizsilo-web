@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
           const mIdx = sFiles.findIndex(f => f && f._meta);
           const cMeta = mIdx >= 0 ? sFiles[mIdx] : { _meta: true };
           if (cMeta.auto_hidden || Number(cMeta.flag_count) > 0 || cMeta.is_hidden) {
-            wasAutoHidden = Boolean(cMeta.auto_hidden || Number(cMeta.flag_count) > 10);
+            wasAutoHidden = Boolean(cMeta.auto_hidden || Number(cMeta.flag_count) >= 10);
             const upMeta = { ...cMeta, is_hidden: false, auto_hidden: false, flag_count: 0, _meta: true };
             if (mIdx >= 0) sFiles[mIdx] = upMeta;
             else sFiles.push(upMeta);
