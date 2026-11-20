@@ -222,6 +222,87 @@ module.exports = async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
+    // Branch 1.8: Get Footer / Site Config
+    // -------------------------------------------------------------
+    if (flag === 'get_footer_config') {
+      const footerRes = await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?status=like.SYSTEM_FOOTER_CONFIG*&select=*&order=created_at.desc&limit=1`, { headers });
+      const footerRows = await footerRes.json();
+      let footerConfig = null;
+      if (Array.isArray(footerRows) && footerRows.length > 0) {
+        try {
+          const raw = footerRows[0].status.replace('SYSTEM_FOOTER_CONFIG:', '');
+          footerConfig = JSON.parse(raw);
+          footerConfig.id = footerRows[0].id;
+          footerConfig.createdAt = footerRows[0].created_at;
+        } catch (e) {}
+      }
+      return res.status(200).json({ success: true, footerConfig });
+    }
+
+    // -------------------------------------------------------------
+    // Branch 1.9: Set / Update Footer / Site Config (Admin only)
+    // -------------------------------------------------------------
+    if (flag === 'set_footer_config') {
+      const { footerData, adminProfile } = body;
+      if (!footerData) return res.status(400).json({ error: 'Missing footerData' });
+
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: adminProfile?.uuid || null,
+          batch_id: null,
+          questions_scanned: 0,
+          status: 'SYSTEM_FOOTER_CONFIG:' + JSON.stringify({
+            brandTagline: String(footerData.brandTagline || '').trim(),
+            brandBio: String(footerData.brandBio || '').trim(),
+            copyrightText: String(footerData.copyrightText || '').trim(),
+            facebookUrl: String(footerData.facebookUrl || '').trim(),
+            facebookEnabled: Boolean(footerData.facebookEnabled),
+            lineUrl: String(footerData.lineUrl || '').trim(),
+            lineEnabled: Boolean(footerData.lineEnabled),
+            tiktokUrl: String(footerData.tiktokUrl || '').trim(),
+            tiktokEnabled: Boolean(footerData.tiktokEnabled),
+            email: String(footerData.email || '').trim(),
+            emailEnabled: Boolean(footerData.emailEnabled),
+            youtubeUrl: String(footerData.youtubeUrl || '').trim(),
+            youtubeEnabled: Boolean(footerData.youtubeEnabled),
+            discordUrl: String(footerData.discordUrl || '').trim(),
+            discordEnabled: Boolean(footerData.discordEnabled),
+            updatedBy: adminProfile?.name || adminProfile?.nickname || 'Super Admin',
+            updatedAt: new Date().toISOString()
+          })
+        })
+      });
+
+      // Audit Log
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: adminProfile?.uuid || null,
+            batch_id: null,
+            questions_scanned: 0,
+            status: 'LOG: ' + JSON.stringify({
+              action: 'SET_FOOTER_CONFIG',
+              user_name: adminProfile?.name || 'Admin',
+              user_avatar: adminProfile?.avatar || '👑',
+              user_role: 'admin',
+              batch_name: 'ระบบส่วนกลาง',
+              batch_category: 'ตั้งค่าเว็บไซต์',
+              question_count: 0,
+              details: 'อัปเดตข้อมูล Footer และช่องทางติดต่อโซเชียลมีเดีย',
+              timestamp: new Date().toISOString()
+            })
+          })
+        });
+      } catch (e) {}
+
+      return res.status(200).json({ success: true, message: 'บันทึกการตั้งค่า Footer และเว็บไซต์เรียบร้อยแล้ว' });
+    }
+
+    // -------------------------------------------------------------
     // Branch 2: Resolve a Flagged Question (Admin Action)
     // -------------------------------------------------------------
     if (flag === 'resolve_flag') {

@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.18.24</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.18.55</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -1273,6 +1273,10 @@
       <i data-lucide="megaphone" class="w-4 h-4 text-amber-500"></i>
       <span>📢 จัดการประกาศหน้าแรก</span>
     </button>
+    <button id="admin-tab-btn-footer" onclick="switchAdminTab('footer')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+      <i data-lucide="settings-2" class="w-4 h-4 text-brand-600"></i>
+      <span>⚙️ ตั้งค่าเว็บไซต์ & Footer</span>
+    </button>
   </div>
 
   <!-- TAB 1: สถิติสมาชิกและภาพรวม (Stats Content) -->
@@ -1668,9 +1672,340 @@
     </div>
   </div>
 
+  <!-- TAB 5: ตั้งค่าเว็บไซต์ & Footer (Footer & Site Config) -->
+  <div id="admin-tab-content-footer" class="hidden space-y-6">
+    <div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-xs space-y-6">
+      
+      <!-- Card Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="settings-2" class="w-5 h-5 text-brand-600"></i>
+            <span>จัดการข้อมูลเว็บไซต์และช่องทางติดต่อท้ายหน้า (Footer)</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">
+            กำหนดสโลแกน ข้อความวิสัยทัศน์ และลิงก์ช่องทางโซเชียลมีเดียที่แสดงผลด้านล่างสุดของเว็บ
+          </p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 shrink-0 self-start sm:self-auto">
+          👑 เฉพาะ Super Admin
+        </span>
+      </div>
+
+      <!-- Live Preview of Footer Branding & Icons -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+          ตัวอย่างการแสดงผลจริงบน Footer (Live Preview)
+        </label>
+        <div class="bg-slate-900 text-slate-300 p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1.5 max-w-lg">
+              <div class="flex items-center gap-2">
+                <span class="text-base font-black text-white">QuizSilo</span>
+                <span class="text-[10px] px-2 py-0.5 bg-brand-500/20 text-brand-300 border border-brand-500/30 rounded-full font-bold">Preview</span>
+              </div>
+              <p id="prev-footer-tagline" class="text-xs text-brand-300 font-semibold break-words">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</p>
+              <p id="prev-footer-bio" class="text-xs text-slate-400 leading-relaxed break-words">ข้อความวิสัยทัศน์จะปรากฏตรงนี้...</p>
+            </div>
+            <!-- Preview Social Icons -->
+            <div>
+              <div class="text-[11px] text-slate-400 font-semibold mb-1.5">ไอคอนที่กำลังเปิดแสดง:</div>
+              <div id="prev-footer-icons" class="flex items-center gap-1.5 flex-wrap">
+                <!-- dynamic badge preview -->
+              </div>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-500" id="prev-footer-copyright">
+            © 2026 QuizSilo. สงวนลิขสิทธิ์ทุกประการ
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Settings -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Section 1: ข้อมูลแบรนด์และสโลแกน -->
+        <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-4">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-200 text-slate-800 font-bold text-xs sm:text-sm">
+            <i data-lucide="sparkles" class="w-4 h-4 text-brand-600"></i>
+            <span>1. ข้อมูลแบรนด์และข้อความแนะนำ</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">สโลแกนใต้โลโก้ (Tagline)</label>
+            <input type="text" id="admin-footer-tagline" oninput="updateAdminFooterLivePreview()" placeholder="เช่น เพื่อนคู่คิดคนเตรียมสอบ • AI Companion" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ข้อความแนะนำตัว / วิสัยทัศน์ (Bio)</label>
+            <textarea id="admin-footer-bio" rows="4" oninput="updateAdminFooterLivePreview()" placeholder="ข้อความอบอุ่นแนะนำเว็บและประโยชน์ที่ผู้ใช้จะได้รับ..." class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ข้อความลิขสิทธิ์ท้ายหน้า (Copyright Notice)</label>
+            <input type="text" id="admin-footer-copyright" oninput="updateAdminFooterLivePreview()" placeholder="เช่น © 2026 QuizSilo. สงวนลิขสิทธิ์ทุกประการ • พัฒนาด้วยความตั้งใจเพื่อการศึกษาไทย" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+          </div>
+        </div>
+
+        <!-- Section 2: ช่องทางโซเชียลมีเดียและการติดต่อ -->
+        <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-4">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-200 text-slate-800 font-bold text-xs sm:text-sm">
+            <i data-lucide="share-2" class="w-4 h-4 text-brand-600"></i>
+            <span>2. ช่องทางโซเชียลมีเดียและการติดต่อ</span>
+          </div>
+
+          <!-- Facebook -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#1877F2]"></span>
+                <span>Facebook (เพจ / โปรไฟล์)</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                <input type="checkbox" id="admin-footer-fb-enabled" onchange="updateAdminFooterLivePreview()" checked class="rounded text-brand-600 focus:ring-brand-500">
+                <span class="text-[11px] font-semibold">เปิดแสดง</span>
+              </label>
+            </div>
+            <input type="url" id="admin-footer-fb-url" oninput="updateAdminFooterLivePreview()" placeholder="https://facebook.com/yourpage" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+          </div>
+
+          <!-- LINE -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#06C755]"></span>
+                <span>LINE Official / แอดไลน์</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                <input type="checkbox" id="admin-footer-line-enabled" onchange="updateAdminFooterLivePreview()" checked class="rounded text-brand-600 focus:ring-brand-500">
+                <span class="text-[11px] font-semibold">เปิดแสดง</span>
+              </label>
+            </div>
+            <input type="url" id="admin-footer-line-url" oninput="updateAdminFooterLivePreview()" placeholder="https://line.me/ti/p/~yourid" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+          </div>
+
+          <!-- TikTok -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-slate-900"></span>
+                <span>TikTok</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                <input type="checkbox" id="admin-footer-tiktok-enabled" onchange="updateAdminFooterLivePreview()" checked class="rounded text-brand-600 focus:ring-brand-500">
+                <span class="text-[11px] font-semibold">เปิดแสดง</span>
+              </label>
+            </div>
+            <input type="url" id="admin-footer-tiktok-url" oninput="updateAdminFooterLivePreview()" placeholder="https://tiktok.com/@youraccount" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+          </div>
+
+          <!-- Email -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <span>Email สำหรับติดต่อ</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                <input type="checkbox" id="admin-footer-email-enabled" onchange="updateAdminFooterLivePreview()" checked class="rounded text-brand-600 focus:ring-brand-500">
+                <span class="text-[11px] font-semibold">เปิดแสดง</span>
+              </label>
+            </div>
+            <input type="email" id="admin-footer-email" oninput="updateAdminFooterLivePreview()" placeholder="contact@quizsilo.com" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+          </div>
+
+          <!-- YouTube & Discord (Optional 2-Col) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] font-bold text-slate-700">YouTube</label>
+                <label class="inline-flex items-center gap-1 text-[11px] text-slate-600 cursor-pointer">
+                  <input type="checkbox" id="admin-footer-yt-enabled" onchange="updateAdminFooterLivePreview()" class="rounded text-brand-600 focus:ring-brand-500">
+                  <span>เปิด</span>
+                </label>
+              </div>
+              <input type="url" id="admin-footer-yt-url" oninput="updateAdminFooterLivePreview()" placeholder="https://youtube.com/..." class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] font-bold text-slate-700">Discord</label>
+                <label class="inline-flex items-center gap-1 text-[11px] text-slate-600 cursor-pointer">
+                  <input type="checkbox" id="admin-footer-discord-enabled" onchange="updateAdminFooterLivePreview()" class="rounded text-brand-600 focus:ring-brand-500">
+                  <span>เปิด</span>
+                </label>
+              </div>
+              <input type="url" id="admin-footer-discord-url" oninput="updateAdminFooterLivePreview()" placeholder="https://discord.gg/..." class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Action Button -->
+      <div class="pt-2 flex justify-end">
+        <button onclick="saveAdminFooterConfig()" id="btn-save-admin-footer" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-brand-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>บันทึกการตั้งค่า Footer & เว็บไซต์</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </section>
 
   </main>
+
+  <!-- Global Footer -->
+  <!-- ================= FOOTER (แสดงผลด้านล่างสุดของเว็บ) ================= -->
+<footer id="app-footer" class="bg-slate-900 text-slate-300 border-t border-slate-800/90 mt-12 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+      
+      <!-- Zone 1: Branding, Slogan & Warm Bio (col-span-5) -->
+      <div class="md:col-span-5 space-y-4">
+        <div class="flex items-center gap-2.5 group cursor-pointer" onclick="handleLogoClick()">
+          <div class="bg-gradient-to-tr from-brand-700 via-brand-600 to-brand-500 text-white p-2 rounded-xl shadow-md shadow-brand-500/25 flex items-center justify-center transition-transform group-hover:scale-105">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300 tracking-tight">QuizSilo</span>
+              <span class="text-[10px] px-2 py-0.5 bg-brand-500/20 text-brand-300 border border-brand-500/30 rounded-full font-bold">Beta 2026</span>
+            </div>
+            <p id="footer-tagline-el" class="text-xs text-brand-300 font-medium mt-0.5 break-words">
+              เพื่อนคู่คิดคนเตรียมสอบ • AI Companion
+            </p>
+          </div>
+        </div>
+
+        <p id="footer-bio-el" class="text-xs text-slate-400 leading-relaxed max-w-sm break-words">
+          เปลี่ยนเอกสารและภาพถ่ายข้อสอบ ให้กลายเป็นระบบฝึกฝนเสมือนจริง พร้อมระบบเฉลยและสถิติจุดอ่อนเฉพาะบุคคล พัฒนาด้วยใจเพื่อคนเตรียมสอบทุกคน
+        </p>
+
+        <div class="flex items-center gap-2 pt-1 flex-wrap">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 text-[11px] font-semibold text-slate-300 border border-slate-700/80">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>ระบบพร้อมใช้งาน (Open Beta)</span>
+          </span>
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20 text-[11px] font-medium">
+            <span>❤️ พัฒนาเพื่อการศึกษาไทย</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Zone 2: เมนูลัด (Quick Navigation) (col-span-3) -->
+      <div class="md:col-span-3 space-y-3">
+        <h4 class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="compass" class="w-4 h-4 text-brand-400"></i>
+          <span>เมนูลัด (Navigation)</span>
+        </h4>
+        <ul class="space-y-2 text-xs text-slate-400">
+          <li>
+            <a href="javascript:void(0)" onclick="switchPage('library')" class="hover:text-white transition-colors flex items-center gap-2">
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>คลังข้อสอบทั้งหมด</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" onclick="switchPage('dashboard')" class="hover:text-white transition-colors flex items-center gap-2">
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>แดชบอร์ด & สถิติของฉัน</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" onclick="switchPage('upload')" class="hover:text-white transition-colors flex items-center gap-2">
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>อัปโหลดและสกัดข้อสอบ</span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" onclick="openAboutUsModal()" class="text-amber-400 hover:text-amber-300 font-bold transition-colors flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>เกี่ยวกับเรา (About Us) ✨</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Zone 3: Social Media & Contacts (col-span-4) -->
+      <div class="md:col-span-4 space-y-3">
+        <h4 class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="share-2" class="w-4 h-4 text-brand-400"></i>
+          <span>ช่องทางติดต่อ & ติดตามเรา</span>
+        </h4>
+        <p class="text-[11px] text-slate-400">
+          ติดตามอัปเดตแนวข้อสอบใหม่ พูดคุย หรือส่งข้อเสนอแนะถึงผู้พัฒนาได้โดยตรง
+        </p>
+
+        <!-- Social Icons Container (Dynamic Rendered) -->
+        <div id="footer-social-icons" class="flex items-center gap-2 flex-wrap pt-1">
+          
+          <!-- Facebook -->
+          <a id="footer-link-facebook" href="#" target="_blank" rel="noopener noreferrer" 
+            class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#1877F2] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm border border-slate-700/80 hover:border-transparent group" title="Facebook">
+            <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </a>
+
+          <!-- LINE -->
+          <a id="footer-link-line" href="#" target="_blank" rel="noopener noreferrer" 
+            class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#06C755] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm border border-slate-700/80 hover:border-transparent group" title="LINE Official">
+            <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+              <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.477.254l2.484 3.371V8.108c0-.345.282-.63.63-.63.345 0 .626.285.626.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+            </svg>
+          </a>
+
+          <!-- TikTok -->
+          <a id="footer-link-tiktok" href="#" target="_blank" rel="noopener noreferrer" 
+            class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-black text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm border border-slate-700/80 hover:border-transparent group" title="TikTok">
+            <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+            </svg>
+          </a>
+
+          <!-- Email -->
+          <a id="footer-link-email" href="#" 
+            class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm border border-slate-700/80 hover:border-transparent group" title="อีเมลติดต่อ">
+            <i data-lucide="mail" class="w-4 h-4 transition-transform group-hover:scale-110"></i>
+          </a>
+
+          <!-- YouTube (Optional) -->
+          <a id="footer-link-youtube" href="#" target="_blank" rel="noopener noreferrer" 
+            class="hidden w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#FF0000] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm border border-slate-700/80 hover:border-transparent group" title="YouTube">
+            <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+          </a>
+
+          <!-- Discord (Optional) -->
+          <a id="footer-link-discord" href="#" target="_blank" rel="noopener noreferrer" 
+            class="hidden w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#5865F2] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm border border-slate-700/80 hover:border-transparent group" title="Discord Community">
+            <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Line: Copyright & Disclaimer -->
+    <div class="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
+      <div id="footer-copyright-el" class="text-center sm:text-left">
+        © 2026 QuizSilo. สงวนลิขสิทธิ์ทุกประการ • พัฒนาด้วยความตั้งใจเพื่อการศึกษาไทย
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="hover:text-slate-400 cursor-default">ข้อสอบสกัดด้วย AI เพื่อการฝึกฝนส่วนบุคคล</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
 
       <!-- ================= Modal: Onboarding & Insight Survey ================= -->
   <div id="modal-onboarding-dialog" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
@@ -4189,6 +4524,39 @@ const AdminAuditService = {
       console.error('saveGlobalAnnouncement error:', err);
       return notifyFailure(this, err);
     }
+  },
+
+  async getFooterConfig() {
+    try {
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: { flag: 'get_footer_config' }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      return notifySuccess(this, { success: true, footerConfig: null });
+    } catch (err) {
+      console.warn('getFooterConfig error:', err);
+      return notifySuccess(this, { success: true, footerConfig: null });
+    }
+  },
+
+  async saveFooterConfig(footerData, adminProfile) {
+    try {
+      const activeAdmin = getActiveProfile(adminProfile);
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'set_footer_config',
+          footerData,
+          adminProfile: activeAdmin
+        }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to save footer config');
+    } catch (err) {
+      console.error('saveFooterConfig error:', err);
+      return notifyFailure(this, err);
+    }
   }
 };
 
@@ -4238,7 +4606,9 @@ const adapterImpl = {
   unhideBatch: AdminAuditService.unhideBatch,
   getBatchFlags: AdminAuditService.getBatchFlags,
   getGlobalAnnouncement: AdminAuditService.getGlobalAnnouncement,
-  saveGlobalAnnouncement: AdminAuditService.saveGlobalAnnouncement
+  saveGlobalAnnouncement: AdminAuditService.saveGlobalAnnouncement,
+  getFooterConfig: AdminAuditService.getFooterConfig,
+  saveFooterConfig: AdminAuditService.saveFooterConfig
 };
 
 function createGoogleScriptRunner() {
@@ -4638,6 +5008,7 @@ if (typeof window !== 'undefined') {
     if (localStorage.getItem('quizsilo_upload_guide_collapsed') === 'true') {
       toggleUploadGuide(true);
     }
+    loadFooterConfig();
     switchPage('dashboard');
   });
 
@@ -8941,10 +9312,12 @@ if (typeof window !== 'undefined') {
     const btnLogs = document.getElementById('admin-tab-btn-logs');
     const btnFlags = document.getElementById('admin-tab-btn-flags');
     const btnAnn = document.getElementById('admin-tab-btn-announcement');
+    const btnFooter = document.getElementById('admin-tab-btn-footer');
     const contentStats = document.getElementById('admin-tab-content-stats');
     const contentLogs = document.getElementById('admin-tab-content-logs');
     const contentFlags = document.getElementById('admin-tab-content-flags');
     const contentAnn = document.getElementById('admin-tab-content-announcement');
+    const contentFooter = document.getElementById('admin-tab-content-footer');
 
     const activeCls = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0';
     const inactiveCls = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0';
@@ -8953,11 +9326,13 @@ if (typeof window !== 'undefined') {
     if (btnLogs) btnLogs.className = tab === 'logs' ? activeCls : inactiveCls;
     if (btnFlags) btnFlags.className = tab === 'flags' ? activeCls : (inactiveCls + ' relative');
     if (btnAnn) btnAnn.className = tab === 'announcement' ? activeCls : inactiveCls;
+    if (btnFooter) btnFooter.className = tab === 'footer' ? activeCls : inactiveCls;
 
     if (contentStats) contentStats.classList.toggle('hidden', tab !== 'stats');
     if (contentLogs) contentLogs.classList.toggle('hidden', tab !== 'logs');
     if (contentFlags) contentFlags.classList.toggle('hidden', tab !== 'flags');
     if (contentAnn) contentAnn.classList.toggle('hidden', tab !== 'announcement');
+    if (contentFooter) contentFooter.classList.toggle('hidden', tab !== 'footer');
 
     if (tab === 'logs') {
       loadAdminAuditLogs();
@@ -8965,6 +9340,8 @@ if (typeof window !== 'undefined') {
       loadAdminFlags();
     } else if (tab === 'announcement') {
       loadAdminAnnouncementForm();
+    } else if (tab === 'footer') {
+      loadAdminFooterForm();
     }
   }
 
@@ -9712,6 +10089,219 @@ if (typeof window !== 'undefined') {
     if (window.lucide) lucide.createIcons();
   }
 
+  // ==========================================
+  // FOOTER & SITE SETTINGS (Dynamic & Admin Editable)
+  // ==========================================
+  const DEFAULT_FOOTER_CONFIG = {
+    brandTagline: 'เพื่อนคู่คิดคนเตรียมสอบ • AI Companion',
+    brandBio: 'เปลี่ยนเอกสารและภาพถ่ายข้อสอบ ให้กลายเป็นระบบฝึกฝนเสมือนจริง พร้อมระบบเฉลยและสถิติจุดอ่อนเฉพาะบุคคล พัฒนาด้วยใจเพื่อคนเตรียมสอบทุกคน',
+    copyrightText: '© 2026 QuizSilo. สงวนลิขสิทธิ์ทุกประการ • พัฒนาด้วยความตั้งใจเพื่อการศึกษาไทย',
+    facebookUrl: 'https://facebook.com',
+    facebookEnabled: true,
+    lineUrl: 'https://line.me',
+    lineEnabled: true,
+    tiktokUrl: 'https://tiktok.com',
+    tiktokEnabled: true,
+    email: 'contact@quizsilo.com',
+    emailEnabled: true,
+    youtubeUrl: '',
+    youtubeEnabled: false,
+    discordUrl: '',
+    discordEnabled: false
+  };
+  let currentFooterConfig = null;
+
+  function loadFooterConfig() {
+    google.script.run
+      .withSuccessHandler(res => {
+        currentFooterConfig = (res && res.footerConfig) ? res.footerConfig : DEFAULT_FOOTER_CONFIG;
+        renderFooter(currentFooterConfig);
+      })
+      .withFailureHandler(err => {
+        console.warn('loadFooterConfig error:', err);
+        currentFooterConfig = DEFAULT_FOOTER_CONFIG;
+        renderFooter(currentFooterConfig);
+      })
+      .getFooterConfig();
+  }
+
+  function renderFooter(cfg) {
+    if (!cfg) cfg = DEFAULT_FOOTER_CONFIG;
+    const taglineEl = document.getElementById('footer-tagline-el');
+    const bioEl = document.getElementById('footer-bio-el');
+    const copyrightEl = document.getElementById('footer-copyright-el');
+
+    if (taglineEl) taglineEl.textContent = cfg.brandTagline || DEFAULT_FOOTER_CONFIG.brandTagline;
+    if (bioEl) bioEl.textContent = cfg.brandBio || DEFAULT_FOOTER_CONFIG.brandBio;
+    if (copyrightEl) copyrightEl.textContent = cfg.copyrightText || DEFAULT_FOOTER_CONFIG.copyrightText;
+
+    // Helper bind link
+    const bindLink = (id, url, enabled, isMailto = false) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (enabled && url) {
+        el.href = isMailto ? `mailto:${url.replace(/^mailto:/, '')}` : url;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    };
+
+    bindLink('footer-link-facebook', cfg.facebookUrl, cfg.facebookEnabled);
+    bindLink('footer-link-line', cfg.lineUrl, cfg.lineEnabled);
+    bindLink('footer-link-tiktok', cfg.tiktokUrl, cfg.tiktokEnabled);
+    bindLink('footer-link-email', cfg.email, cfg.emailEnabled, true);
+    bindLink('footer-link-youtube', cfg.youtubeUrl, cfg.youtubeEnabled);
+    bindLink('footer-link-discord', cfg.discordUrl, cfg.discordEnabled);
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function loadAdminFooterForm() {
+    const cfg = currentFooterConfig || DEFAULT_FOOTER_CONFIG;
+
+    const taglineInput = document.getElementById('admin-footer-tagline');
+    const bioInput = document.getElementById('admin-footer-bio');
+    const copyrightInput = document.getElementById('admin-footer-copyright');
+
+    const fbUrl = document.getElementById('admin-footer-fb-url');
+    const fbEnabled = document.getElementById('admin-footer-fb-enabled');
+    const lineUrl = document.getElementById('admin-footer-line-url');
+    const lineEnabled = document.getElementById('admin-footer-line-enabled');
+    const tiktokUrl = document.getElementById('admin-footer-tiktok-url');
+    const tiktokEnabled = document.getElementById('admin-footer-tiktok-enabled');
+    const emailInput = document.getElementById('admin-footer-email');
+    const emailEnabled = document.getElementById('admin-footer-email-enabled');
+    const ytUrl = document.getElementById('admin-footer-yt-url');
+    const ytEnabled = document.getElementById('admin-footer-yt-enabled');
+    const discordUrl = document.getElementById('admin-footer-discord-url');
+    const discordEnabled = document.getElementById('admin-footer-discord-enabled');
+
+    if (taglineInput) taglineInput.value = cfg.brandTagline || DEFAULT_FOOTER_CONFIG.brandTagline;
+    if (bioInput) bioInput.value = cfg.brandBio || DEFAULT_FOOTER_CONFIG.brandBio;
+    if (copyrightInput) copyrightInput.value = cfg.copyrightText || DEFAULT_FOOTER_CONFIG.copyrightText;
+
+    if (fbUrl) fbUrl.value = cfg.facebookUrl || '';
+    if (fbEnabled) fbEnabled.checked = cfg.facebookEnabled !== undefined ? Boolean(cfg.facebookEnabled) : true;
+
+    if (lineUrl) lineUrl.value = cfg.lineUrl || '';
+    if (lineEnabled) lineEnabled.checked = cfg.lineEnabled !== undefined ? Boolean(cfg.lineEnabled) : true;
+
+    if (tiktokUrl) tiktokUrl.value = cfg.tiktokUrl || '';
+    if (tiktokEnabled) tiktokEnabled.checked = cfg.tiktokEnabled !== undefined ? Boolean(cfg.tiktokEnabled) : true;
+
+    if (emailInput) emailInput.value = cfg.email || '';
+    if (emailEnabled) emailEnabled.checked = cfg.emailEnabled !== undefined ? Boolean(cfg.emailEnabled) : true;
+
+    if (ytUrl) ytUrl.value = cfg.youtubeUrl || '';
+    if (ytEnabled) ytEnabled.checked = Boolean(cfg.youtubeEnabled);
+
+    if (discordUrl) discordUrl.value = cfg.discordUrl || '';
+    if (discordEnabled) discordEnabled.checked = Boolean(cfg.discordEnabled);
+
+    updateAdminFooterLivePreview();
+  }
+
+  function updateAdminFooterLivePreview() {
+    const tagline = document.getElementById('admin-footer-tagline')?.value.trim() || DEFAULT_FOOTER_CONFIG.brandTagline;
+    const bio = document.getElementById('admin-footer-bio')?.value.trim() || DEFAULT_FOOTER_CONFIG.brandBio;
+    const copyright = document.getElementById('admin-footer-copyright')?.value.trim() || DEFAULT_FOOTER_CONFIG.copyrightText;
+
+    const prevTagline = document.getElementById('prev-footer-tagline');
+    const prevBio = document.getElementById('prev-footer-bio');
+    const prevCopyright = document.getElementById('prev-footer-copyright');
+
+    if (prevTagline) prevTagline.textContent = tagline;
+    if (prevBio) prevBio.textContent = bio;
+    if (prevCopyright) prevCopyright.textContent = copyright;
+
+    const iconsContainer = document.getElementById('prev-footer-icons');
+    if (iconsContainer) {
+      const activeIcons = [];
+      if (document.getElementById('admin-footer-fb-enabled')?.checked) activeIcons.push('<span class="px-2 py-0.5 rounded-lg bg-[#1877F2]/20 text-[#1877F2] font-bold text-[10px] border border-[#1877F2]/40">Facebook</span>');
+      if (document.getElementById('admin-footer-line-enabled')?.checked) activeIcons.push('<span class="px-2 py-0.5 rounded-lg bg-[#06C755]/20 text-[#06C755] font-bold text-[10px] border border-[#06C755]/40">LINE</span>');
+      if (document.getElementById('admin-footer-tiktok-enabled')?.checked) activeIcons.push('<span class="px-2 py-0.5 rounded-lg bg-slate-800 text-white font-bold text-[10px] border border-slate-700">TikTok</span>');
+      if (document.getElementById('admin-footer-email-enabled')?.checked) activeIcons.push('<span class="px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/40">Email</span>');
+      if (document.getElementById('admin-footer-yt-enabled')?.checked) activeIcons.push('<span class="px-2 py-0.5 rounded-lg bg-red-600/20 text-red-400 font-bold text-[10px] border border-red-600/40">YouTube</span>');
+      if (document.getElementById('admin-footer-discord-enabled')?.checked) activeIcons.push('<span class="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold text-[10px] border border-indigo-500/40">Discord</span>');
+
+      iconsContainer.innerHTML = activeIcons.length > 0 ? activeIcons.join('') : '<span class="text-[10px] text-slate-500 italic">ไม่ได้เปิดแสดงไอคอนใดๆ</span>';
+    }
+  }
+
+  function saveAdminFooterConfig() {
+    if (!currentUserProfile || currentUserProfile.role !== 'admin') {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะ Super Admin เท่านั้นที่สามารถแก้ไขข้อมูลเว็บไซต์และ Footer ได้', 'warning');
+      return;
+    }
+
+    const payload = {
+      brandTagline: document.getElementById('admin-footer-tagline')?.value.trim(),
+      brandBio: document.getElementById('admin-footer-bio')?.value.trim(),
+      copyrightText: document.getElementById('admin-footer-copyright')?.value.trim(),
+      facebookUrl: document.getElementById('admin-footer-fb-url')?.value.trim(),
+      facebookEnabled: document.getElementById('admin-footer-fb-enabled')?.checked,
+      lineUrl: document.getElementById('admin-footer-line-url')?.value.trim(),
+      lineEnabled: document.getElementById('admin-footer-line-enabled')?.checked,
+      tiktokUrl: document.getElementById('admin-footer-tiktok-url')?.value.trim(),
+      tiktokEnabled: document.getElementById('admin-footer-tiktok-enabled')?.checked,
+      email: document.getElementById('admin-footer-email')?.value.trim(),
+      emailEnabled: document.getElementById('admin-footer-email-enabled')?.checked,
+      youtubeUrl: document.getElementById('admin-footer-yt-url')?.value.trim(),
+      youtubeEnabled: document.getElementById('admin-footer-yt-enabled')?.checked,
+      discordUrl: document.getElementById('admin-footer-discord-url')?.value.trim(),
+      discordEnabled: document.getElementById('admin-footer-discord-enabled')?.checked
+    };
+
+    Swal.fire({
+      title: 'กำลังบันทึกการตั้งค่า...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.success) {
+          showToast('success', '⚙️ บันทึกการตั้งค่า Footer และเว็บไซต์เรียบร้อยแล้ว');
+          currentFooterConfig = payload;
+          renderFooter(currentFooterConfig);
+          loadAdminFooterForm();
+        } else {
+          Swal.fire('เกิดข้อผิดพลาด', (res && res.error) || 'ไม่สามารถบันทึกการตั้งค่าได้', 'error');
+        }
+      })
+      .withFailureHandler(err => {
+        Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error');
+      })
+      .saveFooterConfig(payload, currentUserProfile);
+  }
+
+  function openAboutUsModal() {
+    Swal.fire({
+      title: 'เรื่องราวของ QuizSilo ✨',
+      html: `
+        <div class="text-left text-xs sm:text-sm text-slate-600 space-y-3.5 leading-relaxed p-1">
+          <div class="p-3 rounded-2xl bg-gradient-to-r from-brand-50 to-indigo-50 border border-brand-200 text-brand-900 font-semibold flex items-center gap-2.5">
+            <span class="text-xl">💌</span>
+            <span>เพื่อนคู่คิดคนเตรียมสอบ • พัฒนาด้วยใจเพื่อทุกคน</span>
+          </div>
+          <p>
+            <b>สวัสดีครับ!</b> จุดเริ่มต้นของ QuizSilo เกิดจากความตั้งใจที่อยากให้คนเตรียมสอบทุกคน มีพื้นที่ฝึกฝนข้อสอบที่สะดวก รวดเร็ว และไม่ต้องเสียเวลานั่งพิมพ์โจทย์เอง
+          </p>
+          <p>
+            เราผสานพลังของ <b>AI</b> เพื่อช่วยอ่านเอกสารชีทข้อสอบ พร้อมระบบจับเวลา วิเคราะห์จุดอ่อนรายข้อ และมีระบบชุมชนช่วยตรวจสอบเฉลย เพื่อสร้างคลังความรู้ที่ยั่งยืนและมีคุณภาพ
+          </p>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs">
+            💡 <i>"หน้า About Us ฉบับเต็มพร้อมเรื่องราวและภาพประกอบจากผู้พัฒนา กำลังจัดทำในขั้นตอนต่อไปครับ โปรดติดตามเร็วๆ นี้!"</i>
+          </div>
+        </div>
+      `,
+      confirmButtonText: 'ร่วมเป็นส่วนหนึ่งของ QuizSilo 🚀',
+      confirmButtonColor: '#4f46e5',
+      showCloseButton: true
+    });
+  }
+
   // Global Window Expose
   window.changeUserRole = changeUserRole;
   window.switchAdminTab = switchAdminTab;
@@ -9739,6 +10329,12 @@ if (typeof window !== 'undefined') {
   window.updateAdminAnnouncementLivePreview = updateAdminAnnouncementLivePreview;
   window.saveAdminAnnouncement = saveAdminAnnouncement;
   window.toggleUploadGuide = toggleUploadGuide;
+  window.loadFooterConfig = loadFooterConfig;
+  window.renderFooter = renderFooter;
+  window.loadAdminFooterForm = loadAdminFooterForm;
+  window.updateAdminFooterLivePreview = updateAdminFooterLivePreview;
+  window.saveAdminFooterConfig = saveAdminFooterConfig;
+  window.openAboutUsModal = openAboutUsModal;
 </script>
 
 
