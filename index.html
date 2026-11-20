@@ -101,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.00.12</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.00.57</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -193,7 +193,15 @@
     </div>
   </header>
 
- <!-- MAIN CONTENT -->
+  <!-- Auth Syncing Global Banner & Animation (Right below Navbar) -->
+  <div id="auth-sync-loading-overlay" class="hidden w-full bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white py-2.5 px-4 shadow-sm border-b border-indigo-700/50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2.5 text-xs sm:text-sm font-bold">
+      <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></div>
+      <span id="auth-sync-loading-text">กำลังซิงค์ข้อมูลโปรไฟล์และสิทธิ์การใช้งาน... กรุณารอสักครู่</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
   <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6">
     <!-- รวมไฟล์ย่อยด้วยคำสั่ง include -->
     <section id="page-library" class="hidden space-y-4 sm:space-y-5">
@@ -463,6 +471,20 @@
         <p class="text-xs text-slate-500 mt-1 leading-relaxed">
           เปลี่ยนเอกสารหรือภาพถ่ายข้อสอบ ให้กลายเป็นโจทย์พร้อมฝึกทำทันที
         </p>
+      </div>
+
+      <!-- Guest Upgrade Banner on Upload Page -->
+      <div id="upload-guest-lock-banner" class="hidden p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">✨</div>
+          <div>
+            <div class="font-extrabold text-amber-950 text-xs sm:text-sm">ฟีเจอร์แปลงข้อสอบด้วย AI สงวนสิทธิ์สำหรับสมาชิก</div>
+            <div class="text-[11px] text-amber-800 font-medium mt-0.5">เข้าสู่ระบบด้วย Google ฟรี 100% ใน 1 คลิก เพื่อรับโควต้าอัปโหลด <b>10 ไฟล์ (500 ข้อ)</b> ทันที</div>
+          </div>
+        </div>
+        <button onclick="handleGoogleLogin()" class="px-3.5 py-1.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer">
+          เข้าสู่ระบบด้วย Google (ฟรี)
+        </button>
       </div>
 
       <!-- Quota Status Banner for Upload Page -->
@@ -917,19 +939,37 @@
       <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0 shadow-2xs">📢</div>
       <div>
         <div class="font-extrabold text-amber-950 text-sm flex items-center gap-2">
-          <span>คุณกำลังใช้งานในโหมดผู้เยี่ยมชม (Guest Tier)</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-bold">โควต้า 3 ไฟล์ / 100 ข้อ</span>
+          <span>คุณกำลังใช้งานในโหมดผู้เยี่ยมชม (Guest Mode)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-bold">ฝึกทำข้อสอบฟรี</span>
         </div>
-        <div class="text-xs text-amber-800 font-medium mt-0.5">เข้าสู่ระบบเพื่อเริ่มบันทึกสถิติผลสอบถาวร และรับโควต้าอัปโหลดเพิ่มเป็น 10 ไฟล์ (500 ข้อ)</div>
+        <div class="text-xs text-amber-800 font-medium mt-0.5">เข้าสู่ระบบด้วย Google ฟรี 100% เพื่อบันทึกสถิติผลสอบถาวร วิเคราะห์จุดอ่อนรายบุคคล และรับโควต้าแปลงข้อสอบ AI ฟรี 10 ไฟล์ (500 ข้อ)</div>
       </div>
     </div>
     <button onclick="handleGoogleLogin()" class="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer">
-      เข้าสู่ระบบด้วย Google
+      เข้าสู่ระบบด้วย Google (ฟรี)
     </button>
   </div>
 
+  <!-- Loading Skeleton while Syncing Auth Profile -->
+  <div id="dash-auth-loading-skeleton" class="hidden p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-xs animate-pulse">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 bg-slate-200 rounded-2xl shrink-0"></div>
+        <div class="space-y-2">
+          <div class="h-5 w-48 bg-slate-200 rounded-lg"></div>
+          <div class="h-3.5 w-64 bg-slate-100 rounded-lg"></div>
+        </div>
+      </div>
+      <div class="h-8 w-36 bg-slate-100 rounded-xl"></div>
+    </div>
+    <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+      <div class="h-3 w-40 bg-slate-100 rounded"></div>
+      <div class="h-3 w-28 bg-slate-100 rounded"></div>
+    </div>
+  </div>
+
   <!-- Unified Homepage Welcome & Tier Banner -->
-  <div class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-3xl p-5 sm:p-7 text-white shadow-lg relative overflow-hidden">
+  <div id="dash-welcome-card" class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-3xl p-5 sm:p-7 text-white shadow-lg relative overflow-hidden">
     <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 relative z-10">
       
@@ -2420,6 +2460,90 @@
     </div>
   </div>
 
+  <!-- ================= Modal: Guest Exam Gateway (เลือกวิธีฝึกซ้อม) ================= -->
+  <div id="modal-guest-gateway" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="relative bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden transition-all transform animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Close button -->
+      <button onclick="closeGuestGatewayModal()" class="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer z-10" title="ปิดหน้าต่าง">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="pt-8 pb-5 px-6 sm:px-8 text-center bg-gradient-to-b from-indigo-50/90 via-white to-white border-b border-slate-100">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-brand-600 to-indigo-600 rounded-2xl shadow-lg shadow-brand-500/30 text-white mb-3">
+          <i data-lucide="sparkles" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">ยินดีต้อนรับสู่ QuizSilo</h3>
+        <p class="text-xs text-slate-500 mt-1">เลือกวิธีเข้าฝึกซ้อม เพื่อประสบการณ์ที่เหมาะสมที่สุดสำหรับคุณ</p>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 sm:p-7 space-y-4">
+        <!-- Option 1: Recommended Google 1-Click (100% Free) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border-2 border-brand-500/40 relative shadow-xs">
+          <div class="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-2xs">
+            แนะนำ ⭐ ฟรี 100%
+          </div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-base">🚀</span>
+            <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">เข้าสู่ระบบด้วย Google</h4>
+          </div>
+          <ul class="text-[11px] text-slate-600 space-y-1 mb-3.5 leading-relaxed">
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500 font-bold">✓</span> บันทึกสถิติผลสอบ & วิเคราะห์จุดอ่อนรายบุคคลถาวร
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500 font-bold">✓</span> ปลดล็อกโควต้าแปลงข้อสอบด้วย AI ฟรี 10 ไฟล์ (500 ข้อ)
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500 font-bold">✓</span> ฝึกซ้อมต่อเนื่องได้ทุกอุปกรณ์ ข้อมูลไม่สูญหาย
+            </li>
+          </ul>
+          <button onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer">
+            <svg class="w-4 h-4 shrink-0 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>เข้าสู่ระบบด้วย Google ทันที (ฟรี 1 คลิก)</span>
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="relative flex items-center justify-center my-2">
+          <div class="border-t border-slate-200 w-full"></div>
+          <span class="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">หรือทดลองใช้งาน</span>
+        </div>
+
+        <!-- Option 2: Guest Mode with Nickname -->
+        <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-base">👤</span>
+            <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">ทดลองใช้งานในฐานะผู้เยี่ยมชม (Guest)</h4>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-2.5">
+            ระบุชื่อเล่นเพื่อให้ระบบใช้เรียกและบันทึกคะแนนในเซสชันนี้:
+          </p>
+          <div class="space-y-2.5">
+            <div class="relative">
+              <input type="text" id="guest-gateway-nickname" maxlength="30" placeholder="เช่น น้องนนท์, สอบ ก.พ., ครูผู้ช่วย..." class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+            </div>
+            <button onclick="confirmGuestNicknameAndStartExam()" class="w-full py-2 px-4 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
+              <span>เริ่มฝึกทำข้อสอบทันที</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2 text-center">
+            *โหมดผู้เยี่ยมชมไม่บันทึกสถิติถาวร และไม่มีโควต้าแปลงไฟล์ AI
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= Modal: สุ่มชุดข้อสอบฝึกซ้อมขั้นสูง (Global Root Level) ================= -->
   <div id="modal-custom-quiz" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden transition-all transform animate-in fade-in zoom-in-95 duration-200">
@@ -2868,6 +2992,10 @@ const AuthService = {
         }
         return;
       }
+      try {
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.ACTIVE_PROFILE);
+        localStorage.setItem('quizsilo_auth_switching', 'true');
+      } catch (e) {}
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -2888,6 +3016,7 @@ const AuthService = {
     try {
       if (sbClient) await sbClient.auth.signOut();
       localStorage.removeItem(CONFIG.STORAGE_KEYS.ACTIVE_PROFILE);
+      localStorage.removeItem('quizsilo_auth_switching');
     } catch (err) {
       console.error('Sign Out Error:', err);
     } finally {
@@ -2995,26 +3124,37 @@ const AuthService = {
 
     if (!authUser) {
       setActiveProfile(buildGuestProfile());
+      try {
+        localStorage.removeItem('quizsilo_auth_switching');
+      } catch (e) {}
+      if (typeof window !== 'undefined') window._isAuthSyncing = false;
+      safeCallGlobal('showAuthSyncLoading', false);
       safeCallGlobal('updateNavbarProfile');
       return;
     }
 
+    safeCallGlobal('showAuthSyncLoading', true);
+    if (typeof window !== 'undefined') window._isAuthSyncing = true;
+
     const googlePhotoUrl = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null;
+    const isAdminEmail = authUser.email === CONFIG.ADMIN_EMAIL;
 
     // Fast-path: Set optimistic profile immediately so user NEVER sees a guest flash screen
     const currentProf = getActiveProfile();
-    if (!currentProf || currentProf.isGuest || currentProf.uuid !== authUser.id) {
+    const isSameUser = currentProf && !currentProf.isGuest && currentProf.uuid === authUser.id;
+
+    if (!isSameUser) {
       const optimisticProfile = {
         uuid: authUser.id,
         name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'ผู้ฝึกซ้อม',
         email: authUser.email || '',
         avatar: googlePhotoUrl || '👤',
         avatarUrl: googlePhotoUrl && googlePhotoUrl.startsWith('http') ? googlePhotoUrl : null,
-        role: authUser.email === CONFIG.ADMIN_EMAIL ? 'admin' : (currentProf?.role || 'student'),
+        role: isAdminEmail ? 'admin' : 'student', // CRITICAL: NEVER inherit admin from previous profile!
         scanCredits: 500,
-        bonusFiles: currentProf?.bonusFiles || 0,
-        bonusQuestions: currentProf?.bonusQuestions || 0,
-        resetAt: currentProf?.resetAt || null,
+        bonusFiles: 0,
+        bonusQuestions: 0,
+        resetAt: null,
         isGuest: false,
         is_onboarded: true
       };
@@ -3031,7 +3171,7 @@ const AuthService = {
       // Parallelize profile query, role resolution, and quota lookup for lightning-fast loading
       const [profileRes, effectiveRole, effectiveQuota] = await Promise.all([
         client.from('profiles').select('*').eq('id', authUser.id).single(),
-        this.resolveEffectiveRole({ id: authUser.id, role: authUser.email === CONFIG.ADMIN_EMAIL ? 'admin' : 'student' }),
+        this.resolveEffectiveRole({ id: authUser.id, role: isAdminEmail ? 'admin' : 'student' }),
         this.resolveEffectiveQuota({ id: authUser.id })
       ]);
 
@@ -3049,7 +3189,7 @@ const AuthService = {
               authUser.user_metadata?.name ||
               authUser.email.split('@')[0],
             avatar: googlePhotoUrl || '👤',
-            role: authUser.email === CONFIG.ADMIN_EMAIL ? 'admin' : 'student',
+            role: isAdminEmail ? 'admin' : 'student',
             scan_credits: 500,
             is_onboarded: false,
             last_seen_at: new Date().toISOString()
@@ -3095,20 +3235,26 @@ const AuthService = {
         setActiveProfile(mappedProfile);
         try {
           localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_PROFILE, JSON.stringify(mappedProfile));
+          localStorage.removeItem('quizsilo_auth_switching');
         } catch {
           // Ignore storage quota errors
         }
 
+        if (typeof window !== 'undefined') window._isAuthSyncing = false;
+        safeCallGlobal('showAuthSyncLoading', false);
         safeCallGlobal('updateNavbarProfile');
         safeCallGlobal('checkOnboardingStatus');
+        safeCallGlobal('renderBatches'); // Re-renders batches to accurately hide/show admin actions
       }
     } catch (err) {
       console.error('syncAuthWithProfile error:', err);
+      if (typeof window !== 'undefined') window._isAuthSyncing = false;
+      safeCallGlobal('showAuthSyncLoading', false);
     }
 
     const pageDash = typeof document !== 'undefined' ? document.getElementById('page-dashboard') : null;
     if (pageDash && !pageDash.classList.contains('hidden')) {
-      safeCallGlobal('loadUserDashboard');
+      safeCallGlobal('loadUserDashboard', true);
     }
   }
 };
@@ -3703,8 +3849,24 @@ const ExamStatsService = {
         answersJson = results;
       }
 
+      // Always record activity log so Super Admin has 100% full visibility of all exam attempts (including Guests)
+      const uProfile = typeof resultsOrProfile === 'object' && !Array.isArray(resultsOrProfile) ? resultsOrProfile : (userProfile || getActiveProfile());
+      const isGuestAttempt = !userId || uProfile?.isGuest;
+      const guestDisplayName = uProfile?.name ? (uProfile.isGuest ? `ผู้เยี่ยมชม (${uProfile.name})` : uProfile.name) : 'ผู้เยี่ยมชม (Guest)';
+
+      AdminAuditService.logActivity({
+        action: 'EXAM_ATTEMPT',
+        user_id: userId || null,
+        user_name: guestDisplayName,
+        user_avatar: uProfile?.avatar || '👤',
+        user_role: isGuestAttempt ? 'guest' : (uProfile?.role || 'member'),
+        batch_name: resolvedBatchName,
+        question_count: total,
+        details: `ทำข้อสอบได้ ${correct}/${total} (${percent}%) ใช้เวลา ${timeSpent}`
+      }).catch(() => {});
+
       if (!userId) {
-        return notifySuccess(this, { success: true, message: 'Guest attempt ignored' });
+        return notifySuccess(this, { success: true, message: 'Guest attempt recorded to audit logs' });
       }
 
       const { data, error } = await client
@@ -4205,31 +4367,24 @@ const UploadQueueService = {
       const isGuest = !activeProfile || activeProfile.isGuest || !activeProfile.uuid;
       const userId = !isGuest ? activeProfile.uuid : currentSupabaseUser?.id || null;
 
-      // Enforce Guest Quota (Max 3 files, 100 questions lifetime)
+      // Enforce Member-Only AI Extraction (Prevents Anonymous Token Abuse)
       if (isGuest) {
-        const usage =
-          typeof window !== 'undefined' && typeof window.getUserLifetimeUsage === 'function'
-            ? window.getUserLifetimeUsage(activeProfile)
-            : { files: 0, questions: 0 };
-
-        if (
-          usage.files + filesArray.length > CONFIG.GUEST_MAX_FILES ||
-          usage.questions >= CONFIG.GUEST_MAX_QUESTIONS
-        ) {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              icon: 'warning',
-              title: 'โควต้าผู้เยี่ยมชมเต็มแล้ว',
-              html: `คุณใช้โควต้าสำหรับผู้เยี่ยมชมครบ ${CONFIG.GUEST_MAX_FILES} ไฟล์ (${CONFIG.GUEST_MAX_QUESTIONS} ข้อ) แล้ว<br><br>กรุณาเข้าสู่ระบบด้วย Google เพื่อรับโควต้าสมาชิก <b>10 ไฟล์ (500 ข้อ)</b> ฟรี!`,
-              confirmButtonText: 'เข้าสู่ระบบด้วย Google',
-              showCancelButton: true,
-              cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-              if (result.isConfirmed) safeCallGlobal('signInWithGoogle');
-            });
-          }
-          return { success: false, message: 'Guest quota exceeded' };
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'info',
+            title: 'เข้าสู่ระบบด้วย Google เพื่อเริ่มสกัดข้อสอบ',
+            html: `ฟีเจอร์แปลงข้อสอบด้วย AI อัตโนมัติ สงวนสิทธิ์สำหรับสมาชิก<br><br><b>เข้าสู่ระบบด้วย Google ฟรี 100% ภายใน 1 คลิก</b><br>เพื่อรับโควต้าแปลงข้อสอบทันที <b>10 ไฟล์ (500 ข้อ)</b> โดยไม่มีค่าใช้จ่าย`,
+            confirmButtonText: '🌐 เข้าสู่ระบบด้วย Google (ฟรีทันที)',
+            showCancelButton: true,
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#94a3b8',
+            customClass: { popup: 'rounded-3xl' }
+          }).then((result) => {
+            if (result.isConfirmed) safeCallGlobal('signInWithGoogle');
+          });
         }
+        return notifyFailure(this, new Error('ฟีเจอร์แปลงข้อสอบด้วย AI สงวนสิทธิ์สำหรับสมาชิก'));
       }
 
       const batchId = `BATCH-${Date.now()}`;
@@ -5224,20 +5379,54 @@ if (typeof window !== 'undefined') {
     if (window.lucide) lucide.createIcons();
   }
 
+  function showAuthSyncLoading(show, message) {
+    const overlay = document.getElementById('auth-sync-loading-overlay');
+    const textEl = document.getElementById('auth-sync-loading-text');
+    const skeleton = document.getElementById('dash-auth-loading-skeleton');
+    const welcomeCard = document.getElementById('dash-welcome-card');
+    const adminToggleBox = document.getElementById('dash-admin-toggle-box');
+    const tabAdmin = document.getElementById('tab-admin');
+
+    if (show) {
+      if (overlay) {
+        overlay.classList.remove('hidden');
+        if (textEl && message) textEl.textContent = message;
+      }
+      if (skeleton) skeleton.classList.remove('hidden');
+      if (welcomeCard) welcomeCard.classList.add('hidden');
+      if (adminToggleBox) adminToggleBox.classList.add('hidden');
+      if (tabAdmin) tabAdmin.classList.add('hidden');
+    } else {
+      if (overlay) overlay.classList.add('hidden');
+      if (skeleton) skeleton.classList.add('hidden');
+      if (welcomeCard) welcomeCard.classList.remove('hidden');
+    }
+  }
+
   function initProfileSession() {
-    const saved = localStorage.getItem('quizsilo_active_profile');
-    if (saved) {
+    // 1. Check if OAuth redirection or account switching is in-flight
+    const hasAuthHash = window.location.hash.includes('access_token=') || window.location.hash.includes('refresh_token=');
+    const isSwitching = localStorage.getItem('quizsilo_auth_switching') === 'true';
+
+    if (hasAuthHash || isSwitching) {
+      window._isAuthSyncing = true;
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed && !parsed.isGuest && parsed.uuid) {
-          currentUserProfile = parsed;
-          updateNavbarProfile();
-          return;
-        }
+        localStorage.removeItem('quizsilo_active_profile');
       } catch (e) {}
+      showAuthSyncLoading(true, 'กำลังสลับบัญชีและตรวจสอบสิทธิ์... กรุณารอสักครู่');
+      currentUserProfile = {
+        uuid: null,
+        name: 'กำลังตรวจสอบบัญชี...',
+        role: 'student',
+        isGuest: false,
+        isSyncing: true
+      };
+      updateNavbarProfile();
+      return;
     }
 
-    // Fast-path: Check for Supabase cached auth token to avoid any flash of guest profile
+    // 2. Identify current cached token in Supabase storage
+    let cachedAuthUser = null;
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
@@ -5245,29 +5434,68 @@ if (typeof window !== 'undefined') {
           const raw = localStorage.getItem(k);
           if (raw) {
             const tokenObj = JSON.parse(raw);
-            const u = tokenObj?.user;
-            if (u && u.id) {
-              const optAvatar = u.user_metadata?.avatar_url || u.user_metadata?.picture || '👤';
-              currentUserProfile = {
-                uuid: u.id,
-                name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'ผู้ใช้งาน',
-                email: u.email || '',
-                avatar: optAvatar,
-                avatarUrl: optAvatar.startsWith('http') ? optAvatar : null,
-                role: 'student',
-                scanCredits: 500,
-                isGuest: false,
-                is_onboarded: true
-              };
-              updateNavbarProfile();
-              return;
+            if (tokenObj?.user?.id) {
+              cachedAuthUser = tokenObj.user;
+              break;
             }
           }
         }
       }
     } catch (e) {}
 
-    currentUserProfile = { ...DEFAULT_GUEST_PROFILE };
+    // 3. Inspect cached profile in localStorage
+    const saved = localStorage.getItem('quizsilo_active_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Only trust saved profile if it matches current auth token (avoids stale admin flash!)
+        if (parsed && !parsed.isGuest && parsed.uuid) {
+          if (!cachedAuthUser || parsed.uuid === cachedAuthUser.id) {
+            currentUserProfile = parsed;
+            updateNavbarProfile();
+            return;
+          } else {
+            // Stale profile from different account: wipe it!
+            localStorage.removeItem('quizsilo_active_profile');
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 4. Fast-path with cached auth user (default to student, never default to admin)
+    if (cachedAuthUser) {
+      const optAvatar = cachedAuthUser.user_metadata?.avatar_url || cachedAuthUser.user_metadata?.picture || '👤';
+      currentUserProfile = {
+        uuid: cachedAuthUser.id,
+        name: cachedAuthUser.user_metadata?.full_name || cachedAuthUser.user_metadata?.name || cachedAuthUser.email?.split('@')[0] || 'ผู้ใช้งาน',
+        email: cachedAuthUser.email || '',
+        avatar: optAvatar,
+        avatarUrl: optAvatar.startsWith('http') ? optAvatar : null,
+        role: cachedAuthUser.email === 'chanathipauto1@gmail.com' ? 'admin' : 'student',
+        scanCredits: 500,
+        bonusFiles: 0,
+        bonusQuestions: 0,
+        resetAt: null,
+        isGuest: false,
+        is_onboarded: true
+      };
+      updateNavbarProfile();
+      return;
+    }
+
+    // 5. Fallback to Guest Profile with saved nickname & persistent guest UUID
+    let guestUuid = localStorage.getItem('quizsilo_guest_uuid');
+    if (!guestUuid) {
+      guestUuid = 'guest_' + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem('quizsilo_guest_uuid', guestUuid);
+    }
+    const guestName = localStorage.getItem('quizsilo_guest_name') || 'ผู้เยี่ยมชม';
+    currentUserProfile = {
+      ...DEFAULT_GUEST_PROFILE,
+      uuid: guestUuid,
+      name: guestName,
+      guestNickname: guestName !== 'ผู้เยี่ยมชม' ? guestName : ''
+    };
     updateNavbarProfile();
 
     // Auto-migrate old batches once
@@ -5686,6 +5914,11 @@ if (typeof window !== 'undefined') {
   // My Dashboard Logic
   // ==========================================
   function loadUserDashboard(forceRefresh = false) {
+    if (window._isAuthSyncing) {
+      showAuthSyncLoading(true);
+      return;
+    }
+
     const icon = document.getElementById('dash-refresh-icon');
     if (forceRefresh && icon) icon.classList.add('animate-spin');
 
@@ -6751,9 +6984,9 @@ if (typeof window !== 'undefined') {
         tierId: 'guest',
         name: 'ผู้เยี่ยมชม (Guest)',
         badgeText: '👤 ผู้เยี่ยมชม',
-        badgeCls: 'bg-slate-100 text-slate-700 border-slate-300',
-        maxFiles: 3,
-        maxQuestions: 100,
+        badgeCls: 'bg-white/20 text-white border-white/30',
+        maxFiles: 0,
+        maxQuestions: 0,
         isUnlimited: false
       };
     }
@@ -6875,6 +7108,10 @@ if (typeof window !== 'undefined') {
       if (quotaSummaryText) quotaSummaryText.textContent = 'โควต้า: ไม่จำกัด (Unlimited 🚀)';
       if (progressContainer) progressContainer.classList.add('hidden');
       if (quotaNumbersWrap) quotaNumbersWrap.classList.add('hidden');
+    } else if (prof && prof.isGuest) {
+      if (quotaSummaryText) quotaSummaryText.textContent = 'โควต้าแปลงข้อสอบ: เข้าสู่ระบบ Google ฟรีเพื่อรับ 10 ไฟล์ (500 ข้อ)';
+      if (progressContainer) progressContainer.classList.add('hidden');
+      if (quotaNumbersWrap) quotaNumbersWrap.classList.add('hidden');
     } else {
       const remFiles = Math.max(0, tier.maxFiles - usage.files);
       const remQuestions = Math.max(0, tier.maxQuestions - usage.questions);
@@ -6896,7 +7133,13 @@ if (typeof window !== 'undefined') {
       }
     }
 
-    // 3. Upload Page Quota Status Box
+    // 3. Upload Page Quota Status Box & Guest Upgrade Notice
+    const uploadGuestLock = document.getElementById('upload-guest-lock-banner');
+    if (uploadGuestLock) {
+      if (prof && prof.isGuest) uploadGuestLock.classList.remove('hidden');
+      else uploadGuestLock.classList.add('hidden');
+    }
+
     const upTierBadge = document.getElementById('upload-quota-tier-badge');
     const upInfoText = document.getElementById('upload-quota-info-text');
     const upCountPill = document.getElementById('upload-quota-count-pill');
@@ -6905,7 +7148,10 @@ if (typeof window !== 'undefined') {
       upTierBadge.className = 'px-2.5 py-0.5 rounded-full font-extrabold text-[10px] border ' + tier.badgeCls;
     }
     if (upInfoText) {
-      if (tier.isUnlimited) {
+      if (prof && prof.isGuest) {
+        upInfoText.textContent = 'โควต้าแปลงข้อสอบ: เฉพาะสมาชิก (ล็อกอิน Google ฟรีเพื่อรับ 10 ไฟล์ 500 ข้อ)';
+        upInfoText.className = 'text-amber-800 font-bold truncate';
+      } else if (tier.isUnlimited) {
         upInfoText.textContent = 'โควต้าอัปโหลด: ไม่จำกัด (Unlimited 🚀)';
         upInfoText.className = 'text-slate-700 font-bold truncate';
       } else {
@@ -6921,7 +7167,8 @@ if (typeof window !== 'undefined') {
       }
     }
     if (upCountPill) {
-      if (tier.isUnlimited) upCountPill.textContent = 'ไม่จำกัด';
+      if (prof && prof.isGuest) upCountPill.textContent = 'เฉพาะสมาชิก';
+      else if (tier.isUnlimited) upCountPill.textContent = 'ไม่จำกัด';
       else upCountPill.textContent = `${usage.files}/${tier.maxFiles} ไฟล์`;
     }
   }
@@ -7015,6 +7262,23 @@ if (typeof window !== 'undefined') {
 
   // [แก้ปัญหาข้อ 3] รวมไฟล์ทั้งหมดแปลงเป็น Base64 แล้วส่งรอบเดียว เพื่อให้รันใน 1 คิว
   async function submitUploadQueue() {
+    if (!currentUserProfile || currentUserProfile.isGuest) {
+      Swal.fire({
+        title: 'เข้าสู่ระบบด้วย Google เพื่อเริ่มสกัดข้อสอบ',
+        html: `ฟีเจอร์แปลงข้อสอบด้วย AI อัตโนมัติ สงวนสิทธิ์สำหรับสมาชิก<br><br><b>เข้าสู่ระบบด้วย Google ฟรี 100% ภายใน 1 คลิก</b><br>เพื่อรับโควต้าแปลงข้อสอบทันที <b>10 ไฟล์ (500 ข้อ)</b> โดยไม่มีค่าใช้จ่าย`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: '🌐 เข้าสู่ระบบด้วย Google (ฟรีทันที)',
+        cancelButtonText: 'ไว้คราวหน้า',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#94a3b8',
+        customClass: { popup: 'rounded-3xl' }
+      }).then(res => {
+        if (res.isConfirmed) handleGoogleLogin();
+      });
+      return;
+    }
+
     if (selectedFiles.length === 0) {
       Swal.fire('กรุณาเลือกไฟล์', 'โปรดเลือกไฟล์อย่างน้อย 1 ไฟล์', 'warning');
       return;
@@ -7027,18 +7291,7 @@ if (typeof window !== 'undefined') {
       const remFiles = Math.max(0, tier.maxFiles - usage.files);
       const remQuestions = Math.max(0, tier.maxQuestions - usage.questions);
       if (remFiles <= 0 || remQuestions <= 0) {
-        if (currentUserProfile && currentUserProfile.isGuest) {
-          Swal.fire({
-            title: 'โควต้าผู้เยี่ยมชมเต็มแล้ว',
-            html: `ผู้เยี่ยมชมสามารถอัปโหลดได้สูงสุด 3 ไฟล์ หรือ 100 ข้อ<br><br><b>โปรดเข้าสู่ระบบด้วย Google เพื่อรับโควต้าเพิ่มเป็น 10 ไฟล์ (500 ข้อ) และเริ่มบันทึกสถิติผลสอบถาวร</b>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'เข้าสู่ระบบด้วย Google',
-            cancelButtonText: 'ปิด'
-          }).then(res => { if (res.isConfirmed) handleGoogleLogin(); });
-        } else {
-          Swal.fire('โควต้าอัปโหลดเต็มแล้ว', `คุณใช้โควต้าอัปโหลดสะสมครบแล้ว (${tier.maxFiles} ไฟล์ หรือ ${tier.maxQuestions} ข้อ)`, 'warning');
-        }
+        Swal.fire('โควต้าอัปโหลดเต็มแล้ว', `คุณใช้โควต้าอัปโหลดสะสมครบแล้ว (${tier.maxFiles} ไฟล์ หรือ ${tier.maxQuestions} ข้อ)`, 'warning');
         return;
       }
       if (selectedFiles.length > remFiles) {
@@ -7239,7 +7492,69 @@ if (typeof window !== 'undefined') {
   /* ------------------------------------------------------------
    * ระบบห้องสอบ & สัญลักษณ์ Flag ⚠️
    * ---------------------------------------------------------- */
+  let pendingExamBatchId = null;
+  let pendingExamIsRetake = false;
+
+  function openGuestGatewayModal(batchId, isRetake = false) {
+    pendingExamBatchId = batchId;
+    pendingExamIsRetake = isRetake;
+    const modal = document.getElementById('modal-guest-gateway');
+    const input = document.getElementById('guest-gateway-nickname');
+    if (input) {
+      input.value = currentUserProfile?.guestNickname || (localStorage.getItem('quizsilo_guest_name') !== 'ผู้เยี่ยมชม' ? localStorage.getItem('quizsilo_guest_name') : '') || '';
+      setTimeout(() => input.focus(), 200);
+    }
+    if (modal) {
+      modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+
+  function closeGuestGatewayModal() {
+    const modal = document.getElementById('modal-guest-gateway');
+    if (modal) modal.classList.add('hidden');
+    pendingExamBatchId = null;
+  }
+
+  function confirmGuestNicknameAndStartExam() {
+    const input = document.getElementById('guest-gateway-nickname');
+    const rawVal = input ? input.value.trim() : '';
+    const chosenName = rawVal || 'ผู้เยี่ยมชม';
+
+    localStorage.setItem('quizsilo_guest_name', chosenName);
+    if (!localStorage.getItem('quizsilo_guest_uuid')) {
+      localStorage.setItem('quizsilo_guest_uuid', 'guest_' + Math.random().toString(36).substring(2, 10));
+    }
+    currentUserProfile.name = chosenName;
+    currentUserProfile.guestNickname = rawVal;
+    currentUserProfile.uuid = localStorage.getItem('quizsilo_guest_uuid');
+
+    updateNavbarProfile();
+    updateUserTierAndQuotaUI();
+
+    const modal = document.getElementById('modal-guest-gateway');
+    if (modal) modal.classList.add('hidden');
+
+    if (pendingExamBatchId) {
+      const bId = pendingExamBatchId;
+      const isRetake = pendingExamIsRetake;
+      pendingExamBatchId = null;
+      startExam(bId, isRetake);
+    }
+  }
+
   function startExam(batchId, isRetake = false) {
+    // 0. Guest Gateway Gate: Prompt Guest to either login with Google or provide a nickname
+    if (currentUserProfile && currentUserProfile.isGuest) {
+      const savedGuestName = localStorage.getItem('quizsilo_guest_name');
+      const hasCustomName = (currentUserProfile.guestNickname && currentUserProfile.guestNickname.trim()) ||
+                            (savedGuestName && savedGuestName.trim() && savedGuestName !== 'ผู้เยี่ยมชม');
+      if (!hasCustomName) {
+        openGuestGatewayModal(batchId, isRetake);
+        return;
+      }
+    }
+
     const batch = allBatches.find(b => b.batchId === batchId);
     if (batch && (batch.autoHidden || Number(batch.flagCount) > 10)) {
       Swal.fire({
@@ -10534,7 +10849,8 @@ if (typeof window !== 'undefined') {
       'PIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">📌 ปักหมุดเด่น</span>',
       'UNPIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-50 text-slate-700 border border-slate-200">📌 ปลดหมุด</span>',
       'RATE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⭐ รีวิวข้อสอบ</span>',
-      'SET_QUOTA': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⚡ ปรับโควต้า</span>'
+      'SET_QUOTA': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⚡ ปรับโควต้า</span>',
+      'EXAM_ATTEMPT': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">📝 ฝึกทำข้อสอบ</span>'
     };
 
     tbody.innerHTML = logs.map(item => {

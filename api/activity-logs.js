@@ -32,6 +32,7 @@ module.exports = async function handler(req, res) {
           batch_name: body.batch_name || 'ชุดข้อสอบ',
           batch_category: body.batch_category || 'ทั่วไป',
           question_count: body.question_count || 0,
+          details: body.details || '-',
           timestamp: new Date().toISOString()
         })
       };
