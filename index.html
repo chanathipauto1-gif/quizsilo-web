@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.15.34</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.15.49</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -569,6 +569,10 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <button id="btn-flag-question" onclick="openFlagQuestionModal()" class="px-3 py-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="รายงานข้อสอบหรือเฉลยผิด">
+            <i data-lucide="flag" class="w-3.5 h-3.5 text-rose-500"></i>
+            <span>รายงานข้อนี้</span>
+          </button>
           <button id="btn-edit-on-the-fly" onclick="editCurrentQuestionOnTheFly()" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs shadow-amber-500/20">
             <i data-lucide="pen-line" class="w-3.5 h-3.5"></i>
             <span>แก้ไขโจทย์ / เฉลย</span>
@@ -584,10 +588,16 @@
           <div id="current-q-feedback" class="hidden pt-4 border-t border-slate-200/80 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
               <div id="current-q-result-badge" class="text-sm font-bold"></div>
-              <button onclick="askAiTutorCurrent()" id="current-q-tutor-btn" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/70 rounded-xl text-xs font-bold transition-colors">
-                <i data-lucide="sparkles" class="w-4 h-4"></i>
-                <span>ดูคำอธิบายเฉลย (AI Tutor)</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button onclick="openFlagQuestionModal()" class="inline-flex items-center gap-1.5 px-3 py-2 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold transition-colors cursor-pointer" title="แจ้งข้อสอบหรือเฉลยมีปัญหา">
+                  <i data-lucide="flag" class="w-3.5 h-3.5"></i>
+                  <span>แจ้งข้อนี้ผิด</span>
+                </button>
+                <button onclick="askAiTutorCurrent()" id="current-q-tutor-btn" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/70 rounded-xl text-xs font-bold transition-colors">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                  <span>ดูคำอธิบายเฉลย (AI Tutor)</span>
+                </button>
+              </div>
             </div>
             <div id="current-q-explanation" class="hidden p-5 bg-white rounded-2xl border border-slate-200/80 text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line shadow-xs"></div>
           </div>
@@ -1113,15 +1123,20 @@
     </div>
   </div>
 
-  <!-- Admin Navigation Tabs: [สถิติสมาชิกและภาพรวม] & [บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)] -->
-  <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
-    <button id="admin-tab-btn-stats" onclick="switchAdminTab('stats')" class="px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer">
+  <!-- Admin Navigation Tabs: [สถิติสมาชิกและภาพรวม] & [บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)] & [ศูนย์รับรายงานข้อสอบ (Flagged Questions)] -->
+  <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+    <button id="admin-tab-btn-stats" onclick="switchAdminTab('stats')" class="px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0">
       <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
       <span>📊 สถิติสมาชิกและภาพรวม</span>
     </button>
-    <button id="admin-tab-btn-logs" onclick="switchAdminTab('logs')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer">
+    <button id="admin-tab-btn-logs" onclick="switchAdminTab('logs')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
       <i data-lucide="history" class="w-4 h-4"></i>
       <span>🕒 บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)</span>
+    </button>
+    <button id="admin-tab-btn-flags" onclick="switchAdminTab('flags')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0 relative">
+      <i data-lucide="flag" class="w-4 h-4 text-rose-500"></i>
+      <span>🚩 ศูนย์รับรายงานข้อสอบ</span>
+      <span id="admin-flags-count-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black animate-pulse">0</span>
     </button>
   </div>
 
@@ -1316,6 +1331,73 @@
                 <div class="flex flex-col items-center justify-center space-y-2">
                   <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-brand-500"></i>
                   <span>กำลังโหลดบันทึกความเคลื่อนไหว...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: ศูนย์รับรายงานข้อสอบเฉลยผิด (Flagged Questions Center) -->
+  <div id="admin-tab-content-flags" class="hidden space-y-6">
+    <!-- Auto-hidden Batch Alert Banner -->
+    <div id="admin-auto-hidden-alert" class="hidden p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-200 text-xs shadow-xs">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-start gap-2.5">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 shrink-0 mt-0.5"></i>
+          <div>
+            <h4 class="font-bold text-rose-900 text-sm">พบชุดข้อสอบถูกซ่อนอัตโนมัติเนื่องจากมีผู้ใช้รายงานเกิน 10 ครั้ง</h4>
+            <p id="admin-auto-hidden-desc" class="text-rose-700 mt-1 leading-relaxed">มีชุดข้อสอบที่ถูกซ่อนจากคลังกลางอัตโนมัติ กรุณาตรวจสอบและแก้ไขข้อสอบ</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+      <!-- Toolbar -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="flag" class="w-4 h-4 text-rose-600"></i>
+            <span>รายการรายงานข้อสอบเฉลยผิด / โจทย์มีปัญหา</span>
+          </h3>
+          <p class="text-[11px] text-slate-500 mt-0.5">ตรวจสอบและแก้ไขข้อสอบที่ผู้เรียนส่งรายงานเข้ามา พร้อมระบบซ่อนชุดข้อสอบอัตโนมัติหากมีรายงาน > 10 ครั้ง</p>
+        </div>
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <select id="admin-flags-filter-status" onchange="renderAdminFlagsTable()" class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            <option value="ALL">รายงานทั้งหมด</option>
+            <option value="PENDING" selected>⏳ รอการตรวจสอบ</option>
+            <option value="RESOLVED">✓ ตรวจสอบแล้ว</option>
+          </select>
+          <button onclick="loadAdminFlags(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 shadow-2xs transition-all cursor-pointer">
+            <i data-lucide="refresh-cw" id="admin-flags-refresh-icon" class="w-3.5 h-3.5"></i>
+            <span>รีเฟรช</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Flags Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100/70 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <th class="py-3 px-4 w-36">วันเวลา</th>
+              <th class="py-3 px-3 min-w-[200px]">ชุดข้อสอบ & ข้อที่</th>
+              <th class="py-3 px-3 w-32">ประเภทปัญหา</th>
+              <th class="py-3 px-4 min-w-[220px]">รายละเอียดที่ผู้ใช้แจ้ง</th>
+              <th class="py-3 px-3 min-w-[140px]">ผู้รายงาน</th>
+              <th class="py-3 px-3 text-center w-28">สถานะ</th>
+              <th class="py-3 px-4 text-center w-36">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="admin-flags-table-body" class="divide-y divide-slate-100 text-slate-700">
+            <tr>
+              <td colspan="7" class="py-12 text-center text-slate-400">
+                <div class="flex flex-col items-center justify-center space-y-2">
+                  <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-brand-500"></i>
+                  <span>กำลังโหลดรายการรายงานข้อสอบ...</span>
                 </div>
               </td>
             </tr>
@@ -3715,6 +3797,83 @@ const AdminAuditService = {
     } catch {
       // Non-critical audit logging
     }
+  },
+
+  async reportQuestionIssue(batchId, questionIndex, questionId, questionText, issueType, userNote, userProfile) {
+    try {
+      const activeUser = getActiveProfile(userProfile);
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'report_question',
+          batchId,
+          questionIndex,
+          questionId,
+          questionText,
+          issueType,
+          userNote,
+          reporterProfile: activeUser
+        }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to submit issue report');
+    } catch (err) {
+      console.error('reportQuestionIssue error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async getFlaggedQuestions() {
+    try {
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: { flag: 'get_flags' }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to fetch flagged questions');
+    } catch (err) {
+      console.error('getFlaggedQuestions error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async resolveFlaggedQuestion(flagLedgerId, resolutionNote, adminProfile) {
+    try {
+      const activeAdmin = getActiveProfile(adminProfile);
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'resolve_flag',
+          flagLedgerId,
+          resolutionNote,
+          adminProfile: activeAdmin
+        }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to resolve flag');
+    } catch (err) {
+      console.error('resolveFlaggedQuestion error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async unhideBatch(batchId, adminProfile) {
+    try {
+      const activeAdmin = getActiveProfile(adminProfile);
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'unhide_batch',
+          batchId,
+          adminProfile: activeAdmin
+        }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to unhide batch');
+    } catch (err) {
+      console.error('unhideBatch error:', err);
+      return notifyFailure(this, err);
+    }
   }
 };
 
@@ -3757,7 +3916,11 @@ const adapterImpl = {
   setUserRole: AdminAuditService.setUserRole,
   setUserQuota: AdminAuditService.setUserQuota,
   getActivityLogs: AdminAuditService.getActivityLogs,
-  logActivity: AdminAuditService.logActivity
+  logActivity: AdminAuditService.logActivity,
+  reportQuestionIssue: AdminAuditService.reportQuestionIssue,
+  getFlaggedQuestions: AdminAuditService.getFlaggedQuestions,
+  resolveFlaggedQuestion: AdminAuditService.resolveFlaggedQuestion,
+  unhideBatch: AdminAuditService.unhideBatch
 };
 
 function createGoogleScriptRunner() {
@@ -6547,6 +6710,115 @@ if (typeof window !== 'undefined') {
       .generateExplanation(q.row, q);
   }
 
+  // ==========================================
+  // Question Issue Reporting (Flagged Questions)
+  // ==========================================
+  function openFlagQuestionModal() {
+    if (!currentQuestions || currentQuestions.length === 0 || !currentExamBatch) {
+      showToast('info', 'ไม่พบข้อสอบที่กำลังทำอยู่');
+      return;
+    }
+    const qIndex = currentQuestionIndex;
+    const q = currentQuestions[qIndex];
+    if (!q) return;
+
+    const qSnippet = (q.question || '').replace(/\s+/g, ' ').slice(0, 150) + ((q.question || '').length > 150 ? '...' : '');
+
+    Swal.fire({
+      title: `<div class="flex items-center gap-2 text-rose-600 font-extrabold text-base text-left">
+        <i data-lucide="flag" class="w-5 h-5 text-rose-600"></i>
+        <span>รายงานข้อสอบหรือเฉลยมีปัญหา</span>
+      </div>`,
+      html: `
+        <div class="text-left text-xs space-y-3 pt-2">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+            <div class="font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>ข้อที่ ${qIndex + 1} จาก ${currentQuestions.length}</span>
+              <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(currentExamBatch.batchName || '')}</span>
+            </div>
+            <div class="text-slate-600 line-clamp-3 leading-relaxed">${escapeHtml(qSnippet)}</div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">เลือกประเภทปัญหาที่พบ <span class="text-rose-500">*</span></label>
+            <select id="flag-issue-type" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+              <option value="ANSWER_WRONG">❌ เฉลยไม่ถูกต้อง (ผิดข้อ)</option>
+              <option value="QUESTION_UNCLEAR">❓ โจทย์ไม่ชัดเจน / ข้อมูลตกหล่น</option>
+              <option value="TYPO_ERROR">🔤 พิมพ์ผิด / ตัวเลือกไม่ครบ</option>
+              <option value="CHOICE_DUPLICATE">🔄 ตัวเลือกซ้ำ / ไม่มีข้อที่ถูก</option>
+              <option value="OTHER">📝 อื่นๆ (ระบุในรายละเอียด)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">รายละเอียดเพิ่มเติม (ไม่บังคับ แต่ช่วยแอดมินได้มาก)</label>
+            <textarea id="flag-user-note" rows="3" placeholder="เช่น ข้อนี้เฉลย ก. แต่ที่ถูกต้องควรเป็น ค. ตาม พ.ร.บ. มาตรา 12..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 resize-none"></textarea>
+          </div>
+          <div class="text-[11px] text-slate-400 leading-relaxed">
+            💡 ขอบคุณที่ร่วมพัฒนาคลังข้อสอบ รายงานของคุณจะถูกส่งไปยังผู้ดูแลระบบเพื่อตรวจสอบแก้ไข
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '🚩 ส่งรายงาน',
+      cancelButtonText: 'ยกเลิก',
+      customClass: { popup: 'rounded-3xl' },
+      didOpen: () => {
+        if (window.lucide) lucide.createIcons();
+      },
+      preConfirm: () => {
+        const typeEl = document.getElementById('flag-issue-type');
+        const noteEl = document.getElementById('flag-user-note');
+        return {
+          issueType: typeEl ? typeEl.value : 'ANSWER_WRONG',
+          userNote: noteEl ? noteEl.value.trim() : ''
+        };
+      }
+    }).then(res => {
+      if (res.isConfirmed && res.value) {
+        Swal.fire({
+          title: 'กำลังส่งรายงาน...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        google.script.run
+          .withSuccessHandler(r => {
+            if (r && r.success) {
+              if (r.isAutoHidden) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'ขอบคุณสำหรับการรายงาน 🙏',
+                  html: `รายงานของคุณถูกบันทึกแล้ว<br><br><span class="text-xs text-slate-600">เนื่องจากชุดข้อสอบนี้มีผู้ใช้รายงานสะสมครบ ${r.flagCount} ครั้ง ระบบจึงได้ซ่อนชุดข้อสอบนี้จากคลังชั่วคราวเพื่อรอให้ Admin เข้ามาตรวจสอบแก้ไข</span>`,
+                  confirmButtonColor: '#4f46e5',
+                  confirmButtonText: 'รับทราบ',
+                  customClass: { popup: 'rounded-3xl' }
+                });
+              } else {
+                showToast('success', '🚩 ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่ช่วยตรวจทานครับ!', 4000);
+              }
+            } else {
+              Swal.fire('เกิดข้อผิดพลาด', (r && r.error) || 'ไม่สามารถส่งรายงานได้', 'error');
+            }
+          })
+          .withFailureHandler(err => {
+            Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error');
+          })
+          .reportQuestionIssue(
+            currentExamBatch.batchId,
+            qIndex,
+            q.row || q.id || null,
+            q.question || '',
+            res.value.issueType,
+            res.value.userNote,
+            currentUserProfile
+          );
+      }
+    });
+  }
+
   /* ------------------------------------------------------------
    * ระบบ Review & Edit (Split-Screen & Base64 Viewer)
    * ---------------------------------------------------------- */
@@ -7826,6 +8098,9 @@ if (typeof window !== 'undefined') {
     const icon = document.getElementById('admin-refresh-icon');
     if (icon) icon.classList.add('animate-spin');
 
+    // Pre-fetch flagged questions so Tab 3 count badge is immediately updated
+    loadAdminFlags(forceRefresh);
+
     google.script.run
       .withSuccessHandler(res => {
         if (icon) icon.classList.remove('animate-spin');
@@ -8186,25 +8461,279 @@ if (typeof window !== 'undefined') {
   // Admin Tabs & Audit Log Navigation
   // ==========================================
   let currentAdminTab = 'stats';
+  let allAdminFlags = [];
+  let allAutoHiddenBatches = [];
+
   function switchAdminTab(tab) {
     currentAdminTab = tab;
     const btnStats = document.getElementById('admin-tab-btn-stats');
     const btnLogs = document.getElementById('admin-tab-btn-logs');
+    const btnFlags = document.getElementById('admin-tab-btn-flags');
     const contentStats = document.getElementById('admin-tab-content-stats');
     const contentLogs = document.getElementById('admin-tab-content-logs');
+    const contentFlags = document.getElementById('admin-tab-content-flags');
 
-    if (tab === 'stats') {
-      if (btnStats) btnStats.className = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer';
-      if (btnLogs) btnLogs.className = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer';
-      if (contentStats) contentStats.classList.remove('hidden');
-      if (contentLogs) contentLogs.classList.add('hidden');
-    } else {
-      if (btnStats) btnStats.className = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer';
-      if (btnLogs) btnLogs.className = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer';
-      if (contentStats) contentStats.classList.add('hidden');
-      if (contentLogs) contentLogs.classList.remove('hidden');
+    const activeCls = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0';
+    const inactiveCls = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0';
+
+    if (btnStats) btnStats.className = tab === 'stats' ? activeCls : inactiveCls;
+    if (btnLogs) btnLogs.className = tab === 'logs' ? activeCls : inactiveCls;
+    if (btnFlags) btnFlags.className = tab === 'flags' ? activeCls : (inactiveCls + ' relative');
+
+    if (contentStats) contentStats.classList.toggle('hidden', tab !== 'stats');
+    if (contentLogs) contentLogs.classList.toggle('hidden', tab !== 'logs');
+    if (contentFlags) contentFlags.classList.toggle('hidden', tab !== 'flags');
+
+    if (tab === 'logs') {
       loadAdminAuditLogs();
+    } else if (tab === 'flags') {
+      loadAdminFlags();
     }
+  }
+
+  function loadAdminFlags(force = false) {
+    const icon = document.getElementById('admin-flags-refresh-icon');
+    if (icon) icon.classList.add('animate-spin');
+
+    const tbody = document.getElementById('admin-flags-table-body');
+    if (tbody && force) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-12 text-center text-slate-400">
+            <div class="flex flex-col items-center justify-center space-y-2">
+              <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-brand-500"></i>
+              <span>กำลังโหลดรายการรายงานข้อสอบ...</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (icon) icon.classList.remove('animate-spin');
+        allAdminFlags = (res && res.flags) ? res.flags : [];
+        allAutoHiddenBatches = (res && res.autoHiddenBatches) ? res.autoHiddenBatches : [];
+
+        // Update badge
+        const badge = document.getElementById('admin-flags-count-badge');
+        const pendingCount = allAdminFlags.filter(f => f.status === 'PENDING').length;
+        if (badge) {
+          if (pendingCount > 0) {
+            badge.textContent = pendingCount;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+
+        // Update Auto-Hidden Batch Alert
+        const alertBox = document.getElementById('admin-auto-hidden-alert');
+        const descEl = document.getElementById('admin-auto-hidden-desc');
+        if (alertBox && descEl) {
+          if (allAutoHiddenBatches.length > 0) {
+            alertBox.classList.remove('hidden');
+            descEl.innerHTML = allAutoHiddenBatches.map(b => `
+              <div class="mt-1 flex flex-wrap items-center justify-between gap-2 p-2 bg-white/80 rounded-xl border border-rose-200">
+                <div>
+                  <b class="text-rose-900">${escapeHtml(b.batchName)}</b>
+                  <span class="text-[10px] text-rose-600 ml-1.5">(ถูกรายงานสะสม ${b.flagCount} ครั้ง)</span>
+                </div>
+                <button onclick="adminUnhideBatch('${b.batchId}')" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[11px] shadow-2xs transition-all cursor-pointer">
+                  <span>👁️ ปลดบล็อกและเปิดแสดงในคลัง</span>
+                </button>
+              </div>
+            `).join('');
+          } else {
+            alertBox.classList.add('hidden');
+          }
+        }
+
+        renderAdminFlagsTable();
+      })
+      .withFailureHandler(err => {
+        if (icon) icon.classList.remove('animate-spin');
+        console.error('loadAdminFlags error:', err);
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-rose-500 text-xs">โหลดรายงานไม่สำเร็จ: ${err.message || err}</td></tr>`;
+        }
+      })
+      .getFlaggedQuestions();
+  }
+
+  function renderAdminFlagsTable() {
+    const tbody = document.getElementById('admin-flags-table-body');
+    if (!tbody) return;
+
+    const filterVal = document.getElementById('admin-flags-filter-status')?.value || 'ALL';
+    let filtered = allAdminFlags;
+    if (filterVal === 'PENDING') {
+      filtered = allAdminFlags.filter(f => f.status === 'PENDING');
+    } else if (filterVal === 'RESOLVED') {
+      filtered = allAdminFlags.filter(f => f.status === 'RESOLVED');
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-slate-400">ไม่พบรายการรายงานข้อสอบตามเงื่อนไขที่เลือก</td></tr>';
+      return;
+    }
+
+    const issueTypeLabels = {
+      'ANSWER_WRONG': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">❌ เฉลยผิด</span>',
+      'QUESTION_UNCLEAR': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">❓ โจทย์ไม่ชัดเจน</span>',
+      'TYPO_ERROR': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">🔤 พิมพ์ผิด/ชอยส์แหว่ง</span>',
+      'CHOICE_DUPLICATE': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">🔄 ตัวเลือกซ้ำ</span>',
+      'OTHER': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">📝 อื่นๆ</span>'
+    };
+
+    tbody.innerHTML = filtered.map(item => {
+      const timeStr = item.createdAt ? new Date(item.createdAt).toLocaleString('th-TH') : '-';
+      const typeBadge = issueTypeLabels[item.issueType] || `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(item.issueType)}</span>`;
+      const isResolved = item.status === 'RESOLVED';
+
+      const avatarHtml = (item.reporterAvatar && item.reporterAvatar.startsWith('http'))
+        ? `<img src="${item.reporterAvatar}" class="w-6 h-6 rounded-full border border-slate-200 object-cover" alt="avatar">`
+        : `<div class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px]">👤</div>`;
+
+      return `
+        <tr class="hover:bg-slate-50/70 transition-colors">
+          <td class="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">${timeStr}</td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-800 truncate max-w-xs" title="${escapeHtml(item.batchName)}">
+              ${escapeHtml(item.batchName)}
+            </div>
+            <div class="text-[11px] font-bold text-brand-600 mt-0.5">
+              ข้อที่ ${(item.questionIndex || 0) + 1}
+            </div>
+          </td>
+          <td class="py-3 px-3 whitespace-nowrap">${typeBadge}</td>
+          <td class="py-3 px-4">
+            <div class="text-slate-800 font-medium text-xs leading-relaxed max-w-sm">
+              ${escapeHtml(item.userNote || '-')}
+            </div>
+            ${item.questionText ? `
+              <div class="text-[10px] text-slate-400 mt-1 line-clamp-1 italic" title="${escapeHtml(item.questionText)}">
+                โจทย์: "${escapeHtml(item.questionText)}"
+              </div>
+            ` : ''}
+          </td>
+          <td class="py-3 px-3">
+            <div class="flex items-center gap-2">
+              ${avatarHtml}
+              <span class="font-semibold text-slate-700 truncate max-w-[120px]">${escapeHtml(item.reporterName)}</span>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            ${isResolved
+              ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ แก้ไขแล้ว</span>'
+              : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">⏳ รอตรวจสอบ</span>'
+            }
+          </td>
+          <td class="py-3 px-4 text-center whitespace-nowrap">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="goToEditFlaggedQuestion('${item.batchId}', ${item.questionIndex})" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="เปิดหน้าแก้ไขชุดข้อสอบนี้">
+                <i data-lucide="pen-line" class="w-3 h-3"></i>
+                <span>แก้ไขข้อนี้</span>
+              </button>
+              ${!isResolved ? `
+                <button onclick="resolveAdminFlag('${item.ledgerId}', '${item.batchId}', ${item.questionIndex})" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="ทำเครื่องหมายว่าตรวจสอบ/แก้ไขแล้ว">
+                  <i data-lucide="check" class="w-3 h-3"></i>
+                  <span>ปิดเคส</span>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function goToEditFlaggedQuestion(batchId, questionIndex) {
+    const batch = allBatches.find(b => b.batchId === batchId);
+    if (!batch) {
+      showToast('error', 'ไม่พบชุดข้อสอบนี้ในคลังข้อมูล');
+      return;
+    }
+    openReviewMode(batchId);
+    setTimeout(() => {
+      const qSelector = `[data-row="${questionIndex + 1}"]`;
+      const qItem = document.querySelector(qSelector) || document.querySelectorAll('.review-question-item')[questionIndex];
+      if (qItem) {
+        qItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        qItem.classList.add('ring-4', 'ring-rose-400');
+        setTimeout(() => qItem.classList.remove('ring-4', 'ring-rose-400'), 3500);
+      }
+    }, 800);
+  }
+
+  function resolveAdminFlag(ledgerId, batchId, questionIndex) {
+    if (!currentUserProfile || (currentUserProfile.role !== 'admin' && currentUserProfile.role !== 'assistant_admin')) {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถปิดเคสรายงานได้', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'ปิดเคสรายงานข้อสอบ?',
+      html: `ยืนยันว่าได้ตรวจสอบและแก้ไข <b>ข้อที่ ${questionIndex + 1}</b> เรียบร้อยแล้ว?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: '✓ ยืนยันปิดเคส',
+      cancelButtonText: 'ยกเลิก',
+      customClass: { popup: 'rounded-3xl' }
+    }).then(res => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run
+          .withSuccessHandler(r => {
+            if (r && r.success) {
+              showToast('success', '✓ บันทึกการตรวจสอบเรียบร้อยแล้ว');
+              loadAdminFlags(true);
+            } else {
+              Swal.fire('เกิดข้อผิดพลาด', (r && r.error) || 'ไม่สามารถปิดเคสได้', 'error');
+            }
+          })
+          .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+          .resolveFlaggedQuestion(ledgerId, '', currentUserProfile);
+      }
+    });
+  }
+
+  function adminUnhideBatch(batchId) {
+    if (!currentUserProfile || (currentUserProfile.role !== 'admin' && currentUserProfile.role !== 'assistant_admin')) {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถปลดบล็อกชุดข้อสอบได้', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'ปลดบล็อกชุดข้อสอบ?',
+      html: 'ต้องการเปิดให้ชุดข้อสอบนี้กลับมาแสดงในคลังสาธารณะอีกครั้งใช่หรือไม่?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4f46e5',
+      confirmButtonText: '👁️ ยืนยันเปิดแสดง',
+      cancelButtonText: 'ยกเลิก',
+      customClass: { popup: 'rounded-3xl' }
+    }).then(res => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังปลดบล็อก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        google.script.run
+          .withSuccessHandler(r => {
+            if (r && r.success) {
+              showToast('success', '👁️ ปลดบล็อกและเปิดแสดงชุดข้อสอบในคลังเรียบร้อยแล้ว');
+              loadAdminFlags(true);
+              loadBatches(true);
+            } else {
+              Swal.fire('เกิดข้อผิดพลาด', (r && r.error) || 'ไม่สามารถปลดบล็อกได้', 'error');
+            }
+          })
+          .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+          .unhideBatch(batchId, currentUserProfile);
+      }
+    });
   }
 
   function loadAdminAuditLogs(force = false) {
@@ -8319,6 +8848,12 @@ if (typeof window !== 'undefined') {
   window.adminAddUserQuota = adminAddUserQuota;
   window.adminResetUserQuota = adminResetUserQuota;
   window.updateUserTierAndQuotaUI = updateUserTierAndQuotaUI;
+  window.openFlagQuestionModal = openFlagQuestionModal;
+  window.loadAdminFlags = loadAdminFlags;
+  window.renderAdminFlagsTable = renderAdminFlagsTable;
+  window.goToEditFlaggedQuestion = goToEditFlaggedQuestion;
+  window.resolveAdminFlag = resolveAdminFlag;
+  window.adminUnhideBatch = adminUnhideBatch;
 </script>
 
 

@@ -1,19 +1,14 @@
 // Serverless Function for Vercel (Auto-Generated)
-// Manages batch flags (is_hidden, is_featured) and ratings (1-5 stars) in source_files._meta
+// Manages batch flags (is_hidden, is_featured), ratings, and question issue reports
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-  const { batchId, flag, value, rating, userIdentifier, raterName, adminProfile } = body;
-
-  if (!batchId) {
-    return res.status(400).json({ error: 'Missing batchId' });
-  }
+  const { batchId, flag, value, rating, userIdentifier, raterName, questionIndex, questionId, questionText, issueType, userNote, reporterProfile, flagLedgerId, resolutionNote, adminProfile } = body;
 
   const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vtwlqtvyxtekuydlvpnb.supabase.co';
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || Buffer.from('c2Jfc2VjcmV0X2JIVUw1SXVnNlNKOXNZVk9kcGFPZndfMEZHdFd0Rjk=', 'base64').toString('utf8');
@@ -25,20 +20,258 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    // 1. Fetch current batch
+    // -------------------------------------------------------------
+    // Branch 1: Get all flagged questions & auto-hidden batches (for Admin)
+    // -------------------------------------------------------------
+    if (flag === 'get_flags') {
+      const [ledgerRes, batchesRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?status=like.FLAG_QUESTION*%2Cstatus=like.RESOLVE_FLAG*&select=*&order=created_at.desc&limit=150`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/batches?select=id,batch_name,batch_category,source_files,total_questions,is_hidden&order=created_at.desc&limit=100`, { headers })
+      ]);
+
+      const ledgerRows = await ledgerRes.json();
+      const batchesList = await batchesRes.json();
+
+      const batchMap = {};
+      const autoHiddenBatches = [];
+      (Array.isArray(batchesList) ? batchesList : []).forEach(b => {
+        batchMap[b.id] = b;
+        const sourceFiles = Array.isArray(b.source_files) ? b.source_files : [];
+        const meta = sourceFiles.find(f => f && f._meta) || {};
+        if (Number(meta.flag_count) > 10 || meta.auto_hidden) {
+          autoHiddenBatches.push({
+            batchId: b.id,
+            batchName: b.batch_name,
+            category: b.batch_category,
+            totalQuestions: b.total_questions,
+            flagCount: Number(meta.flag_count) || 0,
+            isHidden: Boolean(meta.is_hidden)
+          });
+        }
+      });
+
+      // Track resolved flag IDs
+      const resolvedMap = {};
+      (Array.isArray(ledgerRows) ? ledgerRows : []).forEach(row => {
+        if (row.status && row.status.startsWith('RESOLVE_FLAG:')) {
+          try {
+            const raw = row.status.replace('RESOLVE_FLAG:', '');
+            const p = JSON.parse(raw);
+            if (p.flag_ledger_id) resolvedMap[p.flag_ledger_id] = p;
+          } catch (e) {}
+        }
+      });
+
+      const flags = [];
+      (Array.isArray(ledgerRows) ? ledgerRows : []).forEach(row => {
+        if (row.status && row.status.startsWith('FLAG_QUESTION:')) {
+          try {
+            const raw = row.status.replace('FLAG_QUESTION:', '');
+            const p = JSON.parse(raw);
+            const b = batchMap[p.batch_id] || {};
+            const isResolved = Boolean(resolvedMap[row.id]);
+            flags.push({
+              ledgerId: row.id,
+              batchId: p.batch_id,
+              batchName: p.batch_name || b.batch_name || 'ชุดข้อสอบ',
+              questionIndex: p.question_index,
+              questionId: p.question_id,
+              questionText: p.question_text || '',
+              issueType: p.issue_type || 'ANSWER_WRONG',
+              userNote: p.user_note || '',
+              reporterName: p.reporter_name || 'ผู้เรียน',
+              reporterAvatar: p.reporter_avatar || '👤',
+              createdAt: p.created_at || row.created_at,
+              status: isResolved ? 'RESOLVED' : 'PENDING',
+              resolution: resolvedMap[row.id] || null
+            });
+          } catch (e) {}
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        flags,
+        autoHiddenBatches
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Branch 2: Resolve a Flagged Question (Admin Action)
+    // -------------------------------------------------------------
+    if (flag === 'resolve_flag') {
+      if (!flagLedgerId) return res.status(400).json({ error: 'Missing flagLedgerId' });
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: adminProfile?.uuid || null,
+          batch_id: batchId || null,
+          questions_scanned: 0,
+          status: 'RESOLVE_FLAG:' + JSON.stringify({
+            flag_ledger_id: flagLedgerId,
+            resolution_note: resolutionNote || 'ตรวจสอบและแก้ไขเรียบร้อยแล้ว',
+            resolved_by: adminProfile?.name || adminProfile?.nickname || 'Admin 👑',
+            resolved_at: new Date().toISOString()
+          })
+        })
+      });
+      return res.status(200).json({ success: true, message: 'บันทึกการตรวจสอบเรียบร้อยแล้ว' });
+    }
+
+    // -------------------------------------------------------------
+    // Branch 3: Unhide / Unblock an auto-hidden batch (Admin Action)
+    // -------------------------------------------------------------
+    if (flag === 'unhide_batch') {
+      if (!batchId) return res.status(400).json({ error: 'Missing batchId' });
+      const bRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}&select=*`, { headers });
+      const bData = await bRes.json();
+      if (!bData || bData.length === 0) return res.status(404).json({ error: 'Batch not found' });
+      const batch = bData[0];
+
+      const sourceFiles = Array.isArray(batch.source_files) ? [...batch.source_files] : [];
+      const metaIdx = sourceFiles.findIndex(f => f && f._meta);
+      const currentMeta = metaIdx >= 0 ? sourceFiles[metaIdx] : { _meta: true };
+      const updatedMeta = { ...currentMeta, is_hidden: false, auto_hidden: false, _meta: true };
+      if (metaIdx >= 0) sourceFiles[metaIdx] = updatedMeta;
+      else sourceFiles.push(updatedMeta);
+
+      await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ source_files: sourceFiles, updated_at: new Date().toISOString() })
+      });
+
+      // Audit Log for Unhide
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: adminProfile?.uuid || null,
+            batch_id: batchId,
+            questions_scanned: batch.total_questions || 0,
+            status: 'LOG: ' + JSON.stringify({
+              action: 'UNHIDE_BATCH',
+              user_name: adminProfile?.name || 'Admin',
+              user_avatar: adminProfile?.avatar || '👑',
+              user_role: 'admin',
+              batch_name: batch.batch_name,
+              batch_category: batch.batch_category,
+              question_count: batch.total_questions || 0,
+              details: 'ปลดบล็อกและเปิดแสดงชุดข้อสอบในคลังสาธารณะอีกครั้ง หลังตรวจสอบแก้ไขแล้ว',
+              timestamp: new Date().toISOString()
+            })
+          })
+        });
+      } catch (e) {}
+
+      return res.status(200).json({ success: true, is_hidden: false });
+    }
+
+    // -------------------------------------------------------------
+    // For other operations, batchId is required
+    // -------------------------------------------------------------
+    if (!batchId) return res.status(400).json({ error: 'Missing batchId' });
+
     const bRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}&select=*`, { headers });
     const bData = await bRes.json();
-    if (!bData || bData.length === 0) {
-      return res.status(404).json({ error: 'Batch not found' });
-    }
+    if (!bData || bData.length === 0) return res.status(404).json({ error: 'Batch not found' });
     const batch = bData[0];
 
-    // 2. Update source_files metadata
     const sourceFiles = Array.isArray(batch.source_files) ? [...batch.source_files] : [];
     const metaIdx = sourceFiles.findIndex(f => f && f._meta);
     const currentMeta = metaIdx >= 0 ? sourceFiles[metaIdx] : { _meta: true };
 
-    // Branch A: Rating submission (flag === 'rate' or rating !== undefined)
+    // -------------------------------------------------------------
+    // Branch 4: Report question issue (Learner Action)
+    // -------------------------------------------------------------
+    if (flag === 'report_question') {
+      const currentFlagCount = (Number(currentMeta.flag_count) || 0) + 1;
+      const willAutoHide = currentFlagCount > 10;
+
+      const updatedMeta = {
+        ...currentMeta,
+        flag_count: currentFlagCount,
+        _meta: true
+      };
+      if (willAutoHide) {
+        updatedMeta.is_hidden = true;
+        updatedMeta.auto_hidden = true;
+      }
+
+      if (metaIdx >= 0) sourceFiles[metaIdx] = updatedMeta;
+      else sourceFiles.push(updatedMeta);
+
+      await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ source_files: sourceFiles, updated_at: new Date().toISOString() })
+      });
+
+      // Insert record to scan_ledger
+      const repName = reporterProfile?.nickname || reporterProfile?.name || 'ผู้เรียน';
+      const flagData = {
+        batch_id: batchId,
+        batch_name: batch.batch_name,
+        question_index: questionIndex !== undefined ? Number(questionIndex) : 0,
+        question_id: questionId || null,
+        question_text: String(questionText || '').slice(0, 300),
+        issue_type: issueType || 'ANSWER_WRONG',
+        user_note: String(userNote || '').slice(0, 500),
+        reporter_name: repName,
+        reporter_avatar: reporterProfile?.avatar || '👤',
+        created_at: new Date().toISOString()
+      };
+
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: reporterProfile?.uuid || null,
+          batch_id: batchId,
+          questions_scanned: (Number(questionIndex) || 0) + 1,
+          status: 'FLAG_QUESTION:' + JSON.stringify(flagData)
+        })
+      });
+
+      // If Auto-Hidden (> 10), log into Audit Trail
+      if (willAutoHide && !currentMeta.auto_hidden) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              user_id: null,
+              batch_id: batchId,
+              questions_scanned: batch.total_questions || 0,
+              status: 'LOG: ' + JSON.stringify({
+                action: 'AUTO_HIDE_BATCH',
+                user_name: 'ระบบความปลอดภัย QuizSilo 🤖',
+                user_avatar: '🤖',
+                user_role: 'system',
+                batch_name: batch.batch_name,
+                batch_category: batch.batch_category,
+                question_count: batch.total_questions || 0,
+                details: `ซ่อนชุดข้อสอบนี้จากคลังสาธารณะอัตโนมัติ เนื่องจากมีผู้ใช้รายงานข้อผิดพลาดสะสมครบ ${currentFlagCount} ครั้ง`,
+                timestamp: new Date().toISOString()
+              })
+            })
+          });
+        } catch (e) {}
+      }
+
+      return res.status(200).json({
+        success: true,
+        batchId,
+        flagCount: currentFlagCount,
+        isAutoHidden: willAutoHide
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Branch 5: Submit Star Rating
+    // -------------------------------------------------------------
     if (flag === 'rate' || rating !== undefined) {
       const starVal = parseInt(rating, 10);
       if (isNaN(starVal) || starVal < 1 || starVal > 5) {
@@ -62,25 +295,16 @@ module.exports = async function handler(req, res) {
         rating_avg: ratingAvg
       };
 
-      if (metaIdx >= 0) {
-        sourceFiles[metaIdx] = updatedMeta;
-      } else {
-        sourceFiles.push(updatedMeta);
-      }
+      if (metaIdx >= 0) sourceFiles[metaIdx] = updatedMeta;
+      else sourceFiles.push(updatedMeta);
 
       const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({
-          source_files: sourceFiles,
-          updated_at: new Date().toISOString()
-        })
+        body: JSON.stringify({ source_files: sourceFiles, updated_at: new Date().toISOString() })
       });
 
-      if (!updateRes.ok) {
-        const uErr = await updateRes.text();
-        throw new Error(uErr);
-      }
+      if (!updateRes.ok) throw new Error(await updateRes.text());
 
       return res.status(200).json({
         success: true,
@@ -91,35 +315,28 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Branch B: Visibility or Pin Flag (is_hidden / is_featured)
-    if (!flag) {
-      return res.status(400).json({ error: 'Missing flag or rating' });
-    }
+    // -------------------------------------------------------------
+    // Branch 6: Toggle Batch Visibility or Pin
+    // -------------------------------------------------------------
+    if (!flag) return res.status(400).json({ error: 'Missing flag or rating' });
 
     const updatedMeta = { ...currentMeta, [flag]: Boolean(value), _meta: true };
-
-    if (metaIdx >= 0) {
-      sourceFiles[metaIdx] = updatedMeta;
-    } else {
-      sourceFiles.push(updatedMeta);
+    if (flag === 'is_hidden' && !value) {
+      updatedMeta.auto_hidden = false;
     }
 
-    // 3. Save back to Supabase batches
+    if (metaIdx >= 0) sourceFiles[metaIdx] = updatedMeta;
+    else sourceFiles.push(updatedMeta);
+
     const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({
-        source_files: sourceFiles,
-        updated_at: new Date().toISOString()
-      })
+      body: JSON.stringify({ source_files: sourceFiles, updated_at: new Date().toISOString() })
     });
 
-    if (!updateRes.ok) {
-      const uErr = await updateRes.text();
-      throw new Error(uErr);
-    }
+    if (!updateRes.ok) throw new Error(await updateRes.text());
 
-    // 4. Log to scan_ledger
+    // Audit Log for Flag change
     try {
       const uName = adminProfile?.nickname || adminProfile?.name || 'ผู้ดูแลระบบ';
       const uAvatar = adminProfile?.avatar || '👤';
@@ -155,9 +372,7 @@ module.exports = async function handler(req, res) {
           })
         })
       });
-    } catch (le) {
-      console.warn('Flag log warning:', le);
-    }
+    } catch (le) {}
 
     return res.status(200).json({
       success: true,
