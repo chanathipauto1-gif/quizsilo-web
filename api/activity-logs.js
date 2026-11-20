@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-      const isUuid = body.user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.user_id);
+      const isUuid = body.user_id && typeof body.user_id === 'string' && body.user_id.length === 36 && body.user_id.indexOf('-') !== -1;
       const ledgerEntry = {
         user_id: isUuid ? body.user_id : null,
         batch_id: body.batch_id || null,

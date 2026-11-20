@@ -135,9 +135,12 @@ module.exports = async function handler(req, res) {
             const logQCount = Number(logData.question_count || l.questions_scanned || 0);
 
             let logScore = Number(logData.score);
-            if (isNaN(logScore) && logData.details) {
-              const m = logData.details.match(/ทำข้อสอบได้s*(d+)/(d+)/);
-              if (m) logScore = parseInt(m[1], 10);
+            if (isNaN(logScore) && logData.details && typeof logData.details === 'string') {
+              const slashParts = logData.details.split('/');
+              if (slashParts.length >= 2) {
+                const sNum = slashParts[0].replace(/[^0-9]/g, '');
+                if (sNum) logScore = parseInt(sNum, 10);
+              }
             }
             if (isNaN(logScore)) logScore = 0;
 
