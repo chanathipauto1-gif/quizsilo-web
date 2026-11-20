@@ -101,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.22.42</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.23.32</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -194,19 +194,19 @@
     <!-- รวมไฟล์ย่อยด้วยคำสั่ง include -->
     <section id="page-library" class="hidden space-y-4 sm:space-y-5">
 
-  <!-- Container for Hero or Announcement -->
+  <!-- Container for Announcement -->
   <div id="hero-banner-container">
-    <!-- 1. Global Announcement Banner (แสดงเมื่อ Admin เปิดใช้งาน) -->
-    <div id="hero-announcement-banner" class="hidden bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all overflow-hidden w-full">
+    <!-- Global Announcement Banner (แสดงเมื่อ Admin เปิดใช้งาน) -->
+    <div id="hero-announcement-banner" class="hidden bg-gradient-to-r from-brand-50 via-purple-50/70 to-indigo-50/60 p-4 sm:p-5 rounded-3xl border border-brand-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all overflow-hidden w-full">
       <div class="flex items-start gap-3 sm:gap-3.5 min-w-0 w-full flex-1 overflow-hidden">
         <!-- Visual Box: Square Image or Preset Icon -->
-        <div id="announcement-visual-box" class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden cursor-pointer" onclick="openAnnouncementImageModal()">
+        <div id="announcement-visual-box" class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20 overflow-hidden cursor-pointer" onclick="openAnnouncementImageModal()">
           <span id="announcement-icon-el" class="text-2xl sm:text-3xl">📢</span>
           <img id="announcement-img-el" src="" alt="announcement" class="hidden w-full h-full object-cover">
         </div>
         <div class="min-w-0 flex-1 overflow-hidden">
           <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <span id="announcement-tag-el" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+            <span id="announcement-tag-el" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-brand-100 text-brand-800 border border-brand-300 flex items-center gap-1">
               <span>📢 ประกาศจากแอดมิน</span>
             </span>
             <span id="announcement-date-el" class="text-[10px] text-slate-400 font-mono"></span>
@@ -220,34 +220,10 @@
         </div>
       </div>
       <div id="announcement-cta-box" class="shrink-0 flex items-center gap-2 w-full md:w-auto">
-        <a id="announcement-cta-btn" href="#" target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all cursor-pointer">
+        <a id="announcement-cta-btn" href="#" class="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all cursor-pointer">
           <span id="announcement-cta-text">คลิกดูรายละเอียด</span>
-          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
         </a>
-      </div>
-    </div>
-
-    <!-- 2. Modern EdTech Hero Welcome Banner (Default เมื่อไม่มีประกาศ) -->
-    <div id="hero-welcome-banner" class="bg-gradient-to-r from-brand-50 via-indigo-50/70 to-amber-50/50 p-4 sm:p-5 rounded-3xl border border-brand-100/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
-      <div class="flex items-start sm:items-center gap-3.5">
-        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20">
-          <i data-lucide="sparkles" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-100 text-brand-700 border border-brand-200">AI Companion</span>
-            <h2 id="hero-welcome-title" class="text-sm sm:text-base font-black text-slate-800">QuizSilo — คลังข้อสอบอัจฉริยะสำหรับคนเตรียมสอบ</h2>
-          </div>
-          <p id="hero-welcome-sub" class="text-xs text-slate-600 mt-1 leading-relaxed">
-            ทดลองฝึกทำข้อสอบได้ทันที หรือเข้าสู่ระบบด้วย Google เพื่อบันทึกสถิติ ประวัติการฝึกซ้อม และวิเคราะห์จุดอ่อนเฉพาะบุคคล
-          </p>
-        </div>
-      </div>
-      <div id="hero-auth-cta" class="shrink-0 flex items-center gap-2 w-full md:w-auto">
-        <button onclick="openAuthModal()" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
-          <i data-lucide="log-in" class="w-4 h-4"></i>
-          <span>เข้าสู่ระบบด้วย Google</span>
-        </button>
       </div>
     </div>
   </div>
@@ -931,70 +907,64 @@
     </button>
   </div>
 
-  <!-- Hero Welcome Card -->
-  <div class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+  <!-- Unified Homepage Welcome & Tier Banner -->
+  <div class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-3xl p-5 sm:p-7 text-white shadow-lg relative overflow-hidden">
     <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-      <div class="flex items-center gap-4 sm:gap-5">
-        <div id="dash-hero-avatar-wrap" class="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-inner shrink-0 overflow-hidden transition-transform hover:scale-105">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 relative z-10">
+      
+      <!-- User Greeting & Info -->
+      <div class="flex items-start sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
+        <div id="dash-hero-avatar-wrap" class="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-inner shrink-0 overflow-hidden transition-transform hover:scale-105">
           <img id="dash-hero-avatar-img" src="" class="w-full h-full object-cover hidden" alt="Avatar">
-          <span id="dash-hero-avatar-fallback" class="text-3xl sm:text-4xl">👤</span>
+          <span id="dash-hero-avatar-fallback" class="text-2xl sm:text-3xl">👤</span>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">
-              สถิติการฝึกซ้อมของ <span id="dash-hero-name" class="underline decoration-amber-300 decoration-wavy">ผู้ฝึกซ้อม</span>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-black tracking-tight leading-snug">
+              สวัสดี <span id="dash-hero-name" class="underline decoration-amber-300 decoration-wavy">ผู้ฝึกซ้อม</span> 👋
             </h1>
             <span id="dash-hero-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 border border-white/30 tracking-wide uppercase">ผู้ฝึกซ้อม</span>
           </div>
-          <p class="text-xs sm:text-sm text-indigo-100 mt-1 font-medium">
-            ✨ วันนี้เก่งขึ้นกว่าเมื่อวานแล้วนะ! ทุกโจทย์ที่ทำคือก้าวสำคัญสู่ความสำเร็จ
+          <p class="text-xs sm:text-sm text-indigo-100 mt-1 font-medium leading-relaxed">
+            ยินดีต้อนรับสู่ <span class="font-bold text-white">QuizSilo</span> คลังข้อสอบอัจฉริยะสำหรับคนเตรียมสอบ
           </p>
+
+          <!-- Merged Tier & Quota Bar inside Welcome Banner -->
+          <div class="mt-3 pt-3 border-t border-white/15 max-w-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-indigo-100 font-bold mb-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span id="dash-tier-icon-wrap" class="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center text-xs">👑</span>
+                <span class="text-indigo-200 font-normal">ระดับ:</span>
+                <span id="dash-tier-name-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 border border-white/30 text-white">Super Admin</span>
+                <span id="dash-quota-summary-text" class="text-amber-300 font-bold ml-1">โควต้า: ไม่จำกัด (Unlimited 🚀)</span>
+              </div>
+              <div id="dash-quota-numbers-wrap" class="flex items-center gap-2 text-[11px] font-semibold text-white/90 hidden">
+                <span id="dash-quota-files-text">ไฟล์คงเหลือ: 10/10 ไฟล์</span>
+                <span class="text-white/40">•</span>
+                <span id="dash-quota-questions-text">ข้อคงเหลือ: 500/500 ข้อ</span>
+              </div>
+            </div>
+            <div id="dash-quota-progress-container" class="w-full h-2 bg-black/25 rounded-full overflow-hidden border border-white/20 hidden">
+              <div id="dash-quota-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-amber-300 transition-all duration-500 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 shrink-0">
-        <button onclick="openCustomQuizModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs font-extrabold shadow-sm transition-all cursor-pointer">
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+        <button onclick="openCustomQuizModal()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer">
           <i data-lucide="shuffle" class="w-4 h-4"></i>
-          <span>🎲 สุ่มชุดข้อสอบฝึกซ้อม</span>
+          <span>🎲 สุ่มชุดข้อสอบ</span>
         </button>
-        <button onclick="switchPage('upload')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white/20 hover:bg-white/30 border border-white/40 rounded-xl text-xs font-bold text-white transition-all shadow-xs">
+        <button onclick="switchPage('upload')" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer">
           <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
-          <span>นำเข้าไฟล์ใหม่</span>
+          <span>นำเข้าไฟล์</span>
         </button>
-        <button onclick="loadUserDashboard(true)" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl text-xs font-bold text-white transition-all shadow-xs" title="รีเฟรชสถิติ">
+        <button onclick="loadUserDashboard(true)" class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer" title="รีเฟรชสถิติ">
           <i data-lucide="refresh-cw" id="dash-refresh-icon" class="w-3.5 h-3.5"></i>
           <span class="hidden sm:inline">รีเฟรช</span>
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tier & Quota Status Card (แสดงข้อมูลระดับ Tier และจำนวนโควต้าคงเหลือ) -->
-  <div id="dash-tier-quota-card" class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div class="flex items-center gap-3.5">
-      <div id="dash-tier-icon-wrap" class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
-        👑
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-slate-500 font-medium">ระดับของคุณ:</span>
-          <span id="dash-tier-name-badge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-brand-50 text-brand-700 border border-brand-200">👑 Super Admin</span>
-        </div>
-        <div id="dash-quota-summary-text" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">
-          โควต้าอัปโหลด: ไม่จำกัด (Unlimited 🚀)
-        </div>
-      </div>
-    </div>
-
-    <!-- Quota Progress Bar for Member & Guest -->
-    <div id="dash-quota-progress-container" class="flex-1 max-w-md w-full space-y-1.5 hidden">
-      <div class="flex items-center justify-between text-xs font-bold text-slate-600">
-        <span id="dash-quota-files-text">ไฟล์คงเหลือ: 10/10 ไฟล์</span>
-        <span id="dash-quota-questions-text">ข้อคงเหลือ: 500/500 ข้อ</span>
-      </div>
-      <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
-        <div id="dash-quota-progress-bar" class="h-full bg-brand-500 transition-all duration-500 rounded-full" style="width: 0%"></div>
       </div>
     </div>
   </div>
@@ -1581,15 +1551,15 @@
             <span>ตัวอย่างการแสดงผลจริงบนหน้าคลังข้อสอบ (Live Preview)</span>
             <span id="admin-ann-status-pill" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500">⚪ ปิดการแสดงผล</span>
           </label>
-          <div id="admin-ann-preview-box" class="bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all overflow-hidden w-full">
+          <div id="admin-ann-preview-box" class="bg-gradient-to-r from-brand-50 via-purple-50/70 to-indigo-50/60 p-4 sm:p-5 rounded-3xl border border-brand-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all overflow-hidden w-full">
             <div class="flex items-start gap-3 sm:gap-3.5 min-w-0 w-full flex-1 overflow-hidden">
-              <div id="prev-ann-visual-box" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden">
+              <div id="prev-ann-visual-box" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20 overflow-hidden">
                 <span id="prev-ann-icon-el" class="text-2xl">📢</span>
                 <img id="prev-ann-img-el" src="" alt="preview" class="hidden w-full h-full object-cover">
               </div>
               <div class="min-w-0 flex-1 overflow-hidden">
                 <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-brand-100 text-brand-800 border border-brand-300">
                     📢 ประกาศจากแอดมิน
                   </span>
                   <span id="prev-ann-date-el" class="text-[10px] text-slate-400 font-mono">วันนี้</span>
@@ -1603,9 +1573,9 @@
               </div>
             </div>
             <div id="prev-ann-cta-box" class="shrink-0 w-full md:w-auto">
-              <span class="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs">
+              <span class="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs">
                 <span id="prev-ann-btn-text">คลิกดูรายละเอียด</span>
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
               </span>
             </div>
           </div>
@@ -1618,24 +1588,24 @@
             <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div>
                 <span class="text-xs font-bold text-slate-800 block">เปิดใช้งานแถบประกาศบนหน้าแรก</span>
-                <span class="text-[11px] text-slate-400">หากปิด สมาชิกจะเห็นข้อความต้อนรับของระบบตามปกติ</span>
+                <span class="text-[11px] text-slate-400">หากปิด สมาชิกจะไม่เห็นแถบประกาศในหน้าคลังข้อสอบ</span>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="admin-ann-enabled" onchange="updateAdminAnnouncementLivePreview()" class="sr-only peer">
-                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
               </label>
             </div>
 
             <!-- Headline (บรรทัดที่ 1) -->
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">หัวข้อประกาศ (บรรทัดที่ 1) <span class="text-rose-500">*</span></label>
-              <input type="text" id="admin-ann-title" oninput="updateAdminAnnouncementLivePreview()" placeholder="เช่น เปิดรับแนวข้อสอบครูผู้ช่วย ภาค ก ปี 2569 แล้ววันนี้!" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <input type="text" id="admin-ann-title" oninput="updateAdminAnnouncementLivePreview()" placeholder="เช่น เปิดรับแนวข้อสอบครูผู้ช่วย ภาค ก ปี 2569 แล้ววันนี้!" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
             </div>
 
             <!-- Subtext (บรรทัดที่ 2) -->
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดประกาศ (บรรทัดที่ 2) <span class="text-rose-500">*</span></label>
-              <textarea id="admin-ann-desc" rows="3" oninput="updateAdminAnnouncementLivePreview()" placeholder="เช่น สมาชิกทุกคนสามารถเข้าไปทดลองทำข้อสอบเสมือนจริงในหมวดการศึกษาได้ฟรี พร้อมเฉลยละเอียดรายข้อ..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 resize-none"></textarea>
+              <textarea id="admin-ann-desc" rows="3" oninput="updateAdminAnnouncementLivePreview()" placeholder="เช่น สมาชิกทุกคนสามารถเข้าไปทดลองทำข้อสอบเสมือนจริงในหมวดการศึกษาได้ฟรี พร้อมเฉลยละเอียดรายข้อ..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none"></textarea>
             </div>
           </div>
 
@@ -1644,7 +1614,7 @@
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">เลือกไอคอนประกาศ หรือระบุ URL รูปภาพสี่เหลี่ยม</label>
               <div class="flex items-center gap-2 mb-2">
-                <select id="admin-ann-icon" onchange="updateAdminAnnouncementLivePreview()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                <select id="admin-ann-icon" onchange="updateAdminAnnouncementLivePreview()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
                   <option value="📢">📢 โทรโข่ง / ข่าวสาร</option>
                   <option value="🚀">🚀 จรวด / ฟีเจอร์ใหม่</option>
                   <option value="🔔">🔔 กระดิ่ง / แจ้งเตือน</option>
@@ -1654,23 +1624,35 @@
                 </select>
                 <span class="text-xs text-slate-400">หรือใส่ลิงก์รูปภาพด้านล่าง</span>
               </div>
-              <input type="url" id="admin-ann-image-url" oninput="updateAdminAnnouncementLivePreview()" placeholder="https://example.com/banner-square.jpg (ไม่บังคับ)" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <input type="url" id="admin-ann-image-url" oninput="updateAdminAnnouncementLivePreview()" placeholder="https://example.com/banner-square.jpg (ไม่บังคับ)" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
               <p class="text-[10px] text-slate-400 mt-1">💡 หากใส่ URL รูปภาพ ระบบจะแสดงรูปภาพแทนไอคอน และคลิกดูภาพขยายได้</p>
             </div>
 
             <!-- Action Button (Optional) -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">ปุ่มเชื่อมโยง (Action Button) - ไม่บังคับ</label>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="text" id="admin-ann-btn-text" oninput="updateAdminAnnouncementLivePreview()" placeholder="ข้อความบนปุ่ม เช่น คลิกดูเลย" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-                <input type="text" id="admin-ann-btn-url" oninput="updateAdminAnnouncementLivePreview()" placeholder="ลิงก์ปลายทาง เช่น https://..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold text-slate-700">ปุ่มเชื่อมโยง (Action Button) - ไม่บังคับ</label>
+                <span class="text-[10px] text-brand-600 font-bold">เลือกปลายทางด่วนได้</span>
               </div>
-              <p class="text-[10px] text-slate-400 mt-1">หากไม่ใส่ข้อความปุ่ม แถบจะแสดงเฉพาะข้อความและรูปภาพโดยไม่มีปุ่มกด</p>
+              <!-- Quick Preset Buttons -->
+              <div class="flex items-center gap-1.5 flex-wrap mb-2">
+                <button type="button" onclick="selectAdminAnnPreset('about')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-all cursor-pointer">📖 เกี่ยวกับเรา</button>
+                <button type="button" onclick="selectAdminAnnPreset('random_quiz')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all cursor-pointer">🎲 สุ่มข้อสอบ</button>
+                <button type="button" onclick="selectAdminAnnPreset('upload')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all cursor-pointer">📤 นำเข้าไฟล์</button>
+                <button type="button" onclick="selectAdminAnnPreset('library')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-all cursor-pointer">📚 คลังข้อสอบ</button>
+                <button type="button" onclick="selectAdminAnnPreset('dashboard')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer">📊 แดชบอร์ด</button>
+                <button type="button" onclick="selectAdminAnnPreset('custom')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-all cursor-pointer">🌐 URL นอก</button>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="admin-ann-btn-text" oninput="updateAdminAnnouncementLivePreview()" placeholder="ข้อความบนปุ่ม เช่น คลิกดูเลย" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                <input type="text" id="admin-ann-btn-url" oninput="updateAdminAnnouncementLivePreview()" placeholder="ลิงก์ปลายทาง เช่น page:about หรือ https://..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">💡 ใส่ <code>page:about</code> สำหรับหน้าเกี่ยวกับเรา, <code>action:random_quiz</code> สำหรับสุ่มข้อสอบ หรือใส่ URL ภายนอก</p>
             </div>
 
             <!-- Submit Button -->
             <div class="pt-3">
-              <button onclick="saveAdminAnnouncement()" id="btn-save-admin-ann" class="w-full py-3 px-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-amber-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
+              <button onclick="saveAdminAnnouncement()" id="btn-save-admin-ann" class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-brand-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>บันทึกประกาศหน้าแรก</span>
               </button>
@@ -2902,20 +2884,26 @@ const AuthService = {
   },
 
   async resolveEffectiveRole(profile) {
-    let role = profile.role || 'student';
-    if (role === 'admin' || !sbClient) return role;
+    let role = profile?.role || 'student';
+    if (!profile?.id) return role;
+
+    if (window._cachedRoleMap && window._cachedRoleMap[profile.id]) {
+      return window._cachedRoleMap[profile.id];
+    }
 
     try {
-      const { data: roleRecords } = await sbClient
-        .from('scan_ledger')
-        .select('status')
-        .eq('user_id', profile.id)
-        .like('status', 'SYSTEM_ROLE:%')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      if (sbClient) {
+        const { data: roleRecords } = await sbClient
+          .from('scan_ledger')
+          .select('status')
+          .eq('user_id', profile.id)
+          .like('status', 'SYSTEM_ROLE:%')
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-      if (roleRecords?.length > 0) {
-        role = roleRecords[0].status.replace('SYSTEM_ROLE:', '');
+        if (roleRecords?.length > 0) {
+          role = roleRecords[0].status.replace('SYSTEM_ROLE:', '');
+        }
       }
     } catch {
       // Ignore fallback lookup failure
@@ -2927,23 +2915,50 @@ const AuthService = {
     let bonusFiles = 0;
     let bonusQuestions = 0;
     let resetAt = null;
-    if (!sbClient || !profile?.id) return { bonusFiles, bonusQuestions, resetAt };
+    if (!profile?.id) return { bonusFiles, bonusQuestions, resetAt };
+
+    if (window._cachedQuotaMap && window._cachedQuotaMap[profile.id]) {
+      const p = window._cachedQuotaMap[profile.id];
+      return {
+        bonusFiles: Number(p.bonusFiles || 0),
+        bonusQuestions: Number(p.bonusQuestions || 0),
+        resetAt: p.resetAt || null
+      };
+    }
 
     try {
-      const { data: quotaRecords } = await sbClient
-        .from('scan_ledger')
-        .select('status')
-        .eq('user_id', profile.id)
-        .like('status', 'SYSTEM_QUOTA:%')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const apiData = await fetchJsonApi('/api/batches-list');
+      if (apiData?.quotaMap) {
+        window._cachedQuotaMap = apiData.quotaMap;
+        if (apiData.roleMap) window._cachedRoleMap = apiData.roleMap;
+        if (apiData.quotaMap[profile.id]) {
+          const p = apiData.quotaMap[profile.id];
+          return {
+            bonusFiles: Number(p.bonusFiles || 0),
+            bonusQuestions: Number(p.bonusQuestions || 0),
+            resetAt: p.resetAt || null
+          };
+        }
+      }
+    } catch (e) {}
 
-      if (quotaRecords?.length > 0) {
-        const raw = quotaRecords[0].status.replace('SYSTEM_QUOTA:', '');
-        const p = JSON.parse(raw);
-        bonusFiles = Number(p.bonusFiles || 0);
-        bonusQuestions = Number(p.bonusQuestions || 0);
-        resetAt = p.resetAt || null;
+    try {
+      if (sbClient) {
+        const { data: quotaRecords } = await sbClient
+          .from('scan_ledger')
+          .select('status')
+          .eq('user_id', profile.id)
+          .like('status', 'SYSTEM_QUOTA:%')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (quotaRecords?.length > 0) {
+          const raw = quotaRecords[0].status.replace('SYSTEM_QUOTA:', '');
+          const p = JSON.parse(raw);
+          bonusFiles = Number(p.bonusFiles || 0);
+          bonusQuestions = Number(p.bonusQuestions || 0);
+          resetAt = p.resetAt || null;
+        }
       }
     } catch {
       // Ignore fallback lookup failure
@@ -3095,6 +3110,40 @@ const BatchesQuestionsService = {
         if (apiData?.success && Array.isArray(apiData.batches)) {
           batches = apiData.batches;
           profileMap = apiData.profileMap || {};
+          if (apiData.quotaMap) window._cachedQuotaMap = apiData.quotaMap;
+          if (apiData.roleMap) window._cachedRoleMap = apiData.roleMap;
+
+          // Sync current active profile quota and role immediately
+          const activeProf = getActiveProfile();
+          if (activeProf && activeProf.uuid) {
+            let changed = false;
+            if (apiData.quotaMap && apiData.quotaMap[activeProf.uuid]) {
+              const q = apiData.quotaMap[activeProf.uuid];
+              activeProf.bonusFiles = q.bonusFiles || 0;
+              activeProf.bonusQuestions = q.bonusQuestions || 0;
+              activeProf.resetAt = q.resetAt || null;
+              changed = true;
+            }
+            if (apiData.roleMap && apiData.roleMap[activeProf.uuid]) {
+              activeProf.role = apiData.roleMap[activeProf.uuid];
+              changed = true;
+            }
+            if (changed) {
+              setActiveProfile(activeProf);
+              try {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_PROFILE, JSON.stringify(activeProf));
+              } catch (e) {}
+              if (typeof currentUserProfile !== 'undefined' && currentUserProfile && currentUserProfile.uuid === activeProf.uuid) {
+                currentUserProfile.bonusFiles = activeProf.bonusFiles;
+                currentUserProfile.bonusQuestions = activeProf.bonusQuestions;
+                currentUserProfile.resetAt = activeProf.resetAt;
+                currentUserProfile.role = activeProf.role;
+              }
+              if (typeof updateUserTierAndQuotaUI === 'function') {
+                updateUserTierAndQuotaUI();
+              }
+            }
+          }
         }
       } catch (apiErr) {
         console.warn('/api/batches-list failed, falling back to direct client query:', apiErr);
@@ -6649,7 +6698,7 @@ if (typeof window !== 'undefined') {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.savedAt && parsed.savedAt < resetTime) {
+        if (resetTime > 0 && (!parsed.savedAt || parsed.savedAt < resetTime)) {
           usage = { files: 0, questions: 0 };
           localStorage.removeItem(storageKey);
         } else {
@@ -6660,7 +6709,12 @@ if (typeof window !== 'undefined') {
 
     // Synchronize with user's existing batches if higher (only batches created after resetTime)
     if (Array.isArray(allBatches) && allBatches.length > 0) {
-      const myBatches = allBatches.filter(b => isOwner(b) && (new Date(b.createdAt || b.created_at || 0).getTime() >= resetTime));
+      const myBatches = allBatches.filter(b => {
+        if (!isOwner(b)) return false;
+        const bDateStr = b.rawCreatedAt || b.created_at || b.createdAt;
+        const bTime = bDateStr ? new Date(bDateStr).getTime() : 0;
+        return !isNaN(bTime) && bTime >= resetTime;
+      });
       const totalQ = myBatches.reduce((sum, b) => sum + (b.totalQuestions || 0), 0);
       if (myBatches.length > usage.files) usage.files = myBatches.length;
       if (totalQ > usage.questions) usage.questions = totalQ;
@@ -6693,32 +6747,35 @@ if (typeof window !== 'undefined') {
       else guestBanner.classList.add('hidden');
     }
 
-    // 2. Dashboard Tier & Quota Card
+    // 2. Dashboard Tier & Quota Card (Merged in Welcome Banner)
     const tierIconWrap = document.getElementById('dash-tier-icon-wrap');
     const tierNameBadge = document.getElementById('dash-tier-name-badge');
     const quotaSummaryText = document.getElementById('dash-quota-summary-text');
     const progressContainer = document.getElementById('dash-quota-progress-container');
+    const quotaNumbersWrap = document.getElementById('dash-quota-numbers-wrap');
     const filesText = document.getElementById('dash-quota-files-text');
     const questionsText = document.getElementById('dash-quota-questions-text');
     const progressBar = document.getElementById('dash-quota-progress-bar');
 
     if (tierNameBadge) {
       tierNameBadge.textContent = tier.badgeText;
-      tierNameBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold border ' + tier.badgeCls;
+      tierNameBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold border ' + tier.badgeCls;
     }
     if (tierIconWrap) {
       tierIconWrap.textContent = tier.tierId === 'admin' ? '👑' : (tier.tierId === 'assistant_admin' ? '⭐' : (tier.tierId === 'guest' ? '👤' : '🎓'));
     }
 
     if (tier.isUnlimited) {
-      if (quotaSummaryText) quotaSummaryText.textContent = 'โควต้าอัปโหลด: ไม่จำกัด (Unlimited 🚀)';
+      if (quotaSummaryText) quotaSummaryText.textContent = 'โควต้า: ไม่จำกัด (Unlimited 🚀)';
       if (progressContainer) progressContainer.classList.add('hidden');
+      if (quotaNumbersWrap) quotaNumbersWrap.classList.add('hidden');
     } else {
       const remFiles = Math.max(0, tier.maxFiles - usage.files);
       const remQuestions = Math.max(0, tier.maxQuestions - usage.questions);
       if (quotaSummaryText) {
-        quotaSummaryText.textContent = `โควต้าคงเหลือ: อีก ${remFiles} ไฟล์ (${remQuestions} ข้อ)`;
+        quotaSummaryText.textContent = `โควต้าคงเหลือ: ${remFiles} ไฟล์ (${remQuestions} ข้อ)`;
       }
+      if (quotaNumbersWrap) quotaNumbersWrap.classList.remove('hidden');
       if (progressContainer) {
         progressContainer.classList.remove('hidden');
         if (filesText) filesText.textContent = `ไฟล์คงเหลือ: ${remFiles}/${tier.maxFiles} ไฟล์`;
@@ -6728,7 +6785,7 @@ if (typeof window !== 'undefined') {
           const qPct = (usage.questions / tier.maxQuestions) * 100;
           const maxPct = Math.min(100, Math.max(filePct, qPct));
           progressBar.style.width = maxPct + '%';
-          progressBar.className = maxPct >= 100 ? 'h-full bg-rose-500 transition-all duration-500 rounded-full' : (maxPct >= 80 ? 'h-full bg-amber-500 transition-all duration-500 rounded-full' : 'h-full bg-brand-500 transition-all duration-500 rounded-full');
+          progressBar.className = maxPct >= 100 ? 'h-full bg-rose-400 transition-all duration-500 rounded-full' : (maxPct >= 80 ? 'h-full bg-amber-400 transition-all duration-500 rounded-full' : 'h-full bg-emerald-400 transition-all duration-500 rounded-full');
         }
       }
     }
@@ -10024,13 +10081,35 @@ if (typeof window !== 'undefined') {
       .getGlobalAnnouncement();
   }
 
+  function handleAnnouncementAction(url, event) {
+    if (event) event.preventDefault();
+    if (!url) return;
+    const cleanUrl = url.trim();
+    if (cleanUrl === 'page:about' || cleanUrl === '#about' || cleanUrl === 'about') {
+      switchPage('about');
+    } else if (cleanUrl === 'action:random_quiz' || cleanUrl === 'modal:random_quiz' || cleanUrl === 'random_quiz') {
+      openCustomQuizModal();
+    } else if (cleanUrl === 'page:upload' || cleanUrl === '#upload' || cleanUrl === 'upload') {
+      switchPage('upload');
+    } else if (cleanUrl === 'page:library' || cleanUrl === '#library' || cleanUrl === 'library') {
+      switchPage('library');
+    } else if (cleanUrl === 'page:dashboard' || cleanUrl === '#dashboard' || cleanUrl === 'dashboard') {
+      switchPage('dashboard');
+    } else if (cleanUrl.startsWith('#')) {
+      switchPage(cleanUrl.substring(1));
+    } else {
+      window.open(cleanUrl, '_blank');
+    }
+  }
+
   function renderGlobalAnnouncement(ann) {
     const annBanner = document.getElementById('hero-announcement-banner');
+    if (!annBanner) return;
+
     const welcomeBanner = document.getElementById('hero-welcome-banner');
-    if (!annBanner || !welcomeBanner) return;
 
     if (ann && ann.enabled && (ann.title || ann.description)) {
-      welcomeBanner.classList.add('hidden');
+      if (welcomeBanner) welcomeBanner.classList.add('hidden');
       annBanner.classList.remove('hidden');
 
       const titleEl = document.getElementById('announcement-title-el');
@@ -10064,14 +10143,19 @@ if (typeof window !== 'undefined') {
 
       if (ann.buttonText && ann.buttonUrl) {
         if (ctaBox) ctaBox.classList.remove('hidden');
-        if (ctaBtn) ctaBtn.href = ann.buttonUrl;
         if (ctaText) ctaText.textContent = ann.buttonText;
+        if (ctaBtn) {
+          ctaBtn.href = ann.buttonUrl;
+          ctaBtn.onclick = function(e) {
+            handleAnnouncementAction(ann.buttonUrl, e);
+          };
+        }
       } else {
         if (ctaBox) ctaBox.classList.add('hidden');
       }
     } else {
       annBanner.classList.add('hidden');
-      welcomeBanner.classList.remove('hidden');
+      if (welcomeBanner) welcomeBanner.classList.remove('hidden');
     }
 
     if (window.lucide) lucide.createIcons();
@@ -10084,11 +10168,38 @@ if (typeof window !== 'undefined') {
         imageAlt: currentGlobalAnnouncement.title || 'ประกาศ',
         title: currentGlobalAnnouncement.title || '',
         text: currentGlobalAnnouncement.description || '',
-        confirmButtonColor: '#d97706',
+        confirmButtonColor: '#7c3aed',
         confirmButtonText: 'ปิดรูปภาพ',
         customClass: { popup: 'rounded-3xl' }
       });
     }
+  }
+
+  function selectAdminAnnPreset(type) {
+    const btnUrlInput = document.getElementById('admin-ann-btn-url');
+    const btnTextInput = document.getElementById('admin-ann-btn-text');
+    if (!btnUrlInput || !btnTextInput) return;
+
+    if (type === 'about') {
+      btnUrlInput.value = 'page:about';
+      if (!btnTextInput.value || btnTextInput.value === 'คลิกดูรายละเอียด') btnTextInput.value = 'เกี่ยวกับเรา';
+    } else if (type === 'random_quiz') {
+      btnUrlInput.value = 'action:random_quiz';
+      if (!btnTextInput.value || btnTextInput.value === 'คลิกดูรายละเอียด') btnTextInput.value = '🎲 สุ่มชุดข้อสอบ';
+    } else if (type === 'upload') {
+      btnUrlInput.value = 'page:upload';
+      if (!btnTextInput.value || btnTextInput.value === 'คลิกดูรายละเอียด') btnTextInput.value = '📤 นำเข้าไฟล์';
+    } else if (type === 'library') {
+      btnUrlInput.value = 'page:library';
+      if (!btnTextInput.value || btnTextInput.value === 'คลิกดูรายละเอียด') btnTextInput.value = '📚 คลังข้อสอบ';
+    } else if (type === 'dashboard') {
+      btnUrlInput.value = 'page:dashboard';
+      if (!btnTextInput.value || btnTextInput.value === 'คลิกดูรายละเอียด') btnTextInput.value = '📊 หน้าแดชบอร์ด';
+    } else if (type === 'custom') {
+      btnUrlInput.value = 'https://';
+      btnUrlInput.focus();
+    }
+    updateAdminAnnouncementLivePreview();
   }
 
   function loadAdminAnnouncementForm(force = false) {
@@ -10545,6 +10656,8 @@ if (typeof window !== 'undefined') {
   window.loadGlobalAnnouncement = loadGlobalAnnouncement;
   window.renderGlobalAnnouncement = renderGlobalAnnouncement;
   window.openAnnouncementImageModal = openAnnouncementImageModal;
+  window.handleAnnouncementAction = handleAnnouncementAction;
+  window.selectAdminAnnPreset = selectAdminAnnPreset;
   window.loadAdminAnnouncementForm = loadAdminAnnouncementForm;
   window.updateAdminAnnouncementLivePreview = updateAdminAnnouncementLivePreview;
   window.saveAdminAnnouncement = saveAdminAnnouncement;

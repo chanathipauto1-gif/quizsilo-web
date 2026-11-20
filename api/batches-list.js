@@ -16,20 +16,55 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const [bRes, pRes] = await Promise.all([
+    const [bRes, pRes, rolesRes, quotasRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/batches?select=*&order=created_at.desc`, { headers }),
-      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,nickname,display_name,avatar`, { headers })
+      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,nickname,display_name,avatar,role`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?status=like.SYSTEM_ROLE*&select=user_id,status,created_at&order=created_at.asc`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?status=like.SYSTEM_QUOTA*&select=user_id,status,created_at&order=created_at.asc`, { headers })
     ]);
 
     const batches = await bRes.json();
     const profiles = await pRes.json();
+    const roles = await rolesRes.json();
+    const quotas = await quotasRes.json();
+
+    const roleMap = {};
+    (Array.isArray(roles) ? roles : []).forEach(r => {
+      if (r.user_id && r.status) {
+        roleMap[r.user_id] = r.status.replace('SYSTEM_ROLE:', '');
+      }
+    });
+
+    const quotaMap = {};
+    (Array.isArray(quotas) ? quotas : []).forEach(q => {
+      if (q.user_id && q.status) {
+        try {
+          const raw = q.status.replace('SYSTEM_QUOTA:', '');
+          const parsed = JSON.parse(raw);
+          quotaMap[q.user_id] = {
+            bonusFiles: Number(parsed.bonusFiles || 0),
+            bonusQuestions: Number(parsed.bonusQuestions || 0),
+            resetAt: parsed.resetAt || null
+          };
+        } catch (e) {}
+      }
+    });
 
     const profileMap = {};
     (Array.isArray(profiles) ? profiles : []).forEach(p => {
-      profileMap[p.id] = p;
+      profileMap[p.id] = {
+        ...p,
+        role: roleMap[p.id] || p.role || 'student'
+      };
     });
 
-    return res.status(200).json({ success: true, batches: Array.isArray(batches) ? batches : [], profileMap });
+    return res.status(200).json({
+      success: true,
+      batches: Array.isArray(batches) ? batches : [],
+      profileMap,
+      quotaMap,
+      roleMap
+    });
   } catch (err) {
     console.error('batches-list error:', err);
     return res.status(500).json({ success: false, error: err.message, batches: [] });
