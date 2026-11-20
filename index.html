@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.13.57</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.14.23</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -271,6 +271,7 @@
         <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0"></i>
         <select id="sort-by" onchange="filterBatches()" class="bg-transparent text-xs sm:text-sm text-slate-700 font-medium focus:outline-none cursor-pointer">
           <option value="UPLOAD_DESC">🕒 อัปโหลดล่าสุด (ใหม่ ➔ เก่า)</option>
+          <option value="RATING_DESC">⭐ คะแนนรีวิวสูงสุด</option>
           <option value="UPLOAD_ASC">🕒 อัปโหลดเก่าสุด (เก่า ➔ ใหม่)</option>
           <option value="NAME_ASC">🔤 ชื่อชุด ก-ฮ / A-Z</option>
           <option value="NAME_DESC">🔤 ชื่อชุด ฮ-ก / Z-A</option>
@@ -490,7 +491,7 @@
           </div>
           
           <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="pauseExam()" class="text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-xl border border-amber-200/70 transition-colors flex items-center gap-1" title="พักและเซฟสถานะไว้ทำต่อ">
+            <button id="btn-pause-exam" onclick="pauseExam()" class="text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-xl border border-amber-200/70 transition-colors flex items-center gap-1" title="พักและเซฟสถานะไว้ทำต่อ">
               <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
               <span>พัก</span>
             </button>
@@ -540,6 +541,10 @@
           <button id="btn-save-virtual-batch" onclick="saveVirtualBatchFromExam()" class="hidden w-full mt-2 py-2 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs">
             <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
             <span>💾 บันทึกชุดนี้เข้าคลัง</span>
+          </button>
+          <button id="btn-review-and-exit" onclick="openRatingModalAndExit()" class="w-full mt-2 py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-amber-500/20 cursor-pointer">
+            <i data-lucide="star" class="w-4 h-4 fill-white"></i>
+            <span>⭐ รีวิวและออก</span>
           </button>
         </div>
 
@@ -2225,6 +2230,8 @@ const BatchesQuestionsService = {
         const metaObj = Array.isArray(b.source_files) ? (b.source_files.find(f => f && f._meta) || {}) : {};
         const isHidden = Boolean(metaObj.is_hidden);
         const isFeatured = Boolean(metaObj.is_featured);
+        const ratingAvg = Number(metaObj.rating_avg || 0);
+        const ratingCount = Number(metaObj.rating_count || 0);
         const totalQ = b.total_questions || 0;
         const isAllVerified = Boolean(b.is_verified);
 
@@ -2250,6 +2257,8 @@ const BatchesQuestionsService = {
           isCustomQuiz: b.file_type === 'CUSTOM_QUIZ',
           isHidden: isHidden,
           isFeatured: isFeatured,
+          ratingAvg: ratingAvg,
+          ratingCount: ratingCount,
           uploader: {
             avatar: uploader?.avatar?.startsWith('http') ? uploader.avatar : uploader?.avatar || '👤',
             name: uploader?.nickname || uploader?.display_name || 'ระบบส่วนกลาง'
@@ -2584,6 +2593,29 @@ const BatchesQuestionsService = {
       throw new Error(apiRes?.error || 'Failed to toggle flag');
     } catch (err) {
       console.error('toggleBatchFlag error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async submitBatchRating(batchId, rating, userProfile) {
+    try {
+      const activeProfile = getActiveProfile(userProfile);
+      const userIdentifier = activeProfile?.uuid || activeProfile?.email || (typeof localStorage !== 'undefined' ? localStorage.getItem(CONFIG.STORAGE_KEYS.GUEST_DEVICE_ID) : 'guest');
+      const raterName = activeProfile?.nickname || activeProfile?.name || 'ผู้เรียน';
+
+      const apiRes = await fetchJsonApi('/api/batch-rate', {
+        method: 'POST',
+        body: {
+          batchId,
+          rating,
+          userIdentifier,
+          raterName
+        }
+      });
+      if (apiRes?.success) return notifySuccess(this, apiRes);
+      throw new Error(apiRes?.error || 'Failed to submit rating');
+    } catch (err) {
+      console.error('submitBatchRating error:', err);
       return notifyFailure(this, err);
     }
   }
@@ -3654,6 +3686,7 @@ const adapterImpl = {
   saveReviewedQuestions: BatchesQuestionsService.saveReviewedQuestions,
   deleteSingleQuestion: BatchesQuestionsService.deleteSingleQuestion,
   toggleBatchFlag: BatchesQuestionsService.toggleBatchFlag,
+  submitBatchRating: BatchesQuestionsService.submitBatchRating,
 
   // Exam, Custom Quiz & Stats
   recordExamAttempt: ExamStatsService.recordExamAttempt,
@@ -4864,6 +4897,16 @@ if (typeof window !== 'undefined') {
         if (timeA && timeB && timeA !== timeB) return timeB - timeA;
         return (a.rowIndex || 0) - (b.rowIndex || 0); // ข้อสอบใหม่ rowIndex น้อยกว่า
       }
+      if (sortBy === 'RATING_DESC') {
+        const ratingA = a.ratingAvg || 0;
+        const ratingB = b.ratingAvg || 0;
+        if (ratingB !== ratingA) return ratingB - ratingA;
+        const countA = a.ratingCount || 0;
+        const countB = b.ratingCount || 0;
+        if (countB !== countA) return countB - countA;
+        if (timeA && timeB && timeA !== timeB) return timeB - timeA;
+        return (a.rowIndex || 0) - (b.rowIndex || 0);
+      }
       if (sortBy === 'UPLOAD_ASC') {
         if (timeA && timeB && timeA !== timeB) return timeA - timeB;
         return (b.rowIndex || 0) - (a.rowIndex || 0); // ข้อสอบเก่า rowIndex มากกว่า
@@ -5032,13 +5075,27 @@ if (typeof window !== 'undefined') {
 
       const displayName = b.batchName === '[รอ AI ตั้งชื่อ]' ? `ชุดรหัส #${b.batchId.slice(-4)}` : b.batchName;
 
-      // ป้ายปักหมุดเด่น และ ป้ายซ่อน
+      // ป้ายปักหมุดเด่น (Admin Pin)
       const featuredBadge = b.isFeatured 
-        ? `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-300 rounded text-[10px] font-bold shrink-0 shadow-xs inline-flex items-center gap-1" title="ข้อสอบแนะนำ/ปักหมุด"><i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-500"></i> แนะนำ</span>` 
+        ? `<span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[10px] font-bold shrink-0 shadow-xs inline-flex items-center gap-1" title="ชุดข้อสอบปักหมุดเด่นโดยผู้ดูแลระบบ"><i data-lucide="pin" class="w-3 h-3 text-indigo-600 rotate-45"></i> ปักหมุด</span>` 
         : '';
       const hiddenBadge = b.isHidden 
         ? `<span class="px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-300 rounded text-[10px] font-bold shrink-0 inline-flex items-center gap-1" title="ซ่อนอยู่ (สมาชิกทั่วไปมองไม่เห็น)"><i data-lucide="eye-off" class="w-3 h-3"></i> ซ่อนอยู่</span>` 
         : '';
+
+      // ป้ายดาวรีวิวจากผู้เรียน (Rating Badge)
+      let ratingBadge = '';
+      if (b.ratingCount > 0) {
+        ratingBadge = `
+          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/80 rounded text-[10px] font-bold shrink-0 shadow-2xs" title="คะแนนรีวิวเฉลี่ย ${b.ratingAvg.toFixed(1)} จากผู้เรียน ${b.ratingCount} คน">
+            <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-500"></i> ${b.ratingAvg.toFixed(1)} <span class="text-[9px] text-slate-400 font-normal">(${b.ratingCount})</span>
+          </span>`;
+      } else {
+        ratingBadge = `
+          <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-50 text-slate-400 border border-slate-200 rounded text-[10px] font-medium shrink-0" title="ยังไม่มีการรีวิว">
+            <i data-lucide="star" class="w-3 h-3 text-slate-300"></i> ใหม่
+          </span>`;
+      }
 
       // ไอคอน ℹ️ สำหรับชุดสุ่มในคลัง
       const infoBtn = b.isCustomQuiz ? `
@@ -5066,6 +5123,7 @@ if (typeof window !== 'undefined') {
                 ${verifiedBadge}
                 ${featuredBadge}
                 ${hiddenBadge}
+                ${ratingBadge}
                 <span class="text-xs font-bold text-slate-800 cursor-pointer" onclick="${btnAction}">${escapeHtml(displayName)}</span>
                 ${infoBtn}
               </div>
@@ -5085,7 +5143,7 @@ if (typeof window !== 'undefined') {
               <button onclick="openReviewMode('${b.batchId}')" class="p-2 text-slate-500 hover:text-brand-600 bg-white border border-slate-200 rounded-xl transition-all" title="ตรวจสอบและแก้ไข (Review)"><i data-lucide="pen-line" class="w-4 h-4"></i></button>
             ` : ''}
             ${isAdmin ? `
-              <button onclick="toggleBatchFeatured('${b.batchId}', ${!b.isFeatured})" class="p-2 ${b.isFeatured ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:text-amber-500 bg-white'} border border-slate-200 rounded-xl transition-all" title="${b.isFeatured ? 'ยกเลิกปักหมุด' : 'ปักหมุดข้อสอบเด่น'}"><i data-lucide="star" class="w-4 h-4 ${b.isFeatured ? 'fill-amber-400' : ''}"></i></button>
+              <button onclick="toggleBatchFeatured('${b.batchId}', ${!b.isFeatured})" class="p-2 ${b.isFeatured ? 'text-indigo-600 bg-indigo-50 border-indigo-200' : 'text-slate-400 hover:text-indigo-600 bg-white border-slate-200'} border rounded-xl transition-all" title="${b.isFeatured ? 'ยกเลิกปักหมุด' : 'ปักหมุดข้อสอบเด่น'}"><i data-lucide="pin" class="w-4 h-4 ${b.isFeatured ? 'text-indigo-600 rotate-45' : ''}"></i></button>
               <button onclick="toggleBatchVisibility('${b.batchId}', ${!b.isHidden})" class="p-2 ${b.isHidden ? 'text-rose-600 bg-rose-50' : 'text-slate-400 hover:text-rose-600 bg-white'} border border-slate-200 rounded-xl transition-all" title="${b.isHidden ? 'แสดงชุดข้อสอบ' : 'ซ่อนชุดข้อสอบ'}"><i data-lucide="${b.isHidden ? 'eye-off' : 'eye'}" class="w-4 h-4"></i></button>
               <button onclick="confirmResetStats('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-2 text-slate-400 hover:text-rose-600 bg-white border border-slate-200 rounded-xl transition-all" title="ล้างสถิติ"><i data-lucide="brush" class="w-4 h-4"></i></button>
               <button onclick="confirmDeleteBatch('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-2 text-slate-400 hover:text-rose-600 bg-white border border-slate-200 rounded-xl transition-all" title="ลบชุดข้อสอบ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -5108,6 +5166,7 @@ if (typeof window !== 'undefined') {
                 ${verifiedBadge}
                 ${featuredBadge}
                 ${hiddenBadge}
+                ${ratingBadge}
                 <span class="font-bold text-slate-800 group-hover:text-brand-600 cursor-pointer text-sm transition-colors" onclick="${btnAction}">
                   ${escapeHtml(displayName)}
                 </span>
@@ -5136,7 +5195,7 @@ if (typeof window !== 'undefined') {
                 <button onclick="openReviewMode('${b.batchId}')" class="p-2 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all" title="ตรวจสอบและแก้ไข (Review)"><i data-lucide="pen-line" class="w-4 h-4"></i></button>
               ` : ''}
               ${isAdmin ? `
-                <button onclick="toggleBatchFeatured('${b.batchId}', ${!b.isFeatured})" class="p-2 ${b.isFeatured ? 'text-amber-500 bg-amber-50 hover:bg-amber-100' : 'text-slate-400 hover:text-amber-500 bg-slate-100 hover:bg-amber-50'} rounded-xl transition-all" title="${b.isFeatured ? 'ยกเลิกปักหมุดข้อสอบเด่น' : 'ปักหมุดเป็นข้อสอบเด่น'}"><i data-lucide="star" class="w-4 h-4 ${b.isFeatured ? 'fill-amber-400' : ''}"></i></button>
+                <button onclick="toggleBatchFeatured('${b.batchId}', ${!b.isFeatured})" class="p-2 ${b.isFeatured ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200' : 'text-slate-400 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50'} rounded-xl transition-all" title="${b.isFeatured ? 'ยกเลิกปักหมุดข้อสอบเด่น' : 'ปักหมุดเป็นข้อสอบเด่น (Pin)'}"><i data-lucide="pin" class="w-4 h-4 ${b.isFeatured ? 'text-indigo-600 rotate-45' : ''}"></i></button>
                 <button onclick="toggleBatchVisibility('${b.batchId}', ${!b.isHidden})" class="p-2 ${b.isHidden ? 'text-rose-600 bg-rose-50 hover:bg-emerald-50' : 'text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50'} rounded-xl transition-all" title="${b.isHidden ? 'แสดงชุดข้อสอบ (ปัจจุบันซ่อนอยู่)' : 'ซ่อนชุดข้อสอบจากคลัง'}"><i data-lucide="${b.isHidden ? 'eye-off' : 'eye'}" class="w-4 h-4"></i></button>
                 <button onclick="confirmResetStats('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-2 text-slate-400 hover:text-amber-600 bg-slate-100 hover:bg-amber-50 rounded-xl transition-all" title="ล้างสถิติ"><i data-lucide="brush" class="w-4 h-4"></i></button>
                 <button onclick="confirmDeleteBatch('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl transition-all" title="ลบชุดข้อสอบ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -5290,15 +5349,15 @@ if (typeof window !== 'undefined') {
     });
   }
 
-  // ฟังก์ชัน ปักหมุด / ปลดหมุด ข้อสอบเด่น ⭐ (Featured)
+  // ฟังก์ชัน ปักหมุด / ปลดหมุด ข้อสอบเด่น 📌 (Pinned)
   function toggleBatchFeatured(batchId, targetState) {
     if (!currentUserProfile || currentUserProfile.role !== 'admin') {
       Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะผู้ดูแลระบบ (Admin 👑) เท่านั้นที่สามารถปักหมุดข้อสอบเด่นได้', 'warning');
       return;
     }
-    const actionText = targetState ? 'ปักหมุดเป็นข้อสอบเด่น ⭐' : 'ยกเลิกการปักหมุด';
+    const actionText = targetState ? 'ปักหมุดเป็นข้อสอบเด่น 📌' : 'ยกเลิกการปักหมุด';
     const descText = targetState 
-      ? 'ชุดข้อสอบนี้จะถูกนำไปแสดงด้านบนสุดของคลังข้อสอบเพื่อให้ผู้เรียนมองเห็นได้ง่าย' 
+      ? 'ชุดข้อสอบนี้จะถูกปักหมุดไว้ด้านบนสุดของคลังข้อสอบเพื่อให้ผู้เรียนมองเห็นได้ง่าย' 
       : 'ชุดข้อสอบนี้จะกลับไปแสดงตามลำดับการจัดเรียงปกติ';
 
     Swal.fire({
@@ -5306,8 +5365,8 @@ if (typeof window !== 'undefined') {
       text: descText,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: targetState ? '#f59e0b' : '#64748b',
-      confirmButtonText: targetState ? '⭐ ปักหมุดเลย' : 'ยกเลิกหมุด',
+      confirmButtonColor: targetState ? '#6366f1' : '#64748b',
+      confirmButtonText: targetState ? '📌 ปักหมุดเลย' : 'ยกเลิกหมุด',
       cancelButtonText: 'กลับ'
     }).then(res => {
       if (res.isConfirmed) {
@@ -5315,7 +5374,7 @@ if (typeof window !== 'undefined') {
         google.script.run
           .withSuccessHandler(r => {
             if (r && r.success) {
-              showToast('success', targetState ? '⭐ ปักหมุดข้อสอบเด่นเรียบร้อยแล้ว' : 'ปลดหมุดข้อสอบเด่นเรียบร้อยแล้ว');
+              showToast('success', targetState ? '📌 ปักหมุดข้อสอบเด่นเรียบร้อยแล้ว' : 'ปลดหมุดข้อสอบเด่นเรียบร้อยแล้ว');
               loadBatches(true);
             } else {
               Swal.fire('เกิดข้อผิดพลาด', (r && r.message) || 'ไม่สามารถเปลี่ยนสถานะได้', 'error');
@@ -5822,9 +5881,11 @@ if (typeof window !== 'undefined') {
         const cleanCategory = currentExamBatch.batchCategory ? currentExamBatch.batchCategory.split('|')[0].trim() : 'ทั่วไป';
         document.getElementById('exam-sub-info').textContent = `${cleanCategory} • ${currentQuestions.length} ข้อ`;
         
+        const pauseBtn = document.getElementById('btn-pause-exam');
         if (isExamSubmitted) {
           document.getElementById('exam-score-banner').classList.remove('hidden');
           document.getElementById('btn-submit-exam').classList.add('hidden');
+          if (pauseBtn) pauseBtn.classList.add('hidden');
           
           const total = currentQuestions.length;
           const correct = currentExamBatch.correctCount || 0;
@@ -5840,6 +5901,7 @@ if (typeof window !== 'undefined') {
         } else {
           document.getElementById('exam-score-banner').classList.add('hidden');
           document.getElementById('btn-submit-exam').classList.remove('hidden');
+          if (pauseBtn) pauseBtn.classList.remove('hidden');
           startExamTimer();
         }
 
@@ -5942,6 +6004,96 @@ if (typeof window !== 'undefined') {
         switchPage('library');
         loadBatches(true);
       }
+    });
+  }
+
+  // ฟังก์ชันรีวิวชุดข้อสอบ (1-5 ดาว) และออกจากห้องสอบ
+  function openRatingModalAndExit() {
+    if (!currentExamBatch || !currentExamBatch.batchId || currentExamBatch.isVirtual) {
+      stopExamTimer();
+      switchPage('library');
+      return;
+    }
+
+    const batchName = currentExamBatch.batchName || 'ชุดข้อสอบ';
+    let selectedRating = 5; // default 5 stars
+
+    const starDesc = {
+      1: '1 ดาว - ควรปรับปรุง ⚠️',
+      2: '2 ดาว - พอใช้ได้ 😐',
+      3: '3 ดาว - ปานกลาง เหมาะแก่การฝึกซ้อม 👍',
+      4: '4 ดาว - ข้อสอบดีมาก เฉลยเข้าใจง่าย ⭐',
+      5: '5 ดาว - ยอดเยี่ยมมาก แนะนำให้ทุกคนทำ! 🌟'
+    };
+
+    Swal.fire({
+      title: 'ให้คะแนนชุดข้อสอบนี้',
+      html: `
+        <div class="text-xs text-slate-500 mb-2 font-medium truncate max-w-xs mx-auto">"${escapeHtml(batchName)}"</div>
+        <div class="text-xs text-slate-600 mb-3">คุณพึงพอใจกับคุณภาพและความถูกต้องของชุดข้อสอบนี้กี่ดาวครับ?</div>
+        <div id="swal-star-picker" class="flex justify-center items-center gap-2.5 my-3 text-3xl select-none">
+          <span class="swal-star cursor-pointer transition-transform hover:scale-125 text-amber-400" data-val="1">★</span>
+          <span class="swal-star cursor-pointer transition-transform hover:scale-125 text-amber-400" data-val="2">★</span>
+          <span class="swal-star cursor-pointer transition-transform hover:scale-125 text-amber-400" data-val="3">★</span>
+          <span class="swal-star cursor-pointer transition-transform hover:scale-125 text-amber-400" data-val="4">★</span>
+          <span class="swal-star cursor-pointer transition-transform hover:scale-125 text-amber-400" data-val="5">★</span>
+        </div>
+        <div id="swal-star-desc" class="text-xs font-bold text-amber-600 min-h-[20px] transition-all">5 ดาว - ยอดเยี่ยมมาก แนะนำให้ทุกคนทำ! 🌟</div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '⭐ ส่งรีวิวและออก',
+      cancelButtonText: 'ข้ามและออก',
+      confirmButtonColor: '#f59e0b',
+      cancelButtonColor: '#94a3b8',
+      customClass: { popup: 'rounded-3xl' },
+      didOpen: () => {
+        const stars = document.querySelectorAll('#swal-star-picker .swal-star');
+        const descEl = document.getElementById('swal-star-desc');
+        
+        function updateStarUI(val) {
+          stars.forEach(s => {
+            const sVal = parseInt(s.getAttribute('data-val'), 10);
+            if (sVal <= val) {
+              s.classList.remove('text-slate-300');
+              s.classList.add('text-amber-400');
+            } else {
+              s.classList.remove('text-amber-400');
+              s.classList.add('text-slate-300');
+            }
+          });
+          if (descEl) descEl.textContent = starDesc[val] || '';
+        }
+
+        stars.forEach(s => {
+          s.addEventListener('click', () => {
+            selectedRating = parseInt(s.getAttribute('data-val'), 10) || 5;
+            updateStarUI(selectedRating);
+          });
+          s.addEventListener('mouseenter', () => {
+            const hVal = parseInt(s.getAttribute('data-val'), 10) || 5;
+            updateStarUI(hVal);
+          });
+        });
+
+        const picker = document.getElementById('swal-star-picker');
+        if (picker) {
+          picker.addEventListener('mouseleave', () => {
+            updateStarUI(selectedRating);
+          });
+        }
+      }
+    }).then(res => {
+      stopExamTimer();
+      if (res.isConfirmed) {
+        google.script.run
+          .withSuccessHandler(() => {
+            showToast('success', 'ขอบคุณสำหรับคะแนนรีวิว ' + selectedRating + ' ดาวครับ ⭐');
+            loadBatches(false);
+          })
+          .withFailureHandler(() => {})
+          .submitBatchRating(currentExamBatch.batchId, selectedRating, currentUserProfile);
+      }
+      switchPage('library');
     });
   }
 
@@ -6252,6 +6404,9 @@ if (typeof window !== 'undefined') {
     document.getElementById('exam-time-spent-text').textContent = `ใช้เวลา ${timeStr} นาที`;
     document.getElementById('exam-score-banner').classList.remove('hidden');
     document.getElementById('btn-submit-exam').classList.add('hidden');
+    const pauseBtn = document.getElementById('btn-pause-exam');
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (window.lucide) lucide.createIcons();
 
     const btnSaveBatch = document.getElementById('btn-save-virtual-batch');
     if (btnSaveBatch) {
@@ -7920,8 +8075,9 @@ if (typeof window !== 'undefined') {
       'VERIFY_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">🔍 ตรวจเฉลย</span>',
       'HIDE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">👁️‍🗨️ ซ่อนชุดข้อสอบ</span>',
       'SHOW_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">👁️ แสดงชุดข้อสอบ</span>',
-      'PIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⭐ ปักหมุดเด่น</span>',
-      'UNPIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-50 text-slate-700 border border-slate-200">⭐ ปลดหมุด</span>'
+      'PIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">📌 ปักหมุดเด่น</span>',
+      'UNPIN_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-50 text-slate-700 border border-slate-200">📌 ปลดหมุด</span>',
+      'RATE_BATCH': '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⭐ รีวิวข้อสอบ</span>'
     };
 
     tbody.innerHTML = logs.map(item => {
@@ -7975,6 +8131,7 @@ if (typeof window !== 'undefined') {
   window.confirmResetStats = confirmResetStats;
   window.toggleBatchFeatured = toggleBatchFeatured;
   window.toggleBatchVisibility = toggleBatchVisibility;
+  window.openRatingModalAndExit = openRatingModalAndExit;
   window.updateUserTierAndQuotaUI = updateUserTierAndQuotaUI;
 </script>
 
