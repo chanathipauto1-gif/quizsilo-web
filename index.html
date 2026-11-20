@@ -101,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.00.57</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.01.16</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -1440,8 +1440,10 @@
         
         <select id="admin-user-filter-status" onchange="filterAdminUserTable()" 
                 class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs cursor-pointer">
-          <option value="ALL">สมาชิกทั้งหมด</option>
+          <option value="ALL">ผู้ใช้งานทั้งหมด (สมาชิก & Guest)</option>
           <option value="ONLINE">เฉพาะที่ออนไลน์ 🟢</option>
+          <option value="MEMBER">เฉพาะสมาชิกที่ลงทะเบียน 🎓</option>
+          <option value="GUEST">เฉพาะผู้เยี่ยมชม (Guest) 👤</option>
           <option value="ACTIVE_TRAINER">เรียงตามทำโจทย์มากสุด 📝</option>
           <option value="TOP_UPLOADER">เรียงตามอัปโหลดมากสุด ☁️</option>
         </select>
@@ -9776,6 +9778,8 @@ if (typeof window !== 'undefined') {
       if (!matchSearch) return false;
 
       if (filterStatus === 'ONLINE') return u.isOnline;
+      if (filterStatus === 'MEMBER') return !u.isGuest && u.role !== 'guest';
+      if (filterStatus === 'GUEST') return u.isGuest || u.role === 'guest';
       return true;
     });
 
@@ -9820,7 +9824,7 @@ if (typeof window !== 'undefined') {
               <div class="min-w-0">
                 <div class="font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                   <span>${escapeHtml(u.name)}</span>
-                  ${u.role === 'admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-amber-100 text-amber-800 font-extrabold rounded">ADMIN</span>' : (u.role === 'assistant_admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-indigo-100 text-indigo-800 font-bold rounded">ผู้ช่วย</span>' : '<span class="text-[9px] px-1.5 py-0.2 bg-slate-100 text-slate-600 font-medium rounded">สมาชิก</span>')}
+                  ${u.role === 'admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-amber-100 text-amber-800 font-extrabold rounded">ADMIN</span>' : (u.role === 'assistant_admin' ? '<span class="text-[9px] px-1.5 py-0.2 bg-indigo-100 text-indigo-800 font-bold rounded">ผู้ช่วย</span>' : (u.isGuest || u.role === 'guest' ? '<span class="text-[9px] px-1.5 py-0.2 bg-purple-100 text-purple-800 font-bold rounded">GUEST</span>' : '<span class="text-[9px] px-1.5 py-0.2 bg-slate-100 text-slate-600 font-medium rounded">สมาชิก</span>'))}
                 </div>
                 <div class="text-[10px] text-slate-400 truncate">${escapeHtml(u.email)}</div>
               </div>
@@ -9891,7 +9895,16 @@ if (typeof window !== 'undefined') {
             <div><span class="text-slate-500 font-medium">อัปโหลดข้อสอบ:</span> <b class="text-slate-900 block mt-0.5">${u.uploadBatches} ชุด (${u.uploadQuestions} ข้อ)</b></div>
             <div><span class="text-slate-500 font-medium">วันที่ลงทะเบียน:</span> <b class="text-slate-700 block mt-0.5">${u.createdAt}</b></div>
           </div>
-          ${currentUserProfile && currentUserProfile.role === 'admin' && u.role !== 'admin' ? `
+          ${u.isGuest || u.role === 'guest' ? `
+            <div class="p-3 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 text-xs">
+              <div class="font-bold flex items-center gap-1.5 mb-1">
+                <span>👤 ข้อมูลผู้เยี่ยมชม (Guest Profile)</span>
+              </div>
+              <p class="text-[11px] text-purple-700 leading-relaxed">
+                ผู้ใช้นี้เข้าทดลองฝึกทำข้อสอบในเซสชันผู้เยี่ยมชม โดยยังไม่ได้ผูกบัญชี Google ระบบจะบันทึกสถิติเพื่อรายงานใน Admin Console เท่านั้น
+              </p>
+            </div>
+          ` : (currentUserProfile && currentUserProfile.role === 'admin' && u.role !== 'admin' ? `
             <div class="pt-2 border-t border-slate-200 flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
               <div>
                 <span class="text-slate-400 font-medium block text-[10px]">สิทธิ์การดูแลระบบ:</span>
@@ -9930,7 +9943,7 @@ if (typeof window !== 'undefined') {
               </div>
             </div>
             ` : ''}
-          ` : ''}
+          ` : '')}
         </div>
       `,
       confirmButtonText: 'ปิดหน้าต่าง',

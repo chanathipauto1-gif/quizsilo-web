@@ -18,12 +18,13 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const [profilesRes, attemptsRes, batchesRes, rolesRes, quotasRes] = await Promise.all([
+    const [profilesRes, attemptsRes, batchesRes, rolesRes, quotasRes, examLogsRes] = await Promise.all([
       fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.desc', { headers }),
       fetch(SUPABASE_URL + '/rest/v1/exam_attempts?select=*', { headers }),
       fetch(SUPABASE_URL + '/rest/v1/batches?select=*', { headers }),
       fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_ROLE*&select=user_id,status,created_at&order=created_at.asc', { headers }),
-      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_QUOTA*&select=user_id,status,created_at&order=created_at.asc', { headers })
+      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.SYSTEM_QUOTA*&select=user_id,status,created_at&order=created_at.asc', { headers }),
+      fetch(SUPABASE_URL + '/rest/v1/scan_ledger?status=like.LOG*%22EXAM_ATTEMPT%22*&select=*&order=created_at.desc&limit=500', { headers })
     ]);
 
     const profiles = await profilesRes.json();
@@ -31,6 +32,7 @@ module.exports = async function handler(req, res) {
     const batches = await batchesRes.json();
     const roles = await rolesRes.json();
     const quotas = await quotasRes.json();
+    const examLogs = await examLogsRes.json();
 
     const roleOverrideMap = {};
     (Array.isArray(roles) ? roles : []).forEach(r => {
@@ -99,21 +101,87 @@ module.exports = async function handler(req, res) {
         totalScore: 0,
         uploadBatches: 0,
         uploadQuestions: 0,
-        categoriesDone: {}
+        categoriesDone: {},
+        isGuest: false
       };
     });
 
     let totalQuestionsAllUsers = 0;
     let totalScoreAllUsers = 0;
+    let totalAttemptsCount = 0;
 
     (Array.isArray(attempts) ? attempts : []).forEach(a => {
-      totalQuestionsAllUsers += (a.total_questions || 0);
-      totalScoreAllUsers += (a.score || 0);
-      if (userStatsMap[a.user_id]) {
+      if (a.user_id && userStatsMap[a.user_id]) {
         userStatsMap[a.user_id].attemptsCount++;
         userStatsMap[a.user_id].questionsCount += (a.total_questions || 0);
         userStatsMap[a.user_id].totalScore += (a.score || 0);
+        totalQuestionsAllUsers += (a.total_questions || 0);
+        totalScoreAllUsers += (a.score || 0);
+        totalAttemptsCount++;
       }
+    });
+
+    // Aggregate Guest Practice Attempts from Activity Ledger
+    const guestStatsMap = {};
+    (Array.isArray(examLogs) ? examLogs : []).forEach(l => {
+      try {
+        const rawStatus = (l.status || '').replace(/^LOG:s*/, '');
+        const logData = JSON.parse(rawStatus);
+        if (logData.action === 'EXAM_ATTEMPT') {
+          const isGuest = logData.user_role === 'guest' || !l.user_id;
+          if (isGuest) {
+            const rawName = (logData.user_name || 'ผู้เยี่ยมชม (Guest)').trim();
+            const guestKey = 'guest_' + rawName.toLowerCase();
+            const logQCount = Number(logData.question_count || l.questions_scanned || 0);
+
+            let logScore = Number(logData.score);
+            if (isNaN(logScore) && logData.details) {
+              const m = logData.details.match(/ทำข้อสอบได้s*(d+)/(d+)/);
+              if (m) logScore = parseInt(m[1], 10);
+            }
+            if (isNaN(logScore)) logScore = 0;
+
+            const createdDate = l.created_at ? new Date(l.created_at) : new Date();
+            const isRecent = (now - createdDate.getTime()) < fiveMinsMs;
+            if (isRecent) activeNowCount++;
+
+            if (!guestStatsMap[guestKey]) {
+              guestStatsMap[guestKey] = {
+                id: guestKey,
+                name: rawName,
+                email: 'โหมดผู้เยี่ยมชม (Guest)',
+                avatar: logData.user_avatar || '👤',
+                role: 'guest',
+                bonusFiles: 0,
+                bonusQuestions: 0,
+                resetAt: null,
+                targetExams: 'โหมดผู้เยี่ยมชม',
+                occupation: 'ผู้เยี่ยมชม',
+                ageGroup: '-',
+                referralSource: '-',
+                createdAt: createdDate.toLocaleDateString('th-TH'),
+                lastSeenStr: isRecent ? 'ออนไลน์' : createdDate.toLocaleDateString('th-TH'),
+                isOnline: isRecent,
+                attemptsCount: 0,
+                questionsCount: 0,
+                totalScore: 0,
+                uploadBatches: 0,
+                uploadQuestions: 0,
+                categoriesDone: {},
+                isGuest: true
+              };
+            }
+
+            guestStatsMap[guestKey].attemptsCount++;
+            guestStatsMap[guestKey].questionsCount += logQCount;
+            guestStatsMap[guestKey].totalScore += logScore;
+
+            totalQuestionsAllUsers += logQCount;
+            totalScoreAllUsers += logScore;
+            totalAttemptsCount++;
+          }
+        }
+      } catch (e) {}
     });
 
     (Array.isArray(batches) ? batches : []).forEach(b => {
@@ -128,7 +196,9 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    const userList = Object.values(userStatsMap).map(u => {
+    const allUsersCombined = [...Object.values(userStatsMap), ...Object.values(guestStatsMap)];
+
+    const userList = allUsersCombined.map(u => {
       const accuracy = u.questionsCount > 0 ? ((u.totalScore / u.questionsCount) * 100).toFixed(1) + '%' : '-';
       return {
         ...u,
@@ -141,9 +211,11 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       success: true,
       kpis: {
-        totalUsers: (profiles || []).length,
+        totalUsers: (profiles || []).length + Object.keys(guestStatsMap).length,
+        totalRegisteredUsers: (profiles || []).length,
+        totalGuests: Object.keys(guestStatsMap).length,
         activeUsers: activeNowCount,
-        totalAttempts: (attempts || []).length,
+        totalAttempts: totalAttemptsCount,
         totalQuestionsDone: totalQuestionsAllUsers,
         avgAccuracy: systemAvgAccuracy
       },

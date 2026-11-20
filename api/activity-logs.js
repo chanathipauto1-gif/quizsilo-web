@@ -20,8 +20,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+      const isUuid = body.user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.user_id);
       const ledgerEntry = {
-        user_id: body.user_id || null,
+        user_id: isUuid ? body.user_id : null,
         batch_id: body.batch_id || null,
         questions_scanned: body.question_count || 0,
         status: 'LOG: ' + JSON.stringify({
@@ -29,6 +30,9 @@ module.exports = async function handler(req, res) {
           user_name: body.user_name || 'ผู้ใช้',
           user_avatar: body.user_avatar || '👤',
           user_role: body.user_role || 'member',
+          guest_id: body.guest_id || null,
+          score: body.score != null ? body.score : null,
+          percent: body.percent != null ? body.percent : null,
           batch_name: body.batch_name || 'ชุดข้อสอบ',
           batch_category: body.batch_category || 'ทั่วไป',
           question_count: body.question_count || 0,
