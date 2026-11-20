@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.16.35</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.17.48</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -185,27 +185,61 @@
     <!-- รวมไฟล์ย่อยด้วยคำสั่ง include -->
     <section id="page-library" class="hidden space-y-4 sm:space-y-5">
 
-  <!-- Modern EdTech Hero Welcome Banner (สลับสถานะ Guest / User อัตโนมัติ) -->
-  <div id="hero-welcome-banner" class="bg-gradient-to-r from-brand-50 via-indigo-50/70 to-amber-50/50 p-4 sm:p-5 rounded-3xl border border-brand-100/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
-    <div class="flex items-start sm:items-center gap-3.5">
-      <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20">
-        <i data-lucide="sparkles" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-100 text-brand-700 border border-brand-200">AI Companion</span>
-          <h2 id="hero-welcome-title" class="text-sm sm:text-base font-black text-slate-800">QuizSilo — คลังข้อสอบอัจฉริยะสำหรับคนเตรียมสอบ</h2>
+  <!-- Container for Hero or Announcement -->
+  <div id="hero-banner-container">
+    <!-- 1. Global Announcement Banner (แสดงเมื่อ Admin เปิดใช้งาน) -->
+    <div id="hero-announcement-banner" class="hidden bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+      <div class="flex items-start sm:items-center gap-3.5 min-w-0">
+        <!-- Visual Box: Square Image or Preset Icon -->
+        <div id="announcement-visual-box" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden cursor-pointer" onclick="openAnnouncementImageModal()">
+          <span id="announcement-icon-el" class="text-2xl sm:text-3xl">📢</span>
+          <img id="announcement-img-el" src="" alt="announcement" class="hidden w-full h-full object-cover">
         </div>
-        <p id="hero-welcome-sub" class="text-xs text-slate-600 mt-1 leading-relaxed">
-          ทดลองฝึกทำข้อสอบได้ทันที หรือเข้าสู่ระบบด้วย Google เพื่อบันทึกสถิติ ประวัติการฝึกซ้อม และวิเคราะห์จุดอ่อนเฉพาะบุคคล
-        </p>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="announcement-tag-el" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+              <span>📢 ประกาศจากแอดมิน</span>
+            </span>
+            <span id="announcement-date-el" class="text-[10px] text-slate-400 font-mono"></span>
+          </div>
+          <h2 id="announcement-title-el" class="text-sm sm:text-base font-black text-slate-800 mt-1 truncate max-w-xl">
+            หัวข้อประกาศ
+          </h2>
+          <p id="announcement-desc-el" class="text-xs text-slate-600 mt-1 leading-relaxed line-clamp-2 max-w-2xl">
+            รายละเอียดประกาศ
+          </p>
+        </div>
+      </div>
+      <div id="announcement-cta-box" class="shrink-0 flex items-center gap-2 w-full md:w-auto">
+        <a id="announcement-cta-btn" href="#" target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all cursor-pointer">
+          <span id="announcement-cta-text">คลิกดูรายละเอียด</span>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </a>
       </div>
     </div>
-    <div id="hero-auth-cta" class="shrink-0 flex items-center gap-2 w-full md:w-auto">
-      <button onclick="openAuthModal()" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
-        <i data-lucide="log-in" class="w-4 h-4"></i>
-        <span>เข้าสู่ระบบด้วย Google</span>
-      </button>
+
+    <!-- 2. Modern EdTech Hero Welcome Banner (Default เมื่อไม่มีประกาศ) -->
+    <div id="hero-welcome-banner" class="bg-gradient-to-r from-brand-50 via-indigo-50/70 to-amber-50/50 p-4 sm:p-5 rounded-3xl border border-brand-100/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+      <div class="flex items-start sm:items-center gap-3.5">
+        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20">
+          <i data-lucide="sparkles" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-100 text-brand-700 border border-brand-200">AI Companion</span>
+            <h2 id="hero-welcome-title" class="text-sm sm:text-base font-black text-slate-800">QuizSilo — คลังข้อสอบอัจฉริยะสำหรับคนเตรียมสอบ</h2>
+          </div>
+          <p id="hero-welcome-sub" class="text-xs text-slate-600 mt-1 leading-relaxed">
+            ทดลองฝึกทำข้อสอบได้ทันที หรือเข้าสู่ระบบด้วย Google เพื่อบันทึกสถิติ ประวัติการฝึกซ้อม และวิเคราะห์จุดอ่อนเฉพาะบุคคล
+          </p>
+        </div>
+      </div>
+      <div id="hero-auth-cta" class="shrink-0 flex items-center gap-2 w-full md:w-auto">
+        <button onclick="openAuthModal()" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>เข้าสู่ระบบด้วย Google</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -472,6 +506,93 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Full-Width Bento Guide: Extraction Capability & Sustainability Notice -->
+  <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+    <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-500/20">
+        <i data-lucide="sparkles" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h3 class="text-sm sm:text-base font-extrabold text-slate-800">คำแนะนำรูปแบบไฟล์ที่ AI สกัดได้แม่นยำสูงสุด</h3>
+        <p class="text-[11px] text-slate-500">เพื่อผลลัพธ์การสกัดข้อสอบที่ดีที่สุดและลดเวลาตรวจทานเฉลย โปรดตรวจสอบเกณฑ์การนำเข้าไฟล์ด้านล่าง</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+      <!-- Col 1: แนะนำ (Emerald Box) -->
+      <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-200/80 space-y-3">
+        <div class="flex items-center gap-2 font-black text-emerald-800 text-xs sm:text-sm">
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <span>รูปแบบที่ AI สกัดได้ดีเยี่ยม (แนะนำ ✅)</span>
+        </div>
+        <ul class="space-y-2 text-xs text-slate-700 leading-relaxed">
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ไฟล์ PDF (1 ไฟล์ต่อครั้ง):</b> ความยาวไม่เกิน 10 หน้า มีเฉลยอยู่ในไฟล์ (ท้ายเล่ม, ตาราง OMR หรือท้ายข้อ) <span class="text-rose-600 font-bold bg-white/70 px-1.5 py-0.5 rounded border border-rose-200">*กรุณากดอัปโหลดและประมวลผลทีละ 1 ไฟล์ PDF*</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ไฟล์รูปภาพ (ใส่หลายรูปพร้อมกันได้):</b> ไม่เกิน 10–12 ภาพต่อชุด ถ่ายให้ตรง คมชัด แสงสว่างพอดี มีโจทย์และตัวเลือกครบถ้วน
+            </div>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ไฟล์ข้อความ (.TXT / .MD):</b> ประมวลผลเร็วและแม่นยำสูงสุด เหมาะสำหรับข้อสอบแบบข้อความล้วนประมาณ 50–100 ข้อ
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 2: ไม่มั่นใจ / เสี่ยงผิดพลาด (Amber/Rose Box) -->
+      <div class="p-4 rounded-2xl bg-gradient-to-br from-rose-50/70 to-amber-50/40 border border-rose-200/80 space-y-3">
+        <div class="flex items-center gap-2 font-black text-rose-800 text-xs sm:text-sm">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+          <span>รูปแบบที่ AI ไม่มั่นใจ / เสี่ยงผิดพลาด (⚠️)</span>
+        </div>
+        <ul class="space-y-2 text-xs text-slate-700 leading-relaxed">
+          <li class="flex items-start gap-2">
+            <span class="text-rose-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ไฟล์ PDF หนาเกิน 20–25 หน้าในไฟล์เดียว:</b> อาจทำให้ขนาดข้อมูลล้น หรือ AI สกัดคำตอบขาดตอนกลางคัน
+            </div>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ข้อสอบที่ไม่มีเฉลยมาด้วย:</b> AI ต้องคาดเดาและคิดคำตอบเองทั้งหมด ซึ่งอาจมีความคลาดเคลื่อนสูง
+            </div>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ภาพถ่ายลายมือเขียน / ภาพเบลอ / มืด:</b> ข้อความอาจตกหล่นหรืออ่านผิดเพี้ยนได้
+            </div>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-600 font-bold shrink-0">•</span>
+            <div>
+              <b class="text-slate-800">ข้อสอบเขียนบรรยาย / จับคู่โยงเส้น:</b> ระบบถูกออกแบบมาสำหรับข้อสอบปรนัย (ชอยส์ ก ข ค ง) เป็นหลัก
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Sustainability & Review Notice Banner -->
+    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-brand-50 to-indigo-50 border border-brand-200/80 text-xs flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center shrink-0">
+        <i data-lucide="shield-check" class="w-4 h-4"></i>
+      </div>
+      <p class="text-slate-700 leading-relaxed">
+        <b class="text-brand-900">ข้อสังเกตเรื่องความยั่งยืน:</b> ข้อสอบที่สกัดผ่าน AI อาจมีข้อผิดพลาดได้เสมอ เพื่อความถูกต้องและยั่งยืนของคลังข้อสอบ ขอความร่วมมือผู้ใช้งานทุกท่านช่วยกันตรวจสอบและตรวจทานเฉลยในหน้า <b>Review & Edit</b> ก่อนนำไปใช้งานครับ 🙏
+      </p>
+    </div>
   </div>
 </section>
 
@@ -1138,6 +1259,10 @@
       <span>🚩 ศูนย์รับรายงานข้อสอบ</span>
       <span id="admin-flags-count-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black animate-pulse">0</span>
     </button>
+    <button id="admin-tab-btn-announcement" onclick="switchAdminTab('announcement')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+      <i data-lucide="megaphone" class="w-4 h-4 text-amber-500"></i>
+      <span>📢 จัดการประกาศหน้าแรก</span>
+    </button>
   </div>
 
   <!-- TAB 1: สถิติสมาชิกและภาพรวม (Stats Content) -->
@@ -1402,6 +1527,133 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: จัดการแถบประกาศหน้าแรก (Global Announcement Content) -->
+  <div id="admin-tab-content-announcement" class="hidden space-y-6">
+    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+      <!-- Toolbar -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="megaphone" class="w-4 h-4 text-amber-500"></i>
+            <span>จัดการแถบประกาศหน้าแรก (Global Announcement Banner)</span>
+          </h3>
+          <p class="text-[11px] text-slate-500 mt-0.5">ประกาศนี้จะไปปรากฏแทนที่บล็อกต้อนรับในหน้าคลังข้อสอบ สำหรับแจ้งข่าวสาร อัปเดต หรือโปรโมตข้อสอบชุดใหม่</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="loadAdminAnnouncementForm(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 shadow-2xs transition-all cursor-pointer">
+            <i data-lucide="refresh-cw" id="admin-ann-refresh-icon" class="w-3.5 h-3.5"></i>
+            <span>รีเฟรช</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-6">
+        <!-- Live Preview Section -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>ตัวอย่างการแสดงผลจริงบนหน้าคลังข้อสอบ (Live Preview)</span>
+            <span id="admin-ann-status-pill" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500">⚪ ปิดการแสดงผล</span>
+          </label>
+          <div id="admin-ann-preview-box" class="bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+            <div class="flex items-start sm:items-center gap-3.5 min-w-0">
+              <div id="prev-ann-visual-box" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden">
+                <span id="prev-ann-icon-el" class="text-2xl">📢</span>
+                <img id="prev-ann-img-el" src="" alt="preview" class="hidden w-full h-full object-cover">
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                    📢 ประกาศจากแอดมิน
+                  </span>
+                  <span id="prev-ann-date-el" class="text-[10px] text-slate-400 font-mono">วันนี้</span>
+                </div>
+                <h4 id="prev-ann-title-el" class="text-sm sm:text-base font-black text-slate-800 mt-1 truncate max-w-xl">
+                  หัวข้อประกาศ...
+                </h4>
+                <p id="prev-ann-desc-el" class="text-xs text-slate-600 mt-0.5 leading-relaxed line-clamp-2 max-w-2xl">
+                  รายละเอียดของประกาศจะปรากฏที่นี่...
+                </p>
+              </div>
+            </div>
+            <div id="prev-ann-cta-box" class="shrink-0">
+              <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold rounded-xl shadow-xs">
+                <span id="prev-ann-btn-text">คลิกดูรายละเอียด</span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Controls -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-2 border-t border-slate-100">
+          <div class="space-y-4">
+            <!-- Active Toggle -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-800 block">เปิดใช้งานแถบประกาศบนหน้าแรก</span>
+                <span class="text-[11px] text-slate-400">หากปิด สมาชิกจะเห็นข้อความต้อนรับของระบบตามปกติ</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="admin-ann-enabled" onchange="updateAdminAnnouncementLivePreview()" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+
+            <!-- Headline (บรรทัดที่ 1) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">หัวข้อประกาศ (บรรทัดที่ 1) <span class="text-rose-500">*</span></label>
+              <input type="text" id="admin-ann-title" oninput="updateAdminAnnouncementLivePreview()" placeholder="เช่น เปิดรับแนวข้อสอบครูผู้ช่วย ภาค ก ปี 2569 แล้ววันนี้!" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+            </div>
+
+            <!-- Subtext (บรรทัดที่ 2) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดประกาศ (บรรทัดที่ 2) <span class="text-rose-500">*</span></label>
+              <textarea id="admin-ann-desc" rows="3" oninput="updateAdminAnnouncementLivePreview()" placeholder="เช่น สมาชิกทุกคนสามารถเข้าไปทดลองทำข้อสอบเสมือนจริงในหมวดการศึกษาได้ฟรี พร้อมเฉลยละเอียดรายข้อ..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 resize-none"></textarea>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Icon / Media Selector -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">เลือกไอคอนประกาศ หรือระบุ URL รูปภาพสี่เหลี่ยม</label>
+              <div class="flex items-center gap-2 mb-2">
+                <select id="admin-ann-icon" onchange="updateAdminAnnouncementLivePreview()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                  <option value="📢">📢 โทรโข่ง / ข่าวสาร</option>
+                  <option value="🚀">🚀 จรวด / ฟีเจอร์ใหม่</option>
+                  <option value="🔔">🔔 กระดิ่ง / แจ้งเตือน</option>
+                  <option value="💡">💡 หลอดไฟ / เคล็ดลับ</option>
+                  <option value="🎁">🎁 ของขวัญ / สิทธิพิเศษ</option>
+                  <option value="⭐">⭐ ดาว / กิจกรรมเด่น</option>
+                </select>
+                <span class="text-xs text-slate-400">หรือใส่ลิงก์รูปภาพด้านล่าง</span>
+              </div>
+              <input type="url" id="admin-ann-image-url" oninput="updateAdminAnnouncementLivePreview()" placeholder="https://example.com/banner-square.jpg (ไม่บังคับ)" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+              <p class="text-[10px] text-slate-400 mt-1">💡 หากใส่ URL รูปภาพ ระบบจะแสดงรูปภาพแทนไอคอน และคลิกดูภาพขยายได้</p>
+            </div>
+
+            <!-- Action Button (Optional) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">ปุ่มเชื่อมโยง (Action Button) - ไม่บังคับ</label>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="admin-ann-btn-text" oninput="updateAdminAnnouncementLivePreview()" placeholder="ข้อความบนปุ่ม เช่น คลิกดูเลย" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                <input type="text" id="admin-ann-btn-url" oninput="updateAdminAnnouncementLivePreview()" placeholder="ลิงก์ปลายทาง เช่น https://..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">หากไม่ใส่ข้อความปุ่ม แถบจะแสดงเฉพาะข้อความและรูปภาพโดยไม่มีปุ่มกด</p>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-3">
+              <button onclick="saveAdminAnnouncement()" id="btn-save-admin-ann" class="w-full py-3 px-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-amber-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>บันทึกประกาศหน้าแรก</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3894,6 +4146,39 @@ const AdminAuditService = {
       console.warn('getBatchFlags error:', err);
       return notifySuccess(this, { success: true, flags: [], pendingFlags: [] });
     }
+  },
+
+  async getGlobalAnnouncement() {
+    try {
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: { flag: 'get_announcement' }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      return notifySuccess(this, { success: true, announcement: null });
+    } catch (err) {
+      console.warn('getGlobalAnnouncement error:', err);
+      return notifySuccess(this, { success: true, announcement: null });
+    }
+  },
+
+  async saveGlobalAnnouncement(announcementData, adminProfile) {
+    try {
+      const activeAdmin = getActiveProfile(adminProfile);
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'set_announcement',
+          announcementData,
+          adminProfile: activeAdmin
+        }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      throw new Error(data?.error || 'Failed to save announcement');
+    } catch (err) {
+      console.error('saveGlobalAnnouncement error:', err);
+      return notifyFailure(this, err);
+    }
   }
 };
 
@@ -3941,7 +4226,9 @@ const adapterImpl = {
   getFlaggedQuestions: AdminAuditService.getFlaggedQuestions,
   resolveFlaggedQuestion: AdminAuditService.resolveFlaggedQuestion,
   unhideBatch: AdminAuditService.unhideBatch,
-  getBatchFlags: AdminAuditService.getBatchFlags
+  getBatchFlags: AdminAuditService.getBatchFlags,
+  getGlobalAnnouncement: AdminAuditService.getGlobalAnnouncement,
+  saveGlobalAnnouncement: AdminAuditService.saveGlobalAnnouncement
 };
 
 function createGoogleScriptRunner() {
@@ -5066,6 +5353,9 @@ if (typeof window !== 'undefined') {
   function loadBatches(showSpinner = false) {
     const icon = document.getElementById('refresh-lib-icon');
     if (showSpinner && icon) icon.classList.add('animate-spin');
+
+    // Load global announcement for Library hero banner
+    loadGlobalAnnouncement();
 
     google.script.run
       .withSuccessHandler(batches => {
@@ -8612,9 +8902,11 @@ if (typeof window !== 'undefined') {
     const btnStats = document.getElementById('admin-tab-btn-stats');
     const btnLogs = document.getElementById('admin-tab-btn-logs');
     const btnFlags = document.getElementById('admin-tab-btn-flags');
+    const btnAnn = document.getElementById('admin-tab-btn-announcement');
     const contentStats = document.getElementById('admin-tab-content-stats');
     const contentLogs = document.getElementById('admin-tab-content-logs');
     const contentFlags = document.getElementById('admin-tab-content-flags');
+    const contentAnn = document.getElementById('admin-tab-content-announcement');
 
     const activeCls = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0';
     const inactiveCls = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0';
@@ -8622,15 +8914,19 @@ if (typeof window !== 'undefined') {
     if (btnStats) btnStats.className = tab === 'stats' ? activeCls : inactiveCls;
     if (btnLogs) btnLogs.className = tab === 'logs' ? activeCls : inactiveCls;
     if (btnFlags) btnFlags.className = tab === 'flags' ? activeCls : (inactiveCls + ' relative');
+    if (btnAnn) btnAnn.className = tab === 'announcement' ? activeCls : inactiveCls;
 
     if (contentStats) contentStats.classList.toggle('hidden', tab !== 'stats');
     if (contentLogs) contentLogs.classList.toggle('hidden', tab !== 'logs');
     if (contentFlags) contentFlags.classList.toggle('hidden', tab !== 'flags');
+    if (contentAnn) contentAnn.classList.toggle('hidden', tab !== 'announcement');
 
     if (tab === 'logs') {
       loadAdminAuditLogs();
     } else if (tab === 'flags') {
       loadAdminFlags();
+    } else if (tab === 'announcement') {
+      loadAdminAnnouncementForm();
     }
   }
 
@@ -9054,6 +9350,231 @@ if (typeof window !== 'undefined') {
     });
   }
 
+  // ==========================================
+  // Global Announcement Banner Functions
+  // ==========================================
+  let currentGlobalAnnouncement = null;
+
+  function loadGlobalAnnouncement() {
+    google.script.run
+      .withSuccessHandler(res => {
+        currentGlobalAnnouncement = (res && res.announcement) ? res.announcement : null;
+        renderGlobalAnnouncement(currentGlobalAnnouncement);
+      })
+      .withFailureHandler(err => {
+        console.warn('loadGlobalAnnouncement error:', err);
+      })
+      .getGlobalAnnouncement();
+  }
+
+  function renderGlobalAnnouncement(ann) {
+    const annBanner = document.getElementById('hero-announcement-banner');
+    const welcomeBanner = document.getElementById('hero-welcome-banner');
+    if (!annBanner || !welcomeBanner) return;
+
+    if (ann && ann.enabled && (ann.title || ann.description)) {
+      welcomeBanner.classList.add('hidden');
+      annBanner.classList.remove('hidden');
+
+      const titleEl = document.getElementById('announcement-title-el');
+      const descEl = document.getElementById('announcement-desc-el');
+      const iconEl = document.getElementById('announcement-icon-el');
+      const imgEl = document.getElementById('announcement-img-el');
+      const dateEl = document.getElementById('announcement-date-el');
+      const ctaBox = document.getElementById('announcement-cta-box');
+      const ctaBtn = document.getElementById('announcement-cta-btn');
+      const ctaText = document.getElementById('announcement-cta-text');
+
+      if (titleEl) titleEl.textContent = ann.title || 'ประกาศจากแอดมิน';
+      if (descEl) descEl.textContent = ann.description || '';
+      if (dateEl && ann.updatedAt) {
+        dateEl.textContent = new Date(ann.updatedAt).toLocaleDateString('th-TH');
+      }
+
+      if (ann.imageUrl && ann.imageUrl.trim().startsWith('http')) {
+        if (imgEl) {
+          imgEl.src = ann.imageUrl.trim();
+          imgEl.classList.remove('hidden');
+        }
+        if (iconEl) iconEl.classList.add('hidden');
+      } else {
+        if (imgEl) imgEl.classList.add('hidden');
+        if (iconEl) {
+          iconEl.textContent = ann.icon || '📢';
+          iconEl.classList.remove('hidden');
+        }
+      }
+
+      if (ann.buttonText && ann.buttonUrl) {
+        if (ctaBox) ctaBox.classList.remove('hidden');
+        if (ctaBtn) ctaBtn.href = ann.buttonUrl;
+        if (ctaText) ctaText.textContent = ann.buttonText;
+      } else {
+        if (ctaBox) ctaBox.classList.add('hidden');
+      }
+    } else {
+      annBanner.classList.add('hidden');
+      welcomeBanner.classList.remove('hidden');
+    }
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function openAnnouncementImageModal() {
+    if (currentGlobalAnnouncement && currentGlobalAnnouncement.imageUrl) {
+      Swal.fire({
+        imageUrl: currentGlobalAnnouncement.imageUrl,
+        imageAlt: currentGlobalAnnouncement.title || 'ประกาศ',
+        title: currentGlobalAnnouncement.title || '',
+        text: currentGlobalAnnouncement.description || '',
+        confirmButtonColor: '#d97706',
+        confirmButtonText: 'ปิดรูปภาพ',
+        customClass: { popup: 'rounded-3xl' }
+      });
+    }
+  }
+
+  function loadAdminAnnouncementForm(force = false) {
+    const icon = document.getElementById('admin-ann-refresh-icon');
+    if (icon) icon.classList.add('animate-spin');
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (icon) icon.classList.remove('animate-spin');
+        const ann = (res && res.announcement) ? res.announcement : null;
+        currentGlobalAnnouncement = ann;
+
+        const enabledInput = document.getElementById('admin-ann-enabled');
+        const titleInput = document.getElementById('admin-ann-title');
+        const descInput = document.getElementById('admin-ann-desc');
+        const iconSelect = document.getElementById('admin-ann-icon');
+        const imgInput = document.getElementById('admin-ann-image-url');
+        const btnTextInput = document.getElementById('admin-ann-btn-text');
+        const btnUrlInput = document.getElementById('admin-ann-btn-url');
+
+        if (enabledInput) enabledInput.checked = Boolean(ann?.enabled);
+        if (titleInput) titleInput.value = ann?.title || '';
+        if (descInput) descInput.value = ann?.description || '';
+        if (iconSelect) iconSelect.value = ann?.icon || '📢';
+        if (imgInput) imgInput.value = ann?.imageUrl || '';
+        if (btnTextInput) btnTextInput.value = ann?.buttonText || '';
+        if (btnUrlInput) btnUrlInput.value = ann?.buttonUrl || '';
+
+        updateAdminAnnouncementLivePreview();
+      })
+      .withFailureHandler(err => {
+        if (icon) icon.classList.remove('animate-spin');
+        console.error('loadAdminAnnouncementForm error:', err);
+        showToast('error', 'โหลดข้อมูลประกาศไม่สำเร็จ');
+      })
+      .getGlobalAnnouncement();
+  }
+
+  function updateAdminAnnouncementLivePreview() {
+    const enabled = document.getElementById('admin-ann-enabled')?.checked;
+    const title = document.getElementById('admin-ann-title')?.value.trim() || 'หัวข้อประกาศ...';
+    const desc = document.getElementById('admin-ann-desc')?.value.trim() || 'รายละเอียดของประกาศจะปรากฏที่นี่...';
+    const icon = document.getElementById('admin-ann-icon')?.value || '📢';
+    const imgUrl = document.getElementById('admin-ann-image-url')?.value.trim();
+    const btnText = document.getElementById('admin-ann-btn-text')?.value.trim();
+
+    const statusPill = document.getElementById('admin-ann-status-pill');
+    if (statusPill) {
+      if (enabled) {
+        statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 animate-pulse';
+        statusPill.textContent = '🟢 เปิดใช้งานอยู่';
+      } else {
+        statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500';
+        statusPill.textContent = '⚪ ปิดการแสดงผล';
+      }
+    }
+
+    const prevTitle = document.getElementById('prev-ann-title-el');
+    const prevDesc = document.getElementById('prev-ann-desc-el');
+    const prevIcon = document.getElementById('prev-ann-icon-el');
+    const prevImg = document.getElementById('prev-ann-img-el');
+    const prevCtaBox = document.getElementById('prev-ann-cta-box');
+    const prevBtnText = document.getElementById('prev-ann-btn-text');
+
+    if (prevTitle) prevTitle.textContent = title;
+    if (prevDesc) prevDesc.textContent = desc;
+
+    if (imgUrl && imgUrl.startsWith('http')) {
+      if (prevImg) {
+        prevImg.src = imgUrl;
+        prevImg.classList.remove('hidden');
+      }
+      if (prevIcon) prevIcon.classList.add('hidden');
+    } else {
+      if (prevImg) prevImg.classList.add('hidden');
+      if (prevIcon) {
+        prevIcon.textContent = icon;
+        prevIcon.classList.remove('hidden');
+      }
+    }
+
+    if (btnText) {
+      if (prevCtaBox) prevCtaBox.classList.remove('hidden');
+      if (prevBtnText) prevBtnText.textContent = btnText;
+    } else {
+      if (prevCtaBox) prevCtaBox.classList.add('hidden');
+    }
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function saveAdminAnnouncement() {
+    if (!currentUserProfile || currentUserProfile.role !== 'admin') {
+      Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะ Super Admin เท่านั้นที่สามารถจัดการประกาศหน้าแรกได้', 'warning');
+      return;
+    }
+
+    const enabled = document.getElementById('admin-ann-enabled')?.checked;
+    const title = document.getElementById('admin-ann-title')?.value.trim();
+    const desc = document.getElementById('admin-ann-desc')?.value.trim();
+    const icon = document.getElementById('admin-ann-icon')?.value || '📢';
+    const imageUrl = document.getElementById('admin-ann-image-url')?.value.trim();
+    const buttonText = document.getElementById('admin-ann-btn-text')?.value.trim();
+    const buttonUrl = document.getElementById('admin-ann-btn-url')?.value.trim();
+
+    if (enabled && (!title || !desc)) {
+      Swal.fire('ข้อมูลไม่ครบถ้วน', 'กรุณาระบุหัวข้อและรายละเอียดประกาศให้ครบถ้วนก่อนเปิดใช้งาน', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'กำลังบันทึกประกาศ...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    const payload = {
+      enabled,
+      title,
+      description: desc,
+      icon,
+      imageUrl,
+      buttonText,
+      buttonUrl
+    };
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.success) {
+          showToast('success', '📢 บันทึกประกาศหน้าแรกเรียบร้อยแล้ว');
+          currentGlobalAnnouncement = { ...payload, updatedAt: new Date().toISOString() };
+          renderGlobalAnnouncement(currentGlobalAnnouncement);
+          loadAdminAnnouncementForm();
+        } else {
+          Swal.fire('เกิดข้อผิดพลาด', (res && res.error) || 'ไม่สามารถบันทึกประกาศได้', 'error');
+        }
+      })
+      .withFailureHandler(err => {
+        Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error');
+      })
+      .saveGlobalAnnouncement(payload, currentUserProfile);
+  }
+
   function loadAdminAuditLogs(force = false) {
     const icon = document.getElementById('admin-logs-refresh-icon');
     if (icon) icon.classList.add('animate-spin');
@@ -9173,6 +9694,12 @@ if (typeof window !== 'undefined') {
   window.resolveAdminFlag = resolveAdminFlag;
   window.adminUnhideBatch = adminUnhideBatch;
   window.toggleBatchFlagsAccordion = toggleBatchFlagsAccordion;
+  window.loadGlobalAnnouncement = loadGlobalAnnouncement;
+  window.renderGlobalAnnouncement = renderGlobalAnnouncement;
+  window.openAnnouncementImageModal = openAnnouncementImageModal;
+  window.loadAdminAnnouncementForm = loadAdminAnnouncementForm;
+  window.updateAdminAnnouncementLivePreview = updateAdminAnnouncementLivePreview;
+  window.saveAdminAnnouncement = saveAdminAnnouncement;
 </script>
 
 

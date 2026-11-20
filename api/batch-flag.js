@@ -147,6 +147,81 @@ module.exports = async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
+    // Branch 1.6: Get Global Announcement
+    // -------------------------------------------------------------
+    if (flag === 'get_announcement') {
+      const annRes = await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?status=like.SYSTEM_ANNOUNCEMENT*&select=*&order=created_at.desc&limit=1`, { headers });
+      const annRows = await annRes.json();
+      let announcement = null;
+      if (Array.isArray(annRows) && annRows.length > 0) {
+        try {
+          const raw = annRows[0].status.replace('SYSTEM_ANNOUNCEMENT:', '');
+          announcement = JSON.parse(raw);
+          announcement.id = annRows[0].id;
+          announcement.createdAt = annRows[0].created_at;
+        } catch (e) {}
+      }
+      return res.status(200).json({ success: true, announcement });
+    }
+
+    // -------------------------------------------------------------
+    // Branch 1.7: Set / Update Global Announcement (Admin only)
+    // -------------------------------------------------------------
+    if (flag === 'set_announcement') {
+      const { announcementData, adminProfile } = body;
+      if (!announcementData) return res.status(400).json({ error: 'Missing announcementData' });
+
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: adminProfile?.uuid || null,
+          batch_id: null,
+          questions_scanned: 0,
+          status: 'SYSTEM_ANNOUNCEMENT:' + JSON.stringify({
+            enabled: Boolean(announcementData.enabled),
+            title: String(announcementData.title || '').trim(),
+            description: String(announcementData.description || '').trim(),
+            icon: announcementData.icon || '📢',
+            imageUrl: String(announcementData.imageUrl || '').trim(),
+            buttonText: String(announcementData.buttonText || '').trim(),
+            buttonUrl: String(announcementData.buttonUrl || '').trim(),
+            updatedBy: adminProfile?.name || adminProfile?.nickname || 'Super Admin',
+            updatedAt: new Date().toISOString()
+          })
+        })
+      });
+
+      // Audit Log
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: adminProfile?.uuid || null,
+            batch_id: null,
+            questions_scanned: 0,
+            status: 'LOG: ' + JSON.stringify({
+              action: 'SET_ANNOUNCEMENT',
+              user_name: adminProfile?.name || 'Admin',
+              user_avatar: adminProfile?.avatar || '👑',
+              user_role: 'admin',
+              batch_name: 'ระบบส่วนกลาง',
+              batch_category: 'ประกาศ',
+              question_count: 0,
+              details: announcementData.enabled
+                ? `เปิดแถบประกาศหน้าแรก: "${(announcementData.title || '').slice(0, 40)}..."`
+                : 'ปิดการแสดงผลแถบประกาศหน้าแรก',
+              timestamp: new Date().toISOString()
+            })
+          })
+        });
+      } catch (e) {}
+
+      return res.status(200).json({ success: true, message: 'บันทึกประกาศหน้าแรกเรียบร้อยแล้ว' });
+    }
+
+    // -------------------------------------------------------------
     // Branch 2: Resolve a Flagged Question (Admin Action)
     // -------------------------------------------------------------
     if (flag === 'resolve_flag') {
