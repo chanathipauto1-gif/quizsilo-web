@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.15.17</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.15.34</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -5833,20 +5833,38 @@ if (typeof window !== 'undefined') {
             // แสดงเฉพาะงานที่สกัดเสร็จระหว่างที่เปิดเว็บอยู่เท่านั้น
             if (!isInitialQueueLoad) {
               const dName = item.batchName === '[รอ AI ตั้งชื่อ]' ? `ชุดรหัส #${item.shortBatchId}` : escapeHtml(item.batchName);
-              Swal.fire({
-                icon: 'success',
-                title: 'สกัดข้อสอบสำเร็จ! 🎉',
-                html: `ชุดข้อสอบ <b>"${dName}"</b> สกัดเรียบร้อยแล้ว<br><br><span class="text-xs text-slate-500">กรุณาไปตรวจสอบและตรวจทานเฉลยใน <b>หน้าแดชบอร์ด</b> (ชุดข้อสอบของฉัน)</span>`,
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: '📊 ไปที่หน้าแดชบอร์ด',
-                cancelButtonText: 'รับทราบ',
-                customClass: { popup: 'rounded-3xl' }
-              }).then(res => {
-                if (res.isConfirmed) {
-                  switchPage('dashboard');
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                showCloseButton: true,
+                timer: 9000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                  toast.onmouseenter = Swal.stopTimer;
+                  toast.onmouseleave = Swal.resumeTimer;
                 }
+              });
+              Toast.fire({
+                icon: 'success',
+                html: `
+                  <div class="text-left text-xs pr-2">
+                    <div class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5">
+                      <span>สกัดข้อสอบสำเร็จ! 🎉</span>
+                    </div>
+                    <div class="text-slate-600 font-semibold mt-1 truncate max-w-[230px]">
+                      ชุด "${dName}"
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">
+                      ตรวจทานเฉลยได้ที่หน้าแดชบอร์ด
+                    </div>
+                    <div class="mt-2.5">
+                      <button onclick="switchPage('dashboard'); Swal.close();" class="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-[11px] shadow-xs cursor-pointer transition-all inline-flex items-center gap-1">
+                        <span>📊 ไปที่หน้าแดชบอร์ด</span>
+                      </button>
+                    </div>
+                  </div>
+                `
               });
             }
           }
