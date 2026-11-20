@@ -101,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.01.17</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.02.42</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -204,6 +204,1730 @@
   <!-- MAIN CONTENT -->
   <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6">
     <!-- รวมไฟล์ย่อยด้วยคำสั่ง include -->
+    <!-- ========================================================================== -->
+<!-- VIEW: LANDING PAGE (หน้าแรกสำหรับต้อนรับผู้ใช้งานใหม่และผู้เยี่ยมชม)      -->
+<!-- ========================================================================== -->
+<style>
+/* ==========================================================================
+       QuizSilo #phone-demo-screen — 9-Step Walkthrough Scoped CSS
+       ========================================================================== */
+    #phone-demo-screen {
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #phone-demo-screen > style,
+    #phone-demo-screen > script {
+      display: none !important;
+    }
+
+    @keyframes qsLaserSweep {
+      0%   { transform: translateY(-8px); opacity: 0; }
+      15%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { transform: translateY(156px); opacity: 0; }
+    }
+
+    @keyframes qsTapRipple {
+      0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0.9; }
+      100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+
+    @keyframes qsFloatGentle {
+      0%, 100% { transform: translateY(0px); }
+      50%      { transform: translateY(-5px); }
+    }
+
+    @keyframes qsCheckPop {
+      0%   { transform: scale(0.4); opacity: 0; }
+      65%  { transform: scale(1.18); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    #phone-demo-screen .qs-scene {
+      position: absolute;
+      inset: 0;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+      pointer-events: none;
+      transition: opacity 380ms cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: opacity, transform;
+    }
+
+    #phone-demo-screen .qs-scene.is-active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    #phone-demo-screen .qs-doc-scroll-inner {
+      transition: transform 2200ms cubic-bezier(0.35, 0, 0.25, 1);
+      will-change: transform;
+    }
+
+    #phone-demo-screen .qs-morph-sheet {
+      transition: transform 820ms cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 620ms ease;
+      will-change: transform, opacity;
+    }
+
+    #phone-demo-screen .qs-pdf-badge-card {
+      transition: transform 760ms cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 520ms ease;
+      will-change: transform, opacity;
+    }
+
+    #phone-demo-screen .qs-drop-file {
+      transition: transform 860ms cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 420ms ease;
+      will-change: transform, opacity;
+    }
+
+    #phone-demo-screen .qs-laser-line {
+      animation: qsLaserSweep 1.65s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      will-change: transform, opacity;
+    }
+
+    #phone-demo-screen .qs-float-idle {
+      animation: qsFloatGentle 2.6s ease-in-out infinite;
+    }
+
+    #phone-demo-screen .qs-check-pop {
+      animation: qsCheckPop 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    #phone-demo-screen .qs-review-scroll {
+      transition: transform 1350ms cubic-bezier(0.32, 0.72, 0, 1);
+      will-change: transform;
+    }
+
+    #phone-demo-screen .qs-tutor-drawer {
+      opacity: 0;
+      transform: translateY(18px) scale(0.97);
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                  max-height 380ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #phone-demo-screen .qs-tutor-drawer.is-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      max-height: 150px;
+    }
+
+    /* Virtual Hand Cursor */
+    #phone-demo-screen #qs-hand-cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 45;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 540ms cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 220ms ease;
+      will-change: transform, opacity;
+    }
+
+    #phone-demo-screen #qs-hand-cursor .qs-hand-inner {
+      transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: 28% 18%;
+    }
+
+    #phone-demo-screen #qs-hand-cursor.is-tapping .qs-hand-inner {
+      transform: scale(0.84) rotate(-8deg);
+    }
+
+    #phone-demo-screen .qs-ripple-ring {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(139, 92, 246, 0.22) 60%, transparent 100%);
+      border: 1.5px solid rgba(99, 102, 241, 0.7);
+      pointer-events: none;
+      z-index: 44;
+      animation: qsTapRipple 580ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    #phone-demo-screen .qs-btn-press-sim {
+      transform: scale(0.96) !important;
+      filter: brightness(0.96);
+    }
+
+    /* Code viewer scrollbar (for outer showcase panel only) */
+    .code-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .code-scroll::-webkit-scrollbar-track { background: #0f172a; }
+    .code-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .code-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+</style>
+
+<div id="page-landing" class="hidden -mx-3 sm:-mx-6 -my-5 sm:-my-6 bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-800">
+
+  <!-- ================================================================ -->
+  <!-- 1. MINIMAL NAVBAR                                                -->
+  <!-- ================================================================ -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <!-- Brand Logo -->
+      <a href="javascript:void(0)" onclick="handleLandingLogoClick()" class="flex items-center gap-2.5 group shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 transition-transform duration-200 group-hover:scale-105">
+          <i data-lucide="layers" class="w-5 h-5"></i>
+        </div>
+        <div class="leading-tight">
+          <div class="flex items-center gap-1.5">
+            <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 via-violet-600 to-purple-600 tracking-tight">QuizSilo</span>
+            <span class="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80">Open Beta</span>
+          </div>
+          <span class="hidden sm:block text-[11px] text-slate-500 font-normal">คลังข้อสอบอัจฉริยะ • AI Companion</span>
+        </div>
+      </a>
+
+      <!-- Minimal Center Links (Desktop) -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+        <a href="#pain-solution" class="hover:text-indigo-600 transition-colors">ทำไมต้อง QuizSilo</a>
+        <a href="#how-it-works" class="hover:text-indigo-600 transition-colors">วิธีใช้งาน</a>
+        <a href="#community-stats" class="hover:text-indigo-600 transition-colors">คลังข้อสอบชุมชน</a>
+      </nav>
+
+      <!-- Right Action: Google Login -->
+      <div id="landing-auth-container">
+        <button onclick="handleGoogleLogin()" type="button" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/90 hover:border-indigo-300 rounded-xl text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer active:scale-95">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>เข้าสู่ระบบด้วย Google</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div>
+    <!-- ================================================================ -->
+    <!-- 2 & 3. HERO SECTION + INTERACTIVE PHONE MOCKUP CONTAINER         -->
+    <!-- ================================================================ -->
+    <section class="relative overflow-hidden bg-gradient-to-b from-white via-indigo-50/40 to-slate-50 pt-10 pb-16 sm:pt-14 sm:pb-24">
+      <!-- Subtle Background Glows -->
+      <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[36rem] h-[24rem] rounded-full bg-indigo-200/30 blur-3xl"></div>
+      <div class="pointer-events-none absolute top-40 right-0 w-72 h-72 rounded-full bg-purple-200/25 blur-3xl"></div>
+
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+
+          <!-- Left Column: Hero Copy & CTA -->
+          <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+            <!-- Warm Eyebrow Pill -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs sm:text-sm font-medium shadow-xs">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500 shrink-0"></i>
+              <span>เพื่อคนเตรียมสอบ ก.พ. ภาค ก • ครูผู้ช่วย • ท้องถิ่น และราชการ</span>
+            </div>
+
+            <!-- Main Headline -->
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+              ไม่ต้องแบกหนังสือหนักๆ อีกต่อไป
+              <span class="block mt-1.5 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600">
+                แปลงชีทข้อสอบเป็นแบบฝึกหัดบนมือถือได้ในคลิกเดียว
+              </span>
+            </h1>
+
+            <!-- Warm Sub-headline -->
+            <p class="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              เปลี่ยนชีทสรุปและไฟล์ข้อสอบ PDF ที่กองเต็มเครื่อง ให้กลายเป็นระบบฝึกทำข้อสอบอัจฉริยะ จับเวลาเสมือนจริง พร้อม <strong class="font-semibold text-slate-800">AI ติวเตอร์เฉลยรายข้อ</strong> ที่อยู่เป็นเพื่อนข้างโต๊ะอ่านหนังสือของคุณในทุกคืนก่อนวันสอบ
+            </p>
+
+            <!-- Primary & Secondary CTAs -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 pt-1">
+              <button onclick="goToPractice()" type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-700 hover:via-violet-700 hover:to-purple-700 text-white text-sm sm:text-base font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/35 transition-all cursor-pointer active:scale-[0.98]">
+                <span>🚀 ทดลองสกัดข้อสอบตัวอย่างฟรี</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+
+              <button onclick="handleGoogleLogin()" type="button" class="inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/90 hover:border-indigo-300 text-sm sm:text-base font-semibold shadow-xs transition-all cursor-pointer active:scale-[0.98]">
+                <span>🌐 เข้าสู่ระบบด้วย Google (ฟรี 100%)</span>
+              </button>
+            </div>
+
+            <!-- Trust Guarantee Badge -->
+            <div class="pt-1 flex justify-center lg:justify-start">
+              <div class="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 rounded-xl bg-white/85 border border-slate-200/80 text-xs sm:text-sm text-slate-600 font-medium shadow-2xs">
+                <span>✨ ใช้งานฟรี 100%</span>
+                <span class="text-slate-300">•</span>
+                <span>ไม่ต้องกรอกบัตรเครดิต</span>
+                <span class="text-slate-300">•</span>
+                <span>รองรับทุกอุปกรณ์</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: ⭐ Interactive Demo Container (Phone Mockup Frame) -->
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="relative w-full max-w-[300px] sm:max-w-[320px]">
+              <!-- Soft Ambient Halo Behind Phone -->
+              <div class="pointer-events-none absolute -inset-4 bg-gradient-to-tr from-indigo-500/20 via-violet-400/15 to-amber-400/20 rounded-[3rem] blur-2xl"></div>
+
+              <!-- Smartphone Outer Chassis (Front / Bird's-eye view) -->
+              <div class="relative bg-slate-900 p-3 rounded-[2.5rem] shadow-2xl ring-1 ring-slate-700/80 border-[3px] border-slate-800">
+                <!-- Subtle Side Hardware Buttons -->
+                <div class="hidden sm:block absolute -left-[5px] top-24 w-[3px] h-10 bg-slate-700 rounded-l-sm"></div>
+                <div class="hidden sm:block absolute -left-[5px] top-36 w-[3px] h-12 bg-slate-700 rounded-l-sm"></div>
+                <div class="hidden sm:block absolute -right-[5px] top-28 w-[3px] h-16 bg-slate-700 rounded-r-sm"></div>
+
+                <!-- Inner Bezel Screen Container (Strict aspect-[9/19.5], overflow-hidden, relative) -->
+                <div id="phone-demo-screen" class="aspect-[9/19.5] w-full rounded-[2rem] bg-slate-50 overflow-hidden relative flex flex-col border border-slate-800/60">
+<!-- Top Status Bar & Dynamic Island -->
+          <div class="relative z-30 pt-2.5 pb-1.5 px-5 flex items-center justify-between text-[10px] font-semibold text-slate-700 shrink-0 bg-slate-50/95">
+            <span class="tracking-tight">09:41</span>
+            <div class="w-20 h-5 bg-slate-950 rounded-full flex items-center justify-end px-2 shadow-inner">
+              <span class="w-2 h-2 rounded-full bg-indigo-500/85 animate-pulse"></span>
+            </div>
+            <div class="flex items-center gap-1 text-slate-700">
+              <i data-lucide="wifi" class="w-3 h-3"></i>
+              <i data-lucide="battery-full" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+
+          <!-- App Brand Bar + 9-Step Interactive Stepper -->
+          <div class="relative z-30 px-3.5 pt-1.5 pb-2 bg-white/95 border-b border-slate-200/80 shrink-0 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-xs">
+                  <i data-lucide="layers" class="w-3 h-3"></i>
+                </div>
+                <span class="text-[11px] font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-violet-600">QuizSilo</span>
+              </div>
+              <span id="qs-step-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                <span id="qs-step-num">1/9</span>
+                <span>•</span>
+                <span id="qs-step-title">ดาวน์โหลดชีท</span>
+              </span>
+            </div>
+
+            <!-- Clickable 9-Step Progress Strip (Supports skipping via goToStep) -->
+            <div id="qs-stepper-dots" class="grid grid-cols-9 gap-1" aria-label="ลำดับขั้นตอนสาธิต 1 ถึง 9">
+              <button type="button" data-step="1" class="h-1.5 rounded-full bg-indigo-600 transition-all cursor-pointer" title="สเต็ป 1: ดาวน์โหลดไฟล์ตัวอย่าง"></button>
+              <button type="button" data-step="2" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 2: พรีวิวเอกสาร PDF"></button>
+              <button type="button" data-step="3" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 3: ย่อไฟล์เป็นไอคอน"></button>
+              <button type="button" data-step="4" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 4: โยนไฟล์ลง Dropzone"></button>
+              <button type="button" data-step="5" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 5: AI สกัดข้อสอบ"></button>
+              <button type="button" data-step="6" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 6: สกัดสำเร็จ"></button>
+              <button type="button" data-step="7" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 7: Review & Edit"></button>
+              <button type="button" data-step="8" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 8: เริ่มทำข้อสอบ"></button>
+              <button type="button" data-step="9" class="h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer" title="สเต็ป 9: ห้องสอบจริง & AI ติวเตอร์"></button>
+            </div>
+          </div>
+
+          <!-- Stage Viewport (All 9 Scenes + Virtual Hand Cursor) -->
+          <div id="qs-stage-viewport" class="relative flex-1 overflow-hidden bg-gradient-to-b from-slate-50 via-slate-50 to-indigo-50/40">
+
+            <!-- ==========================================================
+                 STEP 1: ปุ่มดาวน์โหลดไฟล์ตัวอย่าง
+                 ========================================================== -->
+            <div id="qs-scene-1" class="qs-scene is-active justify-center items-center text-center">
+              <div class="w-full bg-white rounded-3xl border border-slate-200/90 shadow-md p-4 space-y-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center mx-auto shadow-md shadow-indigo-500/25 qs-float-idle">
+                  <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                  <span class="inline-block px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200/70 text-[9px] font-bold">
+                    Interactive Walkthrough
+                  </span>
+                  <h2 class="text-sm font-extrabold text-slate-800 leading-snug">
+                    เปลี่ยนไฟล์ชีทข้อสอบเดิมๆ<br>เป็นห้องสอบ AI ในไม่กี่วินาที
+                  </h2>
+                  <p class="text-[10.5px] text-slate-500 leading-relaxed">
+                    ลองเริ่มจากดาวน์โหลดไฟล์ชีทข้อสอบต้นฉบับเพื่อทดสอบระบบสกัดโจทย์อัตโนมัติ
+                  </p>
+                </div>
+
+                <!-- Sample File Preview Strip -->
+                <div class="flex items-center gap-2.5 p-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left">
+                  <div class="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 font-extrabold text-[9px]">
+                    PDF
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[10.5px] font-bold text-slate-800 truncate">Exam_Kru_67.pdf</div>
+                    <div class="text-[9px] text-slate-400">ชีทแนวข้อสอบ ก.พ. ภาค ก • 5 ข้อ</div>
+                  </div>
+                </div>
+
+                <button id="qs-btn-step1-download" type="button" class="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 text-white text-[11px] font-bold shadow-md shadow-indigo-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>📥 ดาวน์โหลดชีทข้อสอบ ก.พ. ตัวอย่าง</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 2: แสดงไฟล์เอกสารเต็มจอ เลื่อนพรีวิวความซับซ้อน
+                 ========================================================== -->
+            <div id="qs-scene-2" class="qs-scene justify-between">
+              <div class="w-full h-full bg-white rounded-2xl border border-slate-300/90 shadow-lg overflow-hidden flex flex-col">
+                <!-- PDF Viewer Top Chrome -->
+                <div class="px-3 py-2 bg-slate-800 text-white flex items-center justify-between text-[9.5px] shrink-0">
+                  <div class="flex items-center gap-1.5 truncate">
+                    <span class="px-1.5 py-0.5 rounded bg-rose-500 text-white font-bold text-[8px]">PDF</span>
+                    <span class="font-semibold truncate">Exam_Kru_67.pdf</span>
+                  </div>
+                  <span class="text-slate-300 font-mono shrink-0">หน้า 1 / 3</span>
+                </div>
+
+                <!-- Scrolling Dense Document Body -->
+                <div class="relative flex-1 overflow-hidden bg-slate-100 p-2">
+                  <div id="qs-doc-scroll-target" class="qs-doc-scroll-inner bg-white rounded-lg border border-slate-200 p-3 shadow-xs space-y-2.5 text-left text-[9.5px] text-slate-700 leading-relaxed">
+                    <div class="text-center border-b border-slate-300 pb-2">
+                      <div class="text-[8.5px] text-slate-400 font-semibold">เอกสารชุดฝึกซ้อมมาตรฐาน • รหัสวิชา TH-101</div>
+                      <h3 class="text-[10.5px] font-extrabold text-slate-900 leading-snug mt-0.5">
+                        ข้อสอบวิชาภาษาไทยและความรู้ทั่วไป ก.พ. ภาค ก
+                      </h3>
+                    </div>
+
+                    <!-- Dense Complex Table -->
+                    <div class="space-y-1">
+                      <div class="text-[8.5px] font-bold text-slate-600">ตารางอ้างอิงที่ 1: โครงสร้างการใช้คำราชาศัพท์หมวดกริยา</div>
+                      <table class="w-full border-collapse text-[8px]">
+                        <thead>
+                          <tr class="bg-slate-100 text-slate-700 font-bold">
+                            <th class="border border-slate-300 px-1.5 py-1 text-left">คำสามัญ</th>
+                            <th class="border border-slate-300 px-1.5 py-1 text-left">คำราชาศัพท์ที่ถูกต้อง</th>
+                            <th class="border border-slate-300 px-1.5 py-1 text-left">ข้อควรระวัง</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="border border-slate-200 px-1.5 py-0.5">กราบลา</td>
+                            <td class="border border-slate-200 px-1.5 py-0.5 font-semibold">ถวายบังคมทูลลา</td>
+                            <td class="border border-slate-200 px-1.5 py-0.5 text-rose-600">ห้ามใช้ ทรง นำหน้า</td>
+                          </tr>
+                          <tr>
+                            <td class="border border-slate-200 px-1.5 py-0.5">ป่วย</td>
+                            <td class="border border-slate-200 px-1.5 py-0.5 font-semibold">ประชวร</td>
+                            <td class="border border-slate-200 px-1.5 py-0.5 text-rose-600">ไม่ใช้ ทรงมีพระประชวร</td>
+                          </tr>
+                          <tr>
+                            <td class="border border-slate-200 px-1.5 py-0.5">เดินทาง</td>
+                            <td class="border border-slate-200 px-1.5 py-0.5 font-semibold">เสด็จพระราชดำเนิน</td>
+                            <td class="border border-slate-200 px-1.5 py-0.5 text-rose-600">ห้ามใช้ ทรงเสด็จฯ</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Multiple Dense Questions -->
+                    <div class="space-y-2 pt-1">
+                      <div class="p-2 rounded bg-slate-50 border border-slate-200/80 space-y-1">
+                        <p class="font-bold text-slate-800">ข้อ 1. ข้อใดใช้คำราชาศัพท์ได้ถูกต้องตามหลักภาษาไทย?</p>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[8.5px] text-slate-600">
+                          <span>ก. ทรงโปรดเกล้าฯ</span>
+                          <span>ข. ถวายบังคมทูลลา</span>
+                          <span>ค. ทรงเสด็จพระราชดำเนิน</span>
+                          <span>ง. ทรงมีพระประชวร</span>
+                        </div>
+                      </div>
+
+                      <div class="p-2 rounded bg-slate-50 border border-slate-200/80 space-y-1">
+                        <p class="font-bold text-slate-800">ข้อ 2. ข้อใดเรียงลำดับข้อความต่อไปนี้ได้ถูกต้องตามหลักสัมพันธภาพ?</p>
+                        <p class="text-[8px] text-slate-500">(๑) การอ่านจับใจความสำคัญจึงเป็นทักษะพื้นฐาน (๒) ในยุคที่ข้อมูลข่าวสารหลั่งไหลอย่างรวดเร็ว...</p>
+                        <div class="grid grid-cols-2 gap-x-2 text-[8.5px] text-slate-600">
+                          <span>ก. (๒)-(๓)-(๑)-(๔)</span>
+                          <span>ข. (๒)-(๑)-(๔)-(๓)</span>
+                          <span>ค. (๑)-(๒)-(๓)-(๔)</span>
+                          <span>ง. (๓)-(๒)-(๔)-(๑)</span>
+                        </div>
+                      </div>
+
+                      <div class="p-2 rounded bg-slate-50 border border-slate-200/80 space-y-1">
+                        <p class="font-bold text-slate-800">ข้อ 3. พ.ร.บ. ระเบียบบริหารราชการแผ่นดิน พ.ศ. 2534 กำหนดการจัดระเบียบบริหารราชการส่วนกลางไว้ตามข้อใด?</p>
+                        <div class="text-[8.5px] text-slate-600 space-y-0.5">
+                          <div>ก. สำนักนายกรัฐมนตรี กระทรวง ทบวง กรม</div>
+                          <div>ข. กระทรวง ทบวง กรม จังหวัด</div>
+                        </div>
+                      </div>
+
+                      <div class="p-2 rounded bg-slate-50 border border-slate-200/80 space-y-1">
+                        <p class="font-bold text-slate-800">ข้อ 4. อุปมาอุปไมย: ศัลยแพทย์ : ห้องผ่าตัด :: ? : ?</p>
+                        <div class="text-[8.5px] text-slate-600">ก. ทนายความ : ศาล &nbsp; ข. นักบิน : สนามบิน</div>
+                      </div>
+
+                      <div class="p-1.5 rounded bg-amber-50 border border-amber-200 text-[8px] text-amber-800 font-semibold">
+                        เฉลยท้ายเอกสาร: 1.(ข) | 2.(ก) | 3.(ก) | 4.(ก) | 5.(ค)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 3: ย่อไฟล์เหลือเป็นไอคอน Exam_Kru_67.pdf
+                 ========================================================== -->
+            <div id="qs-scene-3" class="qs-scene justify-center items-center">
+              <div class="relative w-full h-full flex flex-col items-center justify-center">
+                <!-- Shrinking Document Ghost -->
+                <div id="qs-morph-doc" class="qs-morph-sheet absolute inset-x-2 top-3 bottom-3 bg-white rounded-2xl border border-slate-300 shadow-md p-3 overflow-hidden">
+                  <div class="h-3 w-2/3 bg-slate-200 rounded mb-2"></div>
+                  <div class="space-y-1.5">
+                    <div class="h-2 w-full bg-slate-100 rounded"></div>
+                    <div class="h-2 w-5/6 bg-slate-100 rounded"></div>
+                    <div class="h-12 w-full bg-slate-100 rounded mt-2"></div>
+                    <div class="h-2 w-4/5 bg-slate-100 rounded"></div>
+                    <div class="h-2 w-full bg-slate-100 rounded"></div>
+                  </div>
+                </div>
+
+                <!-- Compact Red/White PDF Icon Card -->
+                <div id="qs-morphed-pdf-icon" class="qs-pdf-badge-card relative z-10 opacity-0 scale-50 flex flex-col items-center text-center space-y-2.5">
+                  <div class="w-20 h-24 rounded-2xl bg-white border-2 border-rose-500 shadow-xl shadow-rose-500/15 relative flex flex-col items-center justify-between p-2.5">
+                    <div class="w-full flex justify-between items-center">
+                      <span class="w-2 h-2 rounded-full bg-rose-200"></span>
+                      <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
+                    </div>
+                    <div class="w-full py-1 rounded-lg bg-gradient-to-r from-rose-600 to-red-500 text-white font-extrabold text-xs tracking-wider shadow-xs">
+                      PDF
+                    </div>
+                    <div class="w-full space-y-1">
+                      <div class="h-1 w-full bg-slate-200 rounded-full"></div>
+                      <div class="h-1 w-2/3 bg-slate-200 rounded-full mx-auto"></div>
+                    </div>
+                  </div>
+                  <div class="px-3 py-1 rounded-full bg-white border border-slate-200 shadow-xs">
+                    <span class="text-xs font-extrabold text-slate-800 font-mono">Exam_Kru_67.pdf</span>
+                  </div>
+                  <span class="text-[10px] text-slate-500 font-medium">เตรียมพร้อมนำเข้าสู่ระบบ QuizSilo</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 4: โยนไอคอนลงในพื้นที่วางไฟล์ (Dropzone)
+                 ========================================================== -->
+            <div id="qs-scene-4" class="qs-scene justify-between">
+              <div class="w-full h-full flex flex-col justify-between py-1">
+                <div class="text-center space-y-0.5">
+                  <span class="text-[9.5px] font-bold text-indigo-600 uppercase tracking-wider">Upload & Import</span>
+                  <h3 class="text-xs font-extrabold text-slate-800">อัปโหลดไฟล์ข้อสอบให้ AI สกัดโจทย์</h3>
+                </div>
+
+                <!-- Floating File Drop Zone -->
+                <div class="relative flex-1 flex flex-col items-center justify-center my-2">
+                  <!-- Flying PDF Icon -->
+                  <div id="qs-flying-pdf" class="qs-drop-file z-20 mb-2 flex items-center gap-2 px-3 py-2 rounded-2xl bg-white border-2 border-rose-500 shadow-lg" style="transform: translateY(-68px) rotate(-6deg) scale(1.06);">
+                    <span class="px-1.5 py-0.5 rounded-md bg-rose-600 text-white font-extrabold text-[9px]">PDF</span>
+                    <span class="text-[10.5px] font-bold text-slate-800 font-mono">Exam_Kru_67.pdf</span>
+                  </div>
+
+                  <!-- Dashed Dropzone -->
+                  <div id="qs-dropzone-box" class="w-full rounded-3xl border-2 border-dashed border-slate-300 bg-white/85 p-5 text-center transition-all duration-300 space-y-2">
+                    <div id="qs-dropzone-icon" class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto transition-transform">
+                      <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                    </div>
+                    <div id="qs-dropzone-label" class="text-xs font-extrabold text-slate-700">
+                      วางไฟล์ข้อสอบที่นี่
+                    </div>
+                    <p id="qs-dropzone-sub" class="text-[9.5px] text-slate-400">
+                      รองรับไฟล์ PDF, รูปภาพชีทข้อสอบ และไฟล์ข้อความ
+                    </p>
+                  </div>
+                </div>
+
+                <div class="px-3 py-2 rounded-xl bg-indigo-50/80 border border-indigo-100 text-[9.5px] text-indigo-700 font-semibold text-center">
+                  ✨ ระบบตรวจจับโจทย์ ตัวเลือก และเฉลยท้ายเล่มอัตโนมัติ
+                </div>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 5: อนิเมชันการสกัดข้อสอบด้วย AI (AI Scan 0% -> 100%)
+                 ========================================================== -->
+            <div id="qs-scene-5" class="qs-scene justify-center">
+              <div class="w-full bg-white rounded-3xl border border-slate-200/90 shadow-md p-4 space-y-3.5">
+                <!-- Mini Scanned Sheet with Laser Sweep -->
+                <div class="relative h-40 rounded-2xl bg-slate-50 border border-slate-200/90 p-3 overflow-hidden">
+                  <div class="flex items-center justify-between pb-2 mb-2 border-b border-dashed border-slate-200">
+                    <span class="text-[9.5px] font-bold text-slate-700 font-mono flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-rose-500"></span> Exam_Kru_67.pdf
+                    </span>
+                    <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[8.5px] font-bold">OCR + LLM</span>
+                  </div>
+                  <div class="space-y-1.5 text-[9px] text-slate-500">
+                    <div class="font-bold text-slate-700">1. ข้อใดใช้คำราชาศัพท์ได้ถูกต้องตามหลักภาษาไทย?</div>
+                    <div class="grid grid-cols-2 gap-1">
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-50/80 text-indigo-800 border border-indigo-200/60">ก. ทรงโปรดเกล้าฯ</span>
+                      <span class="px-1.5 py-0.5 rounded bg-emerald-50/90 text-emerald-800 border border-emerald-200/70 font-semibold">ข. ถวายบังคมทูลลา</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-50/80 text-indigo-800 border border-indigo-200/60">ค. ทรงเสด็จฯ</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-50/80 text-indigo-800 border border-indigo-200/60">ง. ทรงมีพระประชวร</span>
+                    </div>
+                    <div class="pt-1 space-y-1 opacity-65">
+                      <div class="h-2 w-5/6 bg-slate-200 rounded"></div>
+                      <div class="h-2 w-2/3 bg-slate-200 rounded"></div>
+                    </div>
+                  </div>
+
+                  <!-- Laser Scan Beam -->
+                  <div class="qs-laser-line absolute inset-x-0 top-0 pointer-events-none">
+                    <div class="h-[2.5px] w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-400 shadow-[0_0_12px_3px_rgba(99,102,241,0.8)]"></div>
+                    <div class="h-10 w-full bg-gradient-to-b from-indigo-500/25 via-violet-500/10 to-transparent"></div>
+                  </div>
+                </div>
+
+                <!-- Progress Bar 0% -> 100% -->
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-indigo-700 flex items-center gap-1.5 text-[10.5px]">
+                      <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-indigo-600"></i>
+                      <span>กำลังประมวลผลด้วย AI</span>
+                    </span>
+                    <span id="qs-scan-percent" class="font-extrabold text-indigo-600 font-mono text-xs">0%</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/70">
+                    <div id="qs-scan-bar" class="h-full bg-gradient-to-r from-indigo-600 via-violet-500 to-emerald-500 rounded-full transition-all duration-75" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- Required Status Alert Text -->
+                <div class="p-2.5 rounded-xl bg-indigo-50/90 border border-indigo-200/70 text-[10px] text-indigo-900 font-semibold leading-relaxed text-center">
+                  AI กำลังอ่านข้อความและแยกตัวเลือก ก ข ค ง...
+                </div>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 6: แจ้งเตือนสกัดเสร็จสิ้น & ปุ่ม Review & Edit
+                 ========================================================== -->
+            <div id="qs-scene-6" class="qs-scene justify-center items-center text-center">
+              <div class="w-full bg-white rounded-3xl border border-slate-200/90 shadow-md p-4 space-y-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                  <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                </div>
+
+                <div class="space-y-1">
+                  <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
+                    Extraction Complete
+                  </span>
+                  <h3 class="text-base font-extrabold text-slate-900">
+                    สกัดข้อสอบสำเร็จ 5 ข้อ!
+                  </h3>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    แยกโจทย์ ตัวเลือก ก–ง และจับคู่เฉลยจากไฟล์ <span class="font-semibold text-slate-700">Exam_Kru_67.pdf</span> เรียบร้อยแล้ว
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-left">
+                  <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div class="text-[8.5px] text-slate-400 font-semibold">หมวดหมู่วิชา</div>
+                    <div class="text-[10px] font-bold text-slate-800 truncate">ก.พ. ภาค ก (ภาษาไทย)</div>
+                  </div>
+                  <div class="p-2 rounded-xl bg-emerald-50/60 border border-emerald-200/80">
+                    <div class="text-[8.5px] text-emerald-600 font-semibold">สถานะเฉลย</div>
+                    <div class="text-[10px] font-bold text-emerald-800">ครบทั้ง 5 ข้อ ✓</div>
+                  </div>
+                </div>
+
+                <button id="qs-btn-step6-review" type="button" class="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-95 text-white text-[11px] font-bold shadow-md shadow-violet-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>🔍 ตรวจสอบและแก้ไข (Review & Edit)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 7: หน้า Review & Edit ตรวจเทียบต้นฉบับ
+                 ========================================================== -->
+            <div id="qs-scene-7" class="qs-scene justify-between">
+              <!-- Top Mode Header -->
+              <div class="flex items-center justify-between pb-1.5 shrink-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-violet-600"></span>
+                  <span class="text-[10.5px] font-extrabold text-slate-800">Review &amp; Edit</span>
+                </div>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-bold">
+                  เทียบต้นฉบับ 2 จอ
+                </span>
+              </div>
+
+              <!-- Column Labels -->
+              <div class="grid grid-cols-12 gap-1.5 text-[8.5px] font-bold text-slate-500 pb-1 shrink-0">
+                <div class="col-span-5 px-2 py-0.5 rounded bg-slate-200/70 text-slate-700 truncate">📄 ต้นฉบับ PDF</div>
+                <div class="col-span-7 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 truncate">✨ ข้อความที่ AI สกัดได้</div>
+              </div>
+
+              <!-- Split Comparison Scroll Viewport (Item 1 & Item 2) -->
+              <div class="relative flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-2">
+                <div id="qs-review-scroll-inner" class="qs-review-scroll space-y-2.5">
+
+                  <!-- Comparison Row 1: ข้อที่ 1 -->
+                  <div class="grid grid-cols-12 gap-1.5 items-stretch p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <!-- Left: Cropped Original Scan -->
+                    <div class="col-span-5 rounded-lg bg-slate-800 text-slate-200 p-2 flex flex-col justify-between border border-slate-700">
+                      <span class="text-[7.5px] text-amber-300 font-mono">Crop • หน้า 1</span>
+                      <div class="my-1 p-1.5 rounded bg-amber-50/95 text-slate-800 text-[7.5px] leading-snug font-serif shadow-inner">
+                        <b>ข้อ 1.</b> ข้อใดใช้คำราชาศัพท์ได้ถูกต้อง?<br>
+                        ก. ทรงโปรดเกล้าฯ<br>
+                        <span class="bg-emerald-200/80 font-bold px-0.5">ข. ถวายบังคมทูลลา</span>
+                      </div>
+                      <span class="text-[7px] text-slate-400">เฉลยไฟล์: ข</span>
+                    </div>
+
+                    <!-- Right: Extracted Structured Card -->
+                    <div class="col-span-7 rounded-lg bg-white border border-sky-300 p-2 space-y-1 shadow-2xs">
+                      <div class="flex items-center justify-between">
+                        <span class="px-1.5 py-0.2 rounded bg-indigo-600 text-white text-[8px] font-bold">ข้อที่ 1</span>
+                        <span class="text-[8px] font-bold text-emerald-600">✓ ตรงต้นฉบับ</span>
+                      </div>
+                      <p class="text-[8.5px] font-bold text-slate-800 leading-snug">
+                        ข้อใดใช้คำราชาศัพท์ได้ถูกต้องตามหลักภาษาไทย?
+                      </p>
+                      <div class="space-y-0.5 text-[8px] text-slate-600">
+                        <div class="truncate">ก. ทรงโปรดเกล้าฯ</div>
+                        <div class="px-1 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 truncate">ข. ถวายบังคมทูลลา ✓</div>
+                        <div class="truncate">ค. ทรงเสด็จพระราชดำเนิน</div>
+                        <div class="truncate">ง. ทรงมีพระประชวร</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Comparison Row 2: ข้อที่ 2 -->
+                  <div class="grid grid-cols-12 gap-1.5 items-stretch p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <!-- Left: Cropped Original Scan -->
+                    <div class="col-span-5 rounded-lg bg-slate-800 text-slate-200 p-2 flex flex-col justify-between border border-slate-700">
+                      <span class="text-[7.5px] text-amber-300 font-mono">Crop • หน้า 1</span>
+                      <div class="my-1 p-1.5 rounded bg-amber-50/95 text-slate-800 text-[7.5px] leading-snug font-serif shadow-inner">
+                        <b>ข้อ 2.</b> ข้อใดเรียงลำดับข้อความได้ถูกต้อง?<br>
+                        <span class="bg-emerald-200/80 font-bold px-0.5">ก. (๒)-(๓)-(๑)-(๔)</span><br>
+                        ข. (๒)-(๑)-(๔)-(๓)
+                      </div>
+                      <span class="text-[7px] text-slate-400">เฉลยไฟล์: ก</span>
+                    </div>
+
+                    <!-- Right: Extracted Structured Card -->
+                    <div class="col-span-7 rounded-lg bg-white border border-sky-300 p-2 space-y-1 shadow-2xs">
+                      <div class="flex items-center justify-between">
+                        <span class="px-1.5 py-0.2 rounded bg-indigo-600 text-white text-[8px] font-bold">ข้อที่ 2</span>
+                        <span class="text-[8px] font-bold text-emerald-600">✓ ตรงต้นฉบับ</span>
+                      </div>
+                      <p class="text-[8.5px] font-bold text-slate-800 leading-snug">
+                        ข้อใดเรียงลำดับข้อความต่อไปนี้ได้ถูกต้อง?
+                      </p>
+                      <div class="space-y-0.5 text-[8px] text-slate-600">
+                        <div class="px-1 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 truncate">ก. (๒)-(๓)-(๑)-(๔) ✓</div>
+                        <div class="truncate">ข. (๒)-(๑)-(๔)-(๓)</div>
+                        <div class="truncate">ค. (๑)-(๒)-(๓)-(๔)</div>
+                        <div class="truncate">ง. (๓)-(๒)-(๔)-(๑)</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Sticky Confirm All Button -->
+              <div class="pt-2 shrink-0">
+                <button id="qs-btn-step7-confirm" type="button" class="w-full py-2.5 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>✅ ยืนยันข้อสอบทั้งหมด</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 8: เริ่มทำข้อสอบ (Start Exam)
+                 ========================================================== -->
+            <div id="qs-scene-8" class="qs-scene justify-center items-center text-center">
+              <div class="w-full bg-white rounded-3xl border border-slate-200/90 shadow-md p-4 space-y-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center mx-auto">
+                  <i data-lucide="clipboard-check" class="w-6 h-6"></i>
+                </div>
+
+                <div class="space-y-1">
+                  <span class="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
+                    ✓ Verified พร้อมสอบ
+                  </span>
+                  <h3 class="text-sm font-extrabold text-slate-900 leading-snug">
+                    ข้อสอบ ก.พ. ภาค ก (วิชาภาษาไทย)
+                  </h3>
+                  <p class="text-[10px] text-slate-500">
+                    ชุดข้อสอบผ่านการยืนยันความถูกต้องเรียบร้อยแล้ว
+                  </p>
+                </div>
+
+                <!-- Exam Specs: 1 ข้อตัวอย่าง, เวลา 2 นาที -->
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col items-center">
+                    <span class="text-[9px] text-slate-400 font-semibold">จำนวนข้อสอบ</span>
+                    <span class="text-xs font-extrabold text-indigo-700 mt-0.5">1 ข้อตัวอย่าง</span>
+                  </div>
+                  <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col items-center">
+                    <span class="text-[9px] text-slate-400 font-semibold">เวลาในการทำ</span>
+                    <span class="text-xs font-extrabold text-indigo-700 mt-0.5">2 นาที</span>
+                  </div>
+                </div>
+
+                <button id="qs-btn-step8-start" type="button" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>🚀 เริ่มทำข้อสอบจริง</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 STEP 9: หน้าทำข้อสอบจริง ตอบจริง ส่งจริง & จบลูป
+                 ========================================================== -->
+            <div id="qs-scene-9" class="qs-scene justify-between overflow-y-auto">
+              <div class="space-y-2 w-full">
+                <!-- Exam Room Top Timer & Progress -->
+                <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+                  <span class="text-[9.5px] font-extrabold text-slate-700">ข้อ 1 / 1</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/70 text-[10px] font-extrabold font-mono">
+                    <i data-lucide="timer" class="w-3 h-3 text-indigo-600"></i>
+                    <span id="qs-exam-timer">02:00</span>
+                  </span>
+                </div>
+
+                <!-- Question & Interactive Choices Card -->
+                <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-3 space-y-2">
+                  <p class="text-[11px] font-extrabold text-slate-800 leading-snug">
+                    ข้อใดใช้คำราชาศัพท์ได้ถูกต้องตามหลักภาษาไทย?
+                  </p>
+
+                  <div id="qs-exam-choices" class="space-y-1.5">
+                    <button type="button" data-choice="ก" class="qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 flex items-center justify-between gap-2 transition-all cursor-pointer">
+                      <span class="flex items-center gap-2 min-w-0">
+                        <span class="qs-c-badge w-5 h-5 rounded-full bg-white border border-slate-300 text-slate-600 text-[9.5px] font-bold flex items-center justify-center shrink-0">ก</span>
+                        <span class="qs-c-label text-[10px] font-medium text-slate-700 truncate">ทรงโปรดเกล้าฯ</span>
+                      </span>
+                      <span class="qs-c-mark shrink-0 hidden"></span>
+                    </button>
+
+                    <button type="button" data-choice="ข" id="qs-exam-choice-b" class="qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 flex items-center justify-between gap-2 transition-all cursor-pointer">
+                      <span class="flex items-center gap-2 min-w-0">
+                        <span class="qs-c-badge w-5 h-5 rounded-full bg-white border border-slate-300 text-slate-600 text-[9.5px] font-bold flex items-center justify-center shrink-0">ข</span>
+                        <span class="qs-c-label text-[10px] font-medium text-slate-700 truncate">ถวายบังคมทูลลา</span>
+                      </span>
+                      <span class="qs-c-mark shrink-0 hidden"></span>
+                    </button>
+
+                    <button type="button" data-choice="ค" class="qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 flex items-center justify-between gap-2 transition-all cursor-pointer">
+                      <span class="flex items-center gap-2 min-w-0">
+                        <span class="qs-c-badge w-5 h-5 rounded-full bg-white border border-slate-300 text-slate-600 text-[9.5px] font-bold flex items-center justify-center shrink-0">ค</span>
+                        <span class="qs-c-label text-[10px] font-medium text-slate-700 truncate">ทรงเสด็จพระราชดำเนิน</span>
+                      </span>
+                      <span class="qs-c-mark shrink-0 hidden"></span>
+                    </button>
+
+                    <button type="button" data-choice="ง" class="qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 flex items-center justify-between gap-2 transition-all cursor-pointer">
+                      <span class="flex items-center gap-2 min-w-0">
+                        <span class="qs-c-badge w-5 h-5 rounded-full bg-white border border-slate-300 text-slate-600 text-[9.5px] font-bold flex items-center justify-center shrink-0">ง</span>
+                        <span class="qs-c-label text-[10px] font-medium text-slate-700 truncate">ทรงมีพระประชวร</span>
+                      </span>
+                      <span class="qs-c-mark shrink-0 hidden"></span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- AI Tutor Explanation Drawer (Appears after Submit) -->
+                <div id="qs-exam-tutor" class="qs-tutor-drawer rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 text-white p-2.5 shadow-md border border-indigo-400/30">
+                  <p id="qs-exam-tutor-msg" class="text-[9.5px] leading-relaxed text-indigo-50 font-medium">
+                    💡 <strong class="text-white font-bold">AI ติวเตอร์:</strong> ถูกต้องครับ! คำว่า 'ถวายบังคมทูลลา' เป็นคำกริยาราชาศัพท์ที่สมบูรณ์ในตัวเอง จึงห้ามเติม 'ทรง' นำหน้าเหมือนตัวเลือกอื่น
+                  </p>
+                </div>
+              </div>
+
+              <!-- Submit Answer / Try Again Action Slot -->
+              <div class="pt-1.5 shrink-0">
+                <button id="qs-btn-submit-exam" type="button" class="hidden w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 text-white text-[11px] font-bold shadow-md shadow-indigo-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>ส่งกระดาษคำตอบ</span>
+                </button>
+
+                <button id="qs-btn-restart-demo" type="button" class="hidden w-full py-2 px-3 rounded-2xl bg-white hover:bg-slate-100 active:scale-95 text-indigo-700 border border-indigo-200 text-[10.5px] font-extrabold shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>🔄 ลองใหม่อีกครั้ง</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 VIRTUAL HAND CURSOR (Auto-play Guide)
+                 ========================================================== -->
+            <div id="qs-hand-cursor" style="transform: translate3d(150px, 260px, 0);">
+              <div class="qs-hand-inner relative">
+                <div class="w-8 h-8 rounded-full bg-indigo-600/15 border border-indigo-500/50 flex items-center justify-center shadow-md backdrop-blur-[1px]">
+                  <svg class="w-5 h-5 text-slate-900 drop-shadow-sm" viewBox="0 0 24 24" fill="#ffffff" stroke="#312e81" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v0"/>
+                    <path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/>
+                    <path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/>
+                    <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Home Bar -->
+          <div class="relative z-30 py-2 flex justify-center bg-slate-50/95 shrink-0">
+            <div class="w-28 h-1 rounded-full bg-slate-900/75"></div>
+          </div>
+                </div>
+              </div>
+
+              <!-- Floating Highlight Badge (Desktop/Tablet) -->
+              <div class="hidden sm:flex animate-float-slow absolute -bottom-4 -left-8 bg-white px-3.5 py-2.5 rounded-2xl border border-slate-200/90 shadow-lg items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                </div>
+                <div class="text-left leading-tight">
+                  <div class="text-xs font-bold text-slate-800">สกัดโจทย์อัตโนมัติ</div>
+                  <div class="text-[10px] text-slate-500">รองรับ PDF • ภาพถ่ายชีท • TXT</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- 4. PAIN & SOLUTION SECTION (3 ปัญหา VS สิ่งที่ QuizSilo ช่วยคุณ)  -->
+    <!-- ================================================================ -->
+    <section id="pain-solution" class="py-16 sm:py-20 bg-white border-y border-slate-200/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto space-y-3 mb-12">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+            <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
+            <span>เข้าใจทุกความเหนื่อยของคนเตรียมสอบ</span>
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            ปัญหาที่คนเตรียมสอบต้องเจอ <span class="text-indigo-600">vs</span> สิ่งที่ QuizSilo ช่วยคุณ
+          </h2>
+          <p class="text-sm sm:text-base text-slate-600">
+            ลดเวลาที่เสียไปกับการจัดชีทและงงกับเฉลย เพื่อทุ่มพลังทั้งหมดให้กับการทำคะแนนในห้องสอบจริง
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Card 1 -->
+          <div class="group bg-slate-50/70 hover:bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 hover:border-indigo-200 shadow-xs hover:shadow-lg hover:shadow-indigo-500/5 transition-all flex flex-col justify-between space-y-5">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <i data-lucide="bot" class="w-6 h-6"></i>
+              </div>
+
+              <!-- Pain -->
+              <div class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-100">
+                <div class="text-[11px] font-bold text-rose-600 uppercase tracking-wide mb-1 flex items-center gap-1">
+                  <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                  <span>ปัญหาที่เจอบ่อย</span>
+                </div>
+                <p class="text-sm font-semibold text-slate-800">
+                  อ่านเฉลยท้ายเล่มไม่เข้าใจ มีแค่ ก ข ค ง ไม่รู้ว่าทำไมถึงผิด
+                </p>
+              </div>
+
+              <!-- Solution -->
+              <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wide mb-1 flex items-center gap-1">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                  <span>QuizSilo ช่วยคุณได้</span>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  มี <strong class="font-semibold text-slate-900">"AI ติวเตอร์"</strong> ช่วยวิเคราะห์และอธิบายเหตุผลเฉลยรายข้อแบบภาษาคนเข้าใจง่าย กดดูได้ทันทีหลังตอบ
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="group bg-slate-50/70 hover:bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 hover:border-violet-200 shadow-xs hover:shadow-lg hover:shadow-violet-500/5 transition-all flex flex-col justify-between space-y-5">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <i data-lucide="file-up" class="w-6 h-6"></i>
+              </div>
+
+              <!-- Pain -->
+              <div class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-100">
+                <div class="text-[11px] font-bold text-rose-600 uppercase tracking-wide mb-1 flex items-center gap-1">
+                  <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                  <span>ปัญหาที่เจอบ่อย</span>
+                </div>
+                <p class="text-sm font-semibold text-slate-800">
+                  มีไฟล์ PDF และภาพชีทข้อสอบกองเต็มเครื่อง แต่ไม่ได้หยิบมาฝึกทำ
+                </p>
+              </div>
+
+              <!-- Solution -->
+              <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wide mb-1 flex items-center gap-1">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                  <span>QuizSilo ช่วยคุณได้</span>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  AI ช่วย <strong class="font-semibold text-slate-900">แปลงไฟล์ชีทเป็นข้อสอบจับเวลาจริงได้ใน 1 คลิก</strong> ไม่ต้องเสียเวลานั่งพิมพ์โจทย์เองทีละข้อ
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="group bg-slate-50/70 hover:bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 hover:border-purple-200 shadow-xs hover:shadow-lg hover:shadow-purple-500/5 transition-all flex flex-col justify-between space-y-5">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+              </div>
+
+              <!-- Pain -->
+              <div class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-100">
+                <div class="text-[11px] font-bold text-rose-600 uppercase tracking-wide mb-1 flex items-center gap-1">
+                  <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                  <span>ปัญหาที่เจอบ่อย</span>
+                </div>
+                <p class="text-sm font-semibold text-slate-800">
+                  ฝึกทำโจทย์ไปเรื่อยๆ แต่ไม่รู้ว่าตัวเองอ่อนวิชาไหนหรือควรเน้นตรงไหน
+                </p>
+              </div>
+
+              <!-- Solution -->
+              <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wide mb-1 flex items-center gap-1">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                  <span>QuizSilo ช่วยคุณได้</span>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  มี <strong class="font-semibold text-slate-900">แดชบอร์ดสรุปสถิติจุดอ่อนรายหมวดหมู่</strong> บอกความแม่นยำและเวลาเฉลี่ย เพื่อให้คุณติวตรงจุดได้ไวขึ้น
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- 5. HOW IT WORKS (ขั้นตอนง่ายๆ 3 สเต็ป)                            -->
+    <!-- ================================================================ -->
+    <section id="how-it-works" class="py-16 sm:py-20 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto space-y-3 mb-12">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            <span>เริ่มต้นได้ในไม่ถึง 1 นาที</span>
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            ซ้อมสอบอย่างมีประสิทธิภาพใน <span class="text-indigo-600">3 ขั้นตอนง่ายๆ</span>
+          </h2>
+          <p class="text-sm sm:text-base text-slate-600">
+            ออกแบบมาให้ใช้งานง่ายที่สุดบนทุกหน้าจอ ไม่ต้องตั้งค่าซับซ้อน
+          </p>
+        </div>
+
+        <div class="relative grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          <!-- Connecting Line (Desktop Only) -->
+          <div class="hidden md:block absolute top-14 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-200 via-violet-300 to-emerald-200"></div>
+
+          <!-- Step 1 -->
+          <div class="relative bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-xs text-center space-y-4">
+            <div class="relative mx-auto w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/25">
+              <i data-lucide="cloud-upload" class="w-7 h-7"></i>
+              <span class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center ring-4 ring-white">1</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">อัปโหลดชีท หรือเลือกจากคลังกลาง</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              โยนไฟล์ PDF หรือรูปถ่ายชีทข้อสอบให้ AI สกัดโจทย์อัตโนมัติ หรือเลือกฝึกจากคลังข้อสอบที่ชุมชนตรวจทานแล้วได้ทันที
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="relative bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-xs text-center space-y-4">
+            <div class="relative mx-auto w-16 h-16 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-500/25">
+              <i data-lucide="smartphone" class="w-7 h-7"></i>
+              <span class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center ring-4 ring-white">2</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">ลงมือทำบนมือถือ จับเวลาเหมือนจริง</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              ซ้อมทำโจทย์ได้ทุกที่ทุกเวลา จับเวลาจริง สุ่มข้อสอบคละวิชาได้ตามต้องการ และกดพักไว้กลับมาทำต่อเมื่อไหร่ก็ได้
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="relative bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-xs text-center space-y-4">
+            <div class="relative mx-auto w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/25">
+              <i data-lucide="sparkles" class="w-7 h-7"></i>
+              <span class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center ring-4 ring-white">3</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">ส่งตรวจทันที พร้อมคำอธิบายจาก AI</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              รู้คะแนนทันทีหลังส่งกระดาษคำตอบ อ่านคำอธิบายเฉลยละเอียดจาก AI ติวเตอร์ และดูสถิติพัฒนาการของตัวเองบนแดชบอร์ด
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- 6. SOCIAL PROOF & COMMUNITY STATS                                -->
+    <!-- ================================================================ -->
+    <section id="community-stats" class="py-16 sm:py-20 bg-white border-y border-slate-200/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 rounded-3xl p-6 sm:p-10 lg:p-12 text-white shadow-xl relative overflow-hidden">
+          <!-- Decorative Blurs -->
+          <div class="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
+          <div class="pointer-events-none absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-amber-500/15 blur-3xl"></div>
+
+          <div class="relative z-10 space-y-8">
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+              <div class="space-y-2 max-w-2xl">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-amber-300">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                  <span>คลังข้อสอบคัดสรรและพลังชุมชน</span>
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">
+                  มั่นใจในความแม่นยำ ด้วยระบบตรวจสอบจากชุมชนคนเตรียมสอบ
+                </h2>
+                <p class="text-sm text-indigo-100/90 leading-relaxed">
+                  ทุกชุดข้อสอบในคลังกลางผ่านการตรวจสอบเทียบกับไฟล์ต้นฉบับ และมีระบบให้ผู้เรียนช่วยกันรายงานจุดผิดพลาดเพื่อคัดกรองคุณภาพอยู่เสมอ
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-medium text-indigo-100">ก.พ. ภาค ก</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-medium text-indigo-100">ครูผู้ช่วย สพฐ.</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-medium text-indigo-100">ท้องถิ่น (อปท.)</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-medium text-indigo-100">พนักงานราชการ</span>
+              </div>
+            </div>
+
+            <!-- 4 Trust Stat Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-5 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-indigo-200">ครอบคลุมหมวดวิชาหลัก</span>
+                  <i data-lucide="book-marked" class="w-4 h-4 text-amber-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-bold text-white">20+ หมวด</div>
+                <p class="text-xs text-indigo-200/80">คิดวิเคราะห์ อังกฤษ กฎหมาย และวิชาชีพ</p>
+              </div>
+
+              <div class="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-5 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-indigo-200">คลังข้อสอบพร้อมฝึก</span>
+                  <i data-lucide="database" class="w-4 h-4 text-emerald-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-bold text-white">1,000+ ข้อ</div>
+                <p class="text-xs text-indigo-200/80">เพิ่มขึ้นต่อเนื่องจากพลังชุมชนผู้เตรียมสอบ</p>
+              </div>
+
+              <div class="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-5 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-indigo-200">ระบบตรวจทานเฉลย</span>
+                  <i data-lucide="check-check" class="w-4 h-4 text-sky-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-bold text-white">3 ขั้นตอน</div>
+                <p class="text-xs text-indigo-200/80">ตรวจสอบโดย AI • ผู้ใช้งาน • ผู้ดูแลระบบ</p>
+              </div>
+
+              <div class="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-5 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-indigo-200">คัดกรองข้อผิดพลาด</span>
+                  <i data-lucide="flag" class="w-4 h-4 text-rose-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-bold text-white">100% ชุมชน</div>
+                <p class="text-xs text-indigo-200/80">แจ้งข้อสอบผิดและพักชุดข้อสอบอัตโนมัติ</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- 7. FINAL CTA SECTION                                             -->
+    <!-- ================================================================ -->
+    <section class="py-16 sm:py-20 bg-slate-50">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl border-2 border-indigo-200/80 shadow-lg shadow-indigo-500/5 p-8 sm:p-12 text-center space-y-6 relative overflow-hidden">
+          <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-600 via-violet-500 to-amber-500"></div>
+
+          <div class="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200/80 flex items-center justify-center">
+            <i data-lucide="graduation-cap" class="w-7 h-7"></i>
+          </div>
+
+          <div class="space-y-3 max-w-2xl mx-auto">
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug">
+              เป้าหมายการสอบผ่านเริ่มต้นจากการฝึกซ้อมข้อแรก เริ่มต้นเลยวันนี้
+            </h2>
+            <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
+              ไม่ต้องรอให้พร้อม 100% แค่ลองเริ่มทำโจทย์วันละนิดกับ QuizSilo เพื่อให้ทุกนาทีของการอ่านหนังสือมีความหมายมากขึ้น
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button onclick="goToPractice()" type="button" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-700 hover:via-violet-700 hover:to-purple-700 text-white text-base font-bold shadow-lg shadow-indigo-500/30 hover:shadow-xl transition-all cursor-pointer active:scale-[0.98]">
+              <i data-lucide="play-circle" class="w-5 h-5"></i>
+              <span>เริ่มฝึกทำข้อสอบฟรีทันที</span>
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            ✨ ใช้งานฟรี 100% • เข้าสู่ระบบด้วย Google เพื่อบันทึกสถิติและรับโควต้าสกัดข้อสอบ AI ฟรี
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- 8. FOOTER                                                        -->
+  <!-- ================================================================ -->
+  <footer class="bg-slate-900 text-slate-300 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <!-- Brand Info -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-md">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-base font-bold text-white tracking-tight">QuizSilo</div>
+            <div class="text-xs text-slate-400">คลังข้อสอบอัจฉริยะสำหรับคนเตรียมสอบราชการ ก.พ. และครูผู้ช่วย</div>
+          </div>
+        </div>
+
+        <!-- Contact Links -->
+        <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400">
+          <a href="mailto:contact@quizsilo.com" class="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+            <i data-lucide="mail" class="w-4 h-4 text-indigo-400"></i>
+            <span>contact@quizsilo.com</span>
+          </a>
+          <span class="text-slate-700">|</span>
+          <a href="#pain-solution" class="hover:text-white transition-colors">จุดเด่นระบบ</a>
+          <span class="text-slate-700">|</span>
+          <a href="#how-it-works" class="hover:text-white transition-colors">วิธีใช้งาน</a>
+        </div>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <p>© 2026 QuizSilo. สงวนลิขสิทธิ์ทุกประการ</p>
+        <p>พัฒนาด้วยความตั้งใจเพื่อคนเตรียมสอบไทย 🤍</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Feedback Container -->
+  <div id="landing-toast" class="fixed bottom-5 right-5 z-50 hidden max-w-xs sm:max-w-sm bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+    <i data-lucide="info" class="w-4 h-4 text-amber-400 shrink-0"></i>
+    <span id="landing-toast-text">พร้อมใช้งาน</span>
+  </div>
+
+</div>
+
+
+<script>
+  function showLandingToast(msg) {
+    if (typeof showToast === 'function') {
+      showToast('info', msg);
+    }
+  }
+
+  // 9-Step Interactive Walkthrough Engine (Argon)
+  (function initQuizSiloWalkthrough() {
+      const screen = document.getElementById('phone-demo-screen');
+      if (!screen) return;
+
+      // Capture pristine innerHTML BEFORE Lucide mutates <i> into <svg>
+      window.__QUIZSILO_RAW_INNER_HTML__ = screen.innerHTML.trim();
+
+      const viewport = document.getElementById('qs-stage-viewport');
+      const handCursor = document.getElementById('qs-hand-cursor');
+      const stepNumEl = document.getElementById('qs-step-num');
+      const stepTitleEl = document.getElementById('qs-step-title');
+      const stepDots = Array.from(screen.querySelectorAll('#qs-stepper-dots [data-step]'));
+
+      // Scene-specific elements
+      const btnStep1 = document.getElementById('qs-btn-step1-download');
+      const docScrollTarget = document.getElementById('qs-doc-scroll-target');
+      const morphDoc = document.getElementById('qs-morph-doc');
+      const morphedPdfIcon = document.getElementById('qs-morphed-pdf-icon');
+      const flyingPdf = document.getElementById('qs-flying-pdf');
+      const dropzoneBox = document.getElementById('qs-dropzone-box');
+      const dropzoneLabel = document.getElementById('qs-dropzone-label');
+      const dropzoneSub = document.getElementById('qs-dropzone-sub');
+      const scanPercentEl = document.getElementById('qs-scan-percent');
+      const scanBarEl = document.getElementById('qs-scan-bar');
+      const btnStep6 = document.getElementById('qs-btn-step6-review');
+      const reviewScrollInner = document.getElementById('qs-review-scroll-inner');
+      const btnStep7 = document.getElementById('qs-btn-step7-confirm');
+      const btnStep8 = document.getElementById('qs-btn-step8-start');
+
+      // Step 9 Exam elements
+      const examTimerEl = document.getElementById('qs-exam-timer');
+      const examChoiceBtns = Array.from(screen.querySelectorAll('.qs-exam-choice'));
+      const choiceBBtn = document.getElementById('qs-exam-choice-b');
+      const btnSubmitExam = document.getElementById('qs-btn-submit-exam');
+      const btnRestartDemo = document.getElementById('qs-btn-restart-demo');
+      const examTutorDrawer = document.getElementById('qs-exam-tutor');
+      const examTutorMsg = document.getElementById('qs-exam-tutor-msg');
+
+      const STEP_META = {
+        1: 'ดาวน์โหลดชีท',
+        2: 'พรีวิวไฟล์ PDF',
+        3: 'ย่อเป็นไอคอน',
+        4: 'วางลง Dropzone',
+        5: 'AI สกัดข้อสอบ',
+        6: 'สกัดสำเร็จ 5 ข้อ',
+        7: 'Review & Edit',
+        8: 'พร้อมเข้าสอบ',
+        9: 'ห้องสอบจริง'
+      };
+
+      let currentStep = 1;
+      let timers = [];
+      let intervals = [];
+      let selectedChoice = null;
+      let isExamSubmitted = false;
+      let userManualExamMode = false;
+      let countdownRemaining = 120;
+
+      function clearAllTimers() {
+        while (timers.length) clearTimeout(timers.pop());
+        while (intervals.length) clearInterval(intervals.pop());
+      }
+
+      function schedule(fn, ms) {
+        const id = setTimeout(fn, ms);
+        timers.push(id);
+        return id;
+      }
+
+      function hideHand() {
+        handCursor.style.opacity = '0';
+        handCursor.classList.remove('is-tapping');
+      }
+
+      function spawnRippleAt(x, y) {
+        const ring = document.createElement('span');
+        ring.className = 'qs-ripple-ring';
+        ring.style.left = x + 'px';
+        ring.style.top = y + 'px';
+        viewport.appendChild(ring);
+        setTimeout(() => ring.remove(), 600);
+      }
+
+      function moveHandToElement(targetEl, offsetXRatio = 0.62, offsetYRatio = 0.55) {
+        if (!targetEl || !viewport) return { x: 140, y: 220 };
+        const vpRect = viewport.getBoundingClientRect();
+        const tRect = targetEl.getBoundingClientRect();
+        const x = (tRect.left - vpRect.left) + (tRect.width * offsetXRatio) - 14;
+        const y = (tRect.top - vpRect.top) + (tRect.height * offsetYRatio) - 8;
+        handCursor.style.opacity = '1';
+        handCursor.style.transform = 'translate3d(' + Math.round(x) + 'px, ' + Math.round(y) + 'px, 0)';
+        return { x: x + 14, y: y + 8 };
+      }
+
+      function simulateHandTap(targetEl, onTapped, moveDelay = 620) {
+        const coords = moveHandToElement(targetEl);
+        schedule(() => {
+          handCursor.classList.add('is-tapping');
+          if (targetEl) targetEl.classList.add('qs-btn-press-sim');
+          spawnRippleAt(coords.x, coords.y);
+
+          schedule(() => {
+            handCursor.classList.remove('is-tapping');
+            if (targetEl) targetEl.classList.remove('qs-btn-press-sim');
+            if (typeof onTapped === 'function') onTapped();
+          }, 210);
+        }, moveDelay);
+      }
+
+      // Subtle Web Audio chime when user interacts & grades correct
+      function playSuccessChime() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          if (ctx.state === 'suspended') return;
+          const now = ctx.currentTime;
+          [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.04, now + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.07);
+            osc.stop(now + idx * 0.07 + 0.24);
+          });
+        } catch (e) {}
+      }
+
+      function updateHeaderUI(step) {
+        if (stepNumEl) stepNumEl.textContent = step + '/9';
+        if (stepTitleEl) stepTitleEl.textContent = STEP_META[step] || '';
+
+        stepDots.forEach((dot) => {
+          const s = Number(dot.getAttribute('data-step'));
+          if (s === step) {
+            dot.className = 'h-1.5 rounded-full bg-indigo-600 transition-all cursor-pointer';
+          } else if (s < step) {
+            dot.className = 'h-1.5 rounded-full bg-indigo-300 hover:bg-indigo-400 transition-all cursor-pointer';
+          } else {
+            dot.className = 'h-1.5 rounded-full bg-slate-200 hover:bg-indigo-300 transition-all cursor-pointer';
+          }
+        });
+
+        for (let i = 1; i <= 9; i++) {
+          const sc = document.getElementById('qs-scene-' + i);
+          if (sc) sc.classList.toggle('is-active', i === step);
+        }
+      }
+
+      function resetExamRoomState() {
+        selectedChoice = null;
+        isExamSubmitted = false;
+        userManualExamMode = false;
+        countdownRemaining = 120;
+        if (examTimerEl) examTimerEl.textContent = '02:00';
+        examTutorDrawer.classList.remove('is-open');
+        btnSubmitExam.classList.add('hidden');
+        btnRestartDemo.classList.add('hidden');
+
+        examChoiceBtns.forEach((btn) => {
+          btn.disabled = false;
+          btn.className = 'qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 flex items-center justify-between gap-2 transition-all cursor-pointer';
+          const badge = btn.querySelector('.qs-c-badge');
+          const label = btn.querySelector('.qs-c-label');
+          const mark = btn.querySelector('.qs-c-mark');
+          if (badge) badge.className = 'qs-c-badge w-5 h-5 rounded-full bg-white border border-slate-300 text-slate-600 text-[9.5px] font-bold flex items-center justify-center shrink-0';
+          if (label) label.className = 'qs-c-label text-[10px] font-medium text-slate-700 truncate';
+          if (mark) {
+            mark.className = 'qs-c-mark shrink-0 hidden';
+            mark.innerHTML = '';
+          }
+        });
+      }
+
+      function selectExamChoice(choiceKey) {
+        if (isExamSubmitted) return;
+        selectedChoice = choiceKey;
+
+        examChoiceBtns.forEach((btn) => {
+          const key = btn.getAttribute('data-choice');
+          const badge = btn.querySelector('.qs-c-badge');
+          const label = btn.querySelector('.qs-c-label');
+          if (key === choiceKey) {
+            btn.className = 'qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/90 flex items-center justify-between gap-2 transition-all cursor-pointer shadow-2xs';
+            if (badge) badge.className = 'qs-c-badge w-5 h-5 rounded-full bg-indigo-600 border border-indigo-600 text-white text-[9.5px] font-bold flex items-center justify-center shrink-0';
+            if (label) label.className = 'qs-c-label text-[10px] font-bold text-indigo-950 truncate';
+          } else {
+            btn.className = 'qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 flex items-center justify-between gap-2 transition-all cursor-pointer';
+            if (badge) badge.className = 'qs-c-badge w-5 h-5 rounded-full bg-white border border-slate-300 text-slate-600 text-[9.5px] font-bold flex items-center justify-center shrink-0';
+            if (label) label.className = 'qs-c-label text-[10px] font-medium text-slate-700 truncate';
+          }
+        });
+
+        btnSubmitExam.classList.remove('hidden');
+      }
+
+      function submitExamPaper(isRealUserClick) {
+        if (isExamSubmitted || !selectedChoice) return;
+        isExamSubmitted = true;
+        if (isRealUserClick) playSuccessChime();
+
+        examChoiceBtns.forEach((btn) => {
+          btn.disabled = true;
+          const key = btn.getAttribute('data-choice');
+          const badge = btn.querySelector('.qs-c-badge');
+          const label = btn.querySelector('.qs-c-label');
+          const mark = btn.querySelector('.qs-c-mark');
+
+          if (key === 'ข') {
+            btn.className = 'qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 flex items-center justify-between gap-2 transition-all shadow-xs';
+            if (badge) badge.className = 'qs-c-badge w-5 h-5 rounded-full bg-emerald-600 border border-emerald-600 text-white text-[9.5px] font-bold flex items-center justify-center shrink-0';
+            if (label) label.className = 'qs-c-label text-[10px] font-extrabold text-emerald-950 truncate';
+            if (mark) {
+              mark.className = 'qs-c-mark shrink-0 inline-flex items-center text-emerald-600 qs-check-pop';
+              mark.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>';
+            }
+          } else if (key === selectedChoice && selectedChoice !== 'ข') {
+            btn.className = 'qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-rose-400 bg-rose-50 flex items-center justify-between gap-2 transition-all';
+            if (badge) badge.className = 'qs-c-badge w-5 h-5 rounded-full bg-rose-500 border border-rose-500 text-white text-[9.5px] font-bold flex items-center justify-center shrink-0';
+            if (label) label.className = 'qs-c-label text-[10px] font-bold text-rose-900 truncate';
+            if (mark) {
+              mark.className = 'qs-c-mark shrink-0 inline-flex items-center text-rose-500';
+              mark.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>';
+            }
+          } else {
+            btn.className = 'qs-exam-choice w-full text-left px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white/60 opacity-65 flex items-center justify-between gap-2';
+          }
+        });
+
+        if (selectedChoice === 'ข') {
+          examTutorMsg.innerHTML = "💡 <strong class=\"text-white font-bold\">AI ติวเตอร์:</strong> ถูกต้องครับ! คำว่า 'ถวายบังคมทูลลา' เป็นคำกริยาราชาศัพท์สมบูรณ์ในตัว จึงไม่ต้องเติม 'ทรง' นำหน้าเหมือนข้ออื่น";
+        } else {
+          examTutorMsg.innerHTML = "💡 <strong class=\"text-white font-bold\">AI ติวเตอร์:</strong> ข้อที่ถูกคือ <b>ข. ถวายบังคมทูลลา</b> ครับ เพราะคำกริยาราชาศัพท์ที่สมบูรณ์อยู่แล้วจะไม่เติม 'ทรง' ซ้ำหน้า";
+        }
+
+        btnSubmitExam.classList.add('hidden');
+        btnRestartDemo.classList.remove('hidden');
+
+        schedule(() => {
+          examTutorDrawer.classList.add('is-open');
+        }, 180);
+
+        // Seamless loop back to Step 1 after reading time
+        const loopDelay = isRealUserClick ? 5500 : 3800;
+        schedule(() => {
+          goToStep(1);
+        }, loopDelay);
+      }
+
+      // ========================================================================
+      // Core State Controller: goToStep(stepNumber)
+      // ========================================================================
+      function goToStep(stepNumber) {
+        const step = Math.min(9, Math.max(1, Number(stepNumber) || 1));
+        clearAllTimers();
+        currentStep = step;
+        updateHeaderUI(step);
+        hideHand();
+
+        // STEP 1: ปุ่มดาวน์โหลดไฟล์ตัวอย่าง
+        if (step === 1) {
+          handCursor.style.transform = 'translate3d(210px, 340px, 0)';
+          schedule(() => {
+            simulateHandTap(btnStep1, () => goToStep(2), 620);
+          }, 950);
+        }
+
+        // STEP 2: แสดงไฟล์เอกสารเต็มจอ เลื่อนพรีวิวความซับซ้อน
+        else if (step === 2) {
+          docScrollTarget.style.transition = 'none';
+          docScrollTarget.style.transform = 'translateY(0px)';
+          void docScrollTarget.offsetWidth;
+          docScrollTarget.style.transition = 'transform 2300ms cubic-bezier(0.35, 0, 0.25, 1)';
+
+          schedule(() => {
+            docScrollTarget.style.transform = 'translateY(-155px)';
+          }, 360);
+
+          schedule(() => {
+            goToStep(3);
+          }, 3100);
+        }
+
+        // STEP 3: ย่อไฟล์เหลือเป็นไอคอน Exam_Kru_67.pdf
+        else if (step === 3) {
+          morphDoc.style.transition = 'none';
+          morphedPdfIcon.style.transition = 'none';
+          morphDoc.style.opacity = '1';
+          morphDoc.style.transform = 'scale(1)';
+          morphedPdfIcon.style.opacity = '0';
+          morphedPdfIcon.style.transform = 'scale(0.55)';
+          void morphDoc.offsetWidth;
+
+          morphDoc.style.transition = 'transform 780ms cubic-bezier(0.22, 1, 0.36, 1), opacity 560ms ease';
+          morphedPdfIcon.style.transition = 'transform 720ms cubic-bezier(0.16, 1, 0.3, 1), opacity 480ms ease';
+
+          schedule(() => {
+            morphDoc.style.transform = 'scale(0.22)';
+            morphDoc.style.opacity = '0';
+            morphedPdfIcon.style.opacity = '1';
+            morphedPdfIcon.style.transform = 'scale(1)';
+          }, 180);
+
+          schedule(() => {
+            goToStep(4);
+          }, 2150);
+        }
+
+        // STEP 4: โยนไอคอนลงในพื้นที่วางไฟล์ (Dropzone)
+        else if (step === 4) {
+          flyingPdf.style.transition = 'none';
+          flyingPdf.style.opacity = '1';
+          flyingPdf.style.transform = 'translateY(-64px) rotate(-6deg) scale(1.06)';
+          dropzoneBox.className = 'w-full rounded-3xl border-2 border-dashed border-slate-300 bg-white/85 p-5 text-center transition-all duration-300 space-y-2';
+          dropzoneLabel.textContent = 'วางไฟล์ข้อสอบที่นี่';
+          dropzoneSub.textContent = 'รองรับไฟล์ PDF, รูปภาพชีทข้อสอบ และไฟล์ข้อความ';
+          void flyingPdf.offsetWidth;
+
+          flyingPdf.style.transition = 'transform 820ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease';
+
+          schedule(() => {
+            flyingPdf.style.transform = 'translateY(42px) rotate(0deg) scale(0.94)';
+          }, 220);
+
+          schedule(() => {
+            dropzoneBox.className = 'w-full rounded-3xl border-2 border-indigo-500 bg-indigo-50/90 p-5 text-center transition-all duration-300 space-y-2 shadow-sm';
+            dropzoneLabel.textContent = 'รับไฟล์ Exam_Kru_67.pdf เรียบร้อย ✓';
+            dropzoneSub.textContent = 'กำลังส่งเข้าคิวสกัดข้อสอบด้วย AI...';
+          }, 960);
+
+          schedule(() => {
+            goToStep(5);
+          }, 2150);
+        }
+
+        // STEP 5: อนิเมชันการสกัดข้อสอบด้วย AI (Progress 0% -> 100%)
+        else if (step === 5) {
+          let pct = 0;
+          scanPercentEl.textContent = '0%';
+          scanBarEl.style.width = '0%';
+
+          const iv = setInterval(() => {
+            pct = Math.min(100, pct + 4);
+            scanPercentEl.textContent = pct + '%';
+            scanBarEl.style.width = pct + '%';
+            if (pct >= 100) {
+              clearInterval(iv);
+            }
+          }, 85);
+          intervals.push(iv);
+
+          schedule(() => {
+            goToStep(6);
+          }, 2650);
+        }
+
+        // STEP 6: แจ้งเตือนสกัดเสร็จสิ้น & ปุ่ม Review & Edit
+        else if (step === 6) {
+          schedule(() => {
+            simulateHandTap(btnStep6, () => goToStep(7), 620);
+          }, 950);
+        }
+
+        // STEP 7: หน้า Review & Edit ตรวจเทียบต้นฉบับ (สกอร์ดูข้อ 1 & 2 แล้วกดยืนยัน)
+        else if (step === 7) {
+          reviewScrollInner.style.transition = 'none';
+          reviewScrollInner.style.transform = 'translateY(0px)';
+          void reviewScrollInner.offsetWidth;
+          reviewScrollInner.style.transition = 'transform 1250ms cubic-bezier(0.32, 0.72, 0, 1)';
+
+          // Show cursor inspecting Question 1, then scrolling to Question 2
+          schedule(() => {
+            moveHandToElement(reviewScrollInner, 0.72, 0.35);
+          }, 350);
+
+          schedule(() => {
+            moveHandToElement(reviewScrollInner, 0.72, 0.18);
+            reviewScrollInner.style.transform = 'translateY(-78px)';
+          }, 1050);
+
+          // Move hand down to tap "✅ ยืนยันข้อสอบทั้งหมด"
+          schedule(() => {
+            simulateHandTap(btnStep7, () => goToStep(8), 580);
+          }, 2450);
+        }
+
+        // STEP 8: เริ่มทำข้อสอบ (Start Exam)
+        else if (step === 8) {
+          schedule(() => {
+            simulateHandTap(btnStep8, () => goToStep(9), 620);
+          }, 900);
+        }
+
+        // STEP 9: หน้าทำข้อสอบจริง ตอบจริง ส่งจริง & จบลูป
+        else if (step === 9) {
+          resetExamRoomState();
+
+          // Live 2:00 countdown timer
+          const timerIv = setInterval(() => {
+            if (isExamSubmitted) return;
+            countdownRemaining = Math.max(0, countdownRemaining - 1);
+            const mm = String(Math.floor(countdownRemaining / 60)).padStart(2, '0');
+            const ss = String(countdownRemaining % 60).padStart(2, '0');
+            if (examTimerEl) examTimerEl.textContent = mm + ':' + ss;
+          }, 1000);
+          intervals.push(timerIv);
+
+          // Auto-play virtual hand selects "ข. ถวายบังคมทูลลา" then submits (unless user clicks manually)
+          schedule(() => {
+            if (userManualExamMode || isExamSubmitted) return;
+            simulateHandTap(choiceBBtn, () => {
+              if (userManualExamMode || isExamSubmitted) return;
+              selectExamChoice('ข');
+
+              schedule(() => {
+                if (userManualExamMode || isExamSubmitted) return;
+                simulateHandTap(btnSubmitExam, () => {
+                  hideHand();
+                  submitExamPaper(false);
+                }, 560);
+              }, 550);
+            }, 600);
+          }, 1350);
+        }
+      }
+
+      // ========================================================================
+      // Hybrid Real-User Click Listeners (Immediate Response)
+      // ========================================================================
+      function handleUserStepClick(e, nextStep) {
+        if (e && viewport) {
+          const vpRect = viewport.getBoundingClientRect();
+          spawnRippleAt(e.clientX - vpRect.left, e.clientY - vpRect.top);
+        }
+        goToStep(nextStep);
+      }
+
+      if (btnStep1) btnStep1.addEventListener('click', (e) => handleUserStepClick(e, 2));
+      if (btnStep6) btnStep6.addEventListener('click', (e) => handleUserStepClick(e, 7));
+      if (btnStep7) btnStep7.addEventListener('click', (e) => handleUserStepClick(e, 8));
+      if (btnStep8) btnStep8.addEventListener('click', (e) => handleUserStepClick(e, 9));
+
+      stepDots.forEach((dot) => {
+        dot.addEventListener('click', () => {
+          const targetStep = Number(dot.getAttribute('data-step')) || 1;
+          goToStep(targetStep);
+        });
+      });
+
+      examChoiceBtns.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          if (isExamSubmitted) return;
+          userManualExamMode = true;
+          hideHand();
+          const vpRect = viewport.getBoundingClientRect();
+          spawnRippleAt(e.clientX - vpRect.left, e.clientY - vpRect.top);
+          selectExamChoice(btn.getAttribute('data-choice') || 'ข');
+        });
+      });
+
+      if (btnSubmitExam) {
+        btnSubmitExam.addEventListener('click', (e) => {
+          userManualExamMode = true;
+          hideHand();
+          const vpRect = viewport.getBoundingClientRect();
+          spawnRippleAt(e.clientX - vpRect.left, e.clientY - vpRect.top);
+          submitExamPaper(true);
+        });
+      }
+
+      if (btnRestartDemo) {
+        btnRestartDemo.addEventListener('click', (e) => {
+          handleUserStepClick(e, 1);
+        });
+      }
+
+      // Expose goToStep globally for external control / testing
+      window.goToStep = goToStep;
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+      goToStep(1);
+    })();
+
+  window.initQuizSiloWalkthroughGlobal = function() {
+    if (typeof window.goToStep === 'function') {
+      window.goToStep(1);
+    }
+  };
+</script>
+
     <section id="page-library" class="hidden space-y-4 sm:space-y-5">
 
   <!-- Container for Announcement -->
@@ -5600,7 +7324,21 @@ if (typeof window !== 'undefined') {
       toggleUploadGuide(true);
     }
     loadFooterConfig();
-    switchPage('dashboard');
+
+    // Routing decision: สมาชิกเก่าเข้า Dashboard / ผู้ใช้ใหม่หรือยังไม่ล็อกอินไป Landing Page
+    const hash = window.location.hash;
+    const isAuthRedirect = hash.includes('access_token=') || hash.includes('refresh_token=');
+    const isRegisteredMember = currentUserProfile && !currentUserProfile.isGuest && currentUserProfile.uuid;
+
+    if (isAuthRedirect || isRegisteredMember) {
+      switchPage('dashboard');
+    } else if (hash === '#library') {
+      switchPage('library');
+    } else if (hash === '#dashboard') {
+      switchPage('dashboard');
+    } else {
+      switchPage('landing');
+    }
   });
 
 
@@ -5695,10 +7433,54 @@ if (typeof window !== 'undefined') {
 
   function handleLogoClick() {
     if (!document.getElementById('page-exam').classList.contains('hidden')) return;
-    switchPage('dashboard');
+    switchPage('landing');
+  }
+
+  function handleLandingLogoClick() {
+    const isLoggedIn = currentUserProfile && !currentUserProfile.isGuest && currentUserProfile.uuid;
+    if (isLoggedIn) {
+      switchPage('dashboard');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function goToPractice() {
+    switchPage('library');
+    showToast('success', '🚀 ยินดีต้อนรับสู่คลังข้อสอบ QuizSilo เริ่มฝึกทำได้ทันทีครับ!');
+  }
+
+  function updateLandingAuthUI() {
+    const container = document.getElementById('landing-auth-container');
+    if (!container) return;
+    const isLoggedIn = currentUserProfile && !currentUserProfile.isGuest && currentUserProfile.uuid;
+    if (isLoggedIn) {
+      container.innerHTML = `
+        <div class="flex items-center gap-2">
+          <button onclick="switchPage('dashboard')" type="button" class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-brand-500/25 transition-all cursor-pointer active:scale-95">
+            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+            <span>ไปที่แดชบอร์ด</span>
+          </button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <button onclick="handleGoogleLogin()" type="button" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/90 hover:border-indigo-300 rounded-xl text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer active:scale-95">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>เข้าสู่ระบบด้วย Google</span>
+        </button>
+      `;
+    }
+    if (window.lucide) lucide.createIcons();
   }
 
   function switchPage(page) {
+    const pageLanding = document.getElementById('page-landing');
     const pageLib = document.getElementById('page-library');
     const pageUp = document.getElementById('page-upload');
     const pageExam = document.getElementById('page-exam');
@@ -5711,8 +7493,11 @@ if (typeof window !== 'undefined') {
     const tabDash = document.getElementById('tab-dashboard');
     const tabAdmin = document.getElementById('tab-admin');
     const mainNav = document.getElementById('main-nav');
+    const appHeader = document.getElementById('app-header');
+    const appFooter = document.getElementById('app-footer');
     const examIndicator = document.getElementById('exam-mode-indicator');
 
+    if (pageLanding) pageLanding.classList.add('hidden');
     pageLib.classList.add('hidden');
     pageUp.classList.add('hidden');
     pageExam.classList.add('hidden');
@@ -5738,6 +7523,24 @@ if (typeof window !== 'undefined') {
       } else {
         tabAdmin.className = 'hidden';
       }
+    }
+
+    if (page === 'landing') {
+      stopExamTimer();
+      if (appHeader) appHeader.classList.add('hidden');
+      if (appFooter) appFooter.classList.add('hidden');
+      if (pageLanding) pageLanding.classList.remove('hidden');
+      tabLib.classList.add(...inactiveClasses);
+      tabUp.classList.add(...inactiveClasses);
+      if (tabDash) tabDash.classList.add(...inactiveClasses);
+      if (tabAdmin && isAdminOrAssistant) tabAdmin.classList.add(...inactiveClasses);
+      updateLandingAuthUI();
+      if (window.initQuizSiloWalkthroughGlobal) {
+        window.initQuizSiloWalkthroughGlobal();
+      }
+    } else {
+      if (appHeader) appHeader.classList.remove('hidden');
+      if (appFooter && page !== 'exam') appFooter.classList.remove('hidden');
     }
 
     if (page === 'library') {
