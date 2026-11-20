@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.01.49</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.13.12</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -1630,407 +1630,600 @@
   
 <script>
 // ==============================================================================
-// QuizSilo — Supabase Client, Google Auth & Full Client AI Extraction Engine
-// Designed for Pure Standalone Vercel & Supabase Architecture
+// QuizSilo — Supabase Adapter, Auth Service & Client AI Extraction Engine
+// Architecture: Pure Standalone Vercel + Supabase
+// Compatibility: 100% Legacy google.script.run Proxy Wrapper Preserved
 // ==============================================================================
 
-const SUPABASE_URL = 'https://vtwlqtvyxtekuydlvpnb.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_VXGHW32uZja6ppejX9-PaQ_R4XenjAD';
-const MODEL_EXTRACTION = 'google/gemini-2.5-flash';
-const MODEL_SOLVER = 'google/gemini-2.5-flash';
+// ==============================================================================
+// 1. CONFIGURATION & CONSTANTS
+// ==============================================================================
+const CONFIG = Object.freeze({
+  SUPABASE_URL: 'https://vtwlqtvyxtekuydlvpnb.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_VXGHW32uZja6ppejX9-PaQ_R4XenjAD',
+  MODEL_EXTRACTION: 'google/gemini-2.5-flash',
+  MODEL_SOLVER: 'google/gemini-2.5-flash',
+  ADMIN_EMAIL: 'chanathipauto1@gmail.com',
+  DEFAULT_CATEGORY: 'ภาค ก: ความรู้ความสามารถทั่วไป',
+  GUEST_MAX_FILES: 3,
+  GUEST_MAX_QUESTIONS: 100,
+  HEARTBEAT_INTERVAL_MS: 90_000,
+  ONLINE_THRESHOLD_MS: 5 * 60 * 1000,
+  DB_INSERT_CHUNK_SIZE: 50,
+  STORAGE_KEYS: Object.freeze({
+    GUEST_DEVICE_ID: 'quizsilo_guest_device_id',
+    GUEST_BATCH_IDS: 'quizsilo_guest_batch_ids',
+    ACTIVE_PROFILE: 'quizsilo_active_profile',
+    OPENROUTER_KEY: 'QUIZSILO_OPENROUTER_KEY'
+  })
+});
 
-// Secure OpenRouter API Caller (Routes through Vercel Serverless /api/openrouter without exposing keys)
+const CATEGORIES_LIST = Object.freeze([
+  'ภาค ก: ความรู้ความสามารถทั่วไป',
+  'ความสามารถในการคิดวิเคราะห์',
+  'การคิดวิเคราะห์เชิงภาษา',
+  'การคิดวิเคราะห์เชิงนามธรรม',
+  'การคิดวิเคราะห์เชิงปริมาณ',
+  'ทักษะภาษาอังกฤษ',
+  'ไวยากรณ์และโครงสร้าง',
+  'คำศัพท์',
+  'การอ่านเพื่อความเข้าใจ',
+  'บทสนทนาในชีวิตประจำวัน',
+  'ความรู้และลักษณะการเป็นข้าราชการที่ดี',
+  'ระเบียบบริหารราชการแผ่นดิน',
+  'กฎหมายว่าด้วยหลักเกณฑ์และวิธีการบริหารกิจการบ้านเมืองที่ดี',
+  'พระราชบัญญัติวิธีปฏิบัติราชการทางปกครอง',
+  'หน้าที่และความรับผิดชอบในการเป็นข้าราชการ ตลอดจนจริยธรรมข้าราชการ',
+  'ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ',
+  'วิชาการศึกษา',
+  'กฎหมายครูและการศึกษา',
+  'วิชาเอก',
+  'วิชาเอก: สังคมศึกษา',
+  'อื่นๆ'
+]);
+
+const ANSWER_NORMALIZE_MAP = Object.freeze({
+  A: 'ก', B: 'ข', C: 'ค', D: 'ง', E: 'จ', F: 'ฉ', G: 'ช', H: 'ซ',
+  '1': 'ก', '2': 'ข', '3': 'ค', '4': 'ง', '5': 'จ', '6': 'ฉ', '7': 'ช', '8': 'ซ',
+  '๑': 'ก', '๒': 'ข', '๓': 'ค', '๔': 'ง', '๕': 'จ', '๖': 'ฉ', '๗': 'ช', '๘': 'ซ'
+});
+
+// Shared In-Memory State
+const localFilesCache = Object.create(null);
+const activeQueueJobs = [];
+let currentSupabaseUser = null;
+
+// Initialize Supabase Client (exposed globally for frontend compatibility)
+const sbClient = (() => {
+  if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+    return supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  }
+  if (typeof window !== 'undefined' && typeof window.supabase?.createClient === 'function') {
+    return window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  }
+  return null;
+})();
+
+if (typeof window !== 'undefined') {
+  window.sbClient = sbClient;
+}
+
+// ==============================================================================
+// 2. CORE UTILITIES & HTTP HELPERS
+// ==============================================================================
+const isHttpEnvironment = () =>
+  typeof window !== 'undefined' && Boolean(window.location?.protocol?.startsWith('http'));
+
+const requireSupabaseClient = () => {
+  if (!sbClient) throw new Error('sbClient is not initialized');
+  return sbClient;
+};
+
+const getActiveProfile = (explicitProfile = null) => {
+  if (explicitProfile) return explicitProfile;
+  if (typeof currentUserProfile !== 'undefined' && currentUserProfile) return currentUserProfile;
+  return (typeof window !== 'undefined' && window.currentUserProfile) || null;
+};
+
+const setActiveProfile = (profile) => {
+  if (typeof window !== 'undefined') {
+    window.currentUserProfile = profile;
+  }
+  if (typeof currentUserProfile !== 'undefined') {
+    currentUserProfile = profile;
+  }
+};
+
+const safeCallGlobal = (fnName, ...args) => {
+  try {
+    const fn = typeof window !== 'undefined' ? window[fnName] : null;
+    if (typeof fn === 'function') return fn(...args);
+  } catch (err) {
+    console.warn(`Global callback "${fnName}" warning:`, err);
+  }
+  return undefined;
+};
+
+const notifySuccess = (ctx, data) => {
+  if (typeof ctx?._successHandler === 'function') ctx._successHandler(data);
+  return data;
+};
+
+const notifyFailure = (ctx, err, fallbackReturn) => {
+  if (typeof ctx?._failureHandler === 'function') ctx._failureHandler(err);
+  return fallbackReturn;
+};
+
+const resolveUserId = (profile) =>
+  profile && !profile.isGuest && profile.uuid ? profile.uuid : null;
+
+async function fetchJsonApi(url, { method = 'GET', body = null, headers = {} } = {}) {
+  if (!isHttpEnvironment()) return null;
+
+  const init = { method, headers: { ...headers } };
+  if (body !== null) {
+    init.headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(body);
+  }
+
+  const resp = await fetch(url, init);
+  if (!resp.ok) {
+    const errData = await resp.json().catch(() => ({}));
+    throw new Error(errData?.error || errData?.message || `HTTP ${resp.status}`);
+  }
+  return resp.json();
+}
+
 async function callOpenRouterApi(payload, title = 'QuizSilo') {
-  const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
   let lastErr = null;
 
-  // 1. Route through Vercel Serverless Function (/api/openrouter) if hosted on Web
-  if (isHttp) {
+  // 1. Primary: Vercel Serverless Function (/api/openrouter)
+  if (isHttpEnvironment()) {
     try {
       const resp = await fetch('/api/openrouter', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Title': title
-        },
+        headers: { 'Content-Type': 'application/json', 'X-Title': title },
         body: JSON.stringify(payload)
       });
-      if (resp.ok) {
-        return await resp.json();
-      }
+      if (resp.ok) return await resp.json();
+
       const errData = await resp.json().catch(() => ({}));
-      lastErr = new Error((errData && errData.error) || ('Vercel API error HTTP ' + resp.status));
+      lastErr = new Error(errData?.error || `Vercel API error HTTP ${resp.status}`);
     } catch (apiErr) {
       lastErr = apiErr;
     }
   }
 
-  // 2. Direct fallback if custom key is provided in browser localStorage
-  const localKey = (typeof localStorage !== 'undefined' && localStorage.getItem('QUIZSILO_OPENROUTER_KEY')) || '';
+  // 2. Fallback: Direct OpenRouter call if custom key exists in localStorage
+  let localKey = '';
+  try {
+    localKey = typeof localStorage !== 'undefined'
+      ? localStorage.getItem(CONFIG.STORAGE_KEYS.OPENROUTER_KEY) || ''
+      : '';
+  } catch {
+    localKey = '';
+  }
+
   if (localKey) {
     const directResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + localKey,
+        Authorization: `Bearer ${localKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': (typeof window !== 'undefined' && window.location.origin) || '',
+        'HTTP-Referer': (typeof window !== 'undefined' && window.location?.origin) || '',
         'X-Title': title
       },
       body: JSON.stringify(payload)
     });
-    if (directResp.ok) {
-      return await directResp.json();
-    }
+    if (directResp.ok) return await directResp.json();
+
     const directErr = await directResp.text();
-    throw new Error('OpenRouter API Direct Error: ' + directErr);
+    throw new Error(`OpenRouter API Direct Error: ${directErr}`);
   }
 
   if (lastErr) throw lastErr;
-  throw new Error('ยังไม่ได้ตั้งค่า OPENROUTER_API_KEY ใน Vercel Environment Variables กรุณาไปที่ Project Settings > Environment Variables บน Vercel');
+  throw new Error(
+    'ยังไม่ได้ตั้งค่า OPENROUTER_API_KEY ใน Vercel Environment Variables กรุณาไปที่ Project Settings > Environment Variables บน Vercel'
+  );
 }
 
-const CATEGORIES_LIST = [
-  'ภาค ก: ความรู้ความสามารถทั่วไป', 'ความสามารถในการคิดวิเคราะห์', 'การคิดวิเคราะห์เชิงภาษา', 'การคิดวิเคราะห์เชิงนามธรรม', 'การคิดวิเคราะห์เชิงปริมาณ',
-  'ทักษะภาษาอังกฤษ', 'ไวยากรณ์และโครงสร้าง', 'คำศัพท์', 'การอ่านเพื่อความเข้าใจ', 'บทสนทนาในชีวิตประจำวัน',
-  'ความรู้และลักษณะการเป็นข้าราชการที่ดี', 'ระเบียบบริหารราชการแผ่นดิน', 'กฎหมายว่าด้วยหลักเกณฑ์และวิธีการบริหารกิจการบ้านเมืองที่ดี', 'พระราชบัญญัติวิธีปฏิบัติราชการทางปกครอง', 'หน้าที่และความรับผิดชอบในการเป็นข้าราชการ ตลอดจนจริยธรรมข้าราชการ',
-  'ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ', 'วิชาการศึกษา', 'กฎหมายครูและการศึกษา', 'วิชาเอก', 'วิชาเอก: สังคมศึกษา',
-  'อื่นๆ'
-];
-
-// In-memory cache for fast file preview retrieval
-const localFilesCache = {};
-// In-memory queue of active/recent jobs
-const activeQueueJobs = [];
-
-function normalizeAnswerText(s) {
-  const cleaned = String(s || '').replace(/[\s.\)\(\[\]\{\}]/g, '').replace(/^ข้อ/, '').trim();
+function normalizeAnswerText(raw) {
+  const cleaned = String(raw || '')
+    .replace(/[\s.)([\]{}]/g, '')
+    .replace(/^ข้อ/, '')
+    .trim();
   const upper = cleaned.toUpperCase();
   if (upper === 'FREE' || cleaned === 'ฟรี' || cleaned === 'ข้อฟรี') return 'FREE';
-  const map = {
-    'A': 'ก', 'B': 'ข', 'C': 'ค', 'D': 'ง', 'E': 'จ', 'F': 'ฉ', 'G': 'ช', 'H': 'ซ',
-    '1': 'ก', '2': 'ข', '3': 'ค', '4': 'ง', '5': 'จ', '6': 'ฉ', '7': 'ช', '8': 'ซ',
-    '๑': 'ก', '๒': 'ข', '๓': 'ค', '๔': 'ง', '๕': 'จ', '๖': 'ฉ', '๗': 'ช', '๘': 'ซ'
-  };
-  return map[upper] || cleaned;
+  return ANSWER_NORMALIZE_MAP[upper] || cleaned;
 }
 
-function safeParseJsonString(s) {
-  let cleaned = String(s || '').replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+function safeParseJsonString(raw) {
+  const cleaned = String(raw || '')
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+
   try {
     return JSON.parse(cleaned);
-  } catch (e) {
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (m) {
-      try { return JSON.parse(m[0]); } catch (err) {}
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        // fall through to throw
+      }
     }
     throw new Error('ไม่สามารถแปลงข้อมูล JSON จาก AI ได้ (ปัญหาโครงสร้าง)');
   }
 }
 
-// Initialize Supabase Client
-const sbClient = (typeof supabase !== 'undefined' && supabase.createClient)
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : (window.supabase && window.supabase.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
-
-window.sbClient = sbClient;
-let currentSupabaseUser = null;
-
-window.signInWithGoogle = async function() {
+function decodeBase64ToUtf8(base64Str) {
   try {
-    if (!sbClient) {
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ Supabase ได้ กรุณารีเฟรชหน้าเว็บ', 'error');
-      return;
-    }
-    const { data, error } = await sbClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin
-      }
-    });
-    if (error) throw error;
-  } catch (err) {
-    console.error('Google Sign In Error:', err);
-    Swal.fire('เข้าสู่ระบบไม่สำเร็จ', err.message || err, 'error');
-  }
-};
-
-window.signOutUser = async function() {
-  try {
-    if (sbClient) {
-      await sbClient.auth.signOut();
-    }
-    localStorage.removeItem('quizsilo_active_profile');
-    window.location.reload();
-  } catch (err) {
-    console.error('Sign Out Error:', err);
-    window.location.reload();
-  }
-};
-
-async function syncAuthWithProfile(authUser) {
-  currentSupabaseUser = authUser;
-  if (!authUser) {
-    // Guest mode with persistent device ID
-    let guestDeviceId = '';
+    const binary = atob(base64Str);
+    const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch {
     try {
-      guestDeviceId = localStorage.getItem('quizsilo_guest_device_id') || '';
-      if (!guestDeviceId) {
-        guestDeviceId = 'GUEST-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-        localStorage.setItem('quizsilo_guest_device_id', guestDeviceId);
-      }
-    } catch (e) {
-      guestDeviceId = 'GUEST-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      return atob(base64Str);
+    } catch {
+      return '';
     }
-
-    currentUserProfile = {
-      uuid: guestDeviceId,
-      name: 'ผู้ใช้ทั่วไป (Guest)',
-      email: '',
-      avatar: '👤',
-      avatarUrl: null,
-      role: 'guest',
-      scanCredits: 10,
-      isGuest: true,
-      nickname: '',
-      age_group: '',
-      occupation: '',
-      target_exams: '',
-      referral_source: '',
-      is_onboarded: false
-    };
-    updateNavbarProfile();
-    return;
-  }
-
-  try {
-    // Extract real Google profile avatar (handles both avatar_url and picture)
-    const googlePhotoUrl = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null;
-
-    let { data: profile, error } = await sbClient
-      .from('profiles')
-      .select('*')
-      .eq('id', authUser.id)
-      .single();
-
-    if (error && error.code === 'PGRST116') {
-      // Create new profile record
-      const newProf = {
-        id: authUser.id,
-        email: authUser.email,
-        display_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email.split('@')[0],
-        avatar: googlePhotoUrl || '👤',
-        role: authUser.email === 'chanathipauto1@gmail.com' ? 'admin' : 'student',
-        scan_credits: 500,
-        is_onboarded: false,
-        last_seen_at: new Date().toISOString()
-      };
-      const { data: created, error: insErr } = await sbClient.from('profiles').insert(newProf).select().single();
-      if (!insErr && created) profile = created;
-    }
-
-    if (profile) {
-      // Update avatar if currently fallback but Google returned a photo URL
-      if (googlePhotoUrl && (!profile.avatar || !profile.avatar.startsWith('http'))) {
-        try {
-          await sbClient.from('profiles').update({ avatar: googlePhotoUrl }).eq('id', profile.id);
-          profile.avatar = googlePhotoUrl;
-        } catch(e) {}
-      }
-
-      // Touch heartbeat presence
-      try {
-        await sbClient.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', profile.id);
-      } catch (e) {}
-
-      const effectiveAvatar = (profile.avatar && profile.avatar.startsWith('http')) 
-        ? profile.avatar 
-        : (googlePhotoUrl || '👤');
-
-      let effectiveRole = profile.role || 'student';
-      if (effectiveRole !== 'admin') {
-        try {
-          const { data: roleRecords } = await sbClient
-            .from('scan_ledger')
-            .select('status')
-            .eq('user_id', profile.id)
-            .like('status', 'SYSTEM_ROLE:%')
-            .order('created_at', { ascending: false })
-            .limit(1);
-          if (roleRecords && roleRecords.length > 0) {
-            effectiveRole = roleRecords[0].status.replace('SYSTEM_ROLE:', '');
-          }
-        } catch (re) {}
-      }
-
-      currentUserProfile = {
-        uuid: profile.id,
-        name: profile.nickname || profile.display_name || profile.email.split('@')[0],
-        email: profile.email,
-        avatar: effectiveAvatar,
-        avatarUrl: effectiveAvatar.startsWith('http') ? effectiveAvatar : null,
-        role: effectiveRole,
-        scanCredits: profile.scan_credits ?? 500,
-        isGuest: false,
-        nickname: profile.nickname || '',
-        age_group: profile.age_group || '',
-        occupation: profile.occupation || '',
-        target_exams: profile.target_exams || '',
-        referral_source: profile.referral_source || '',
-        is_onboarded: profile.is_onboarded || false
-      };
-      localStorage.setItem('quizsilo_active_profile', JSON.stringify(currentUserProfile));
-      updateNavbarProfile();
-
-      // Check Onboarding
-      if (typeof window.checkOnboardingStatus === 'function') {
-        window.checkOnboardingStatus();
-      } else if (typeof checkOnboardingStatus === 'function') {
-        checkOnboardingStatus();
-      }
-    }
-  } catch (err) {
-    console.error('syncAuthWithProfile error:', err);
-  }
-
-  // Refresh current page data if needed
-  const pageDash = document.getElementById('page-dashboard');
-  if (pageDash && !pageDash.classList.contains('hidden')) {
-    loadUserDashboard();
   }
 }
 
-// Periodic Heartbeat every 90 seconds
-setInterval(async () => {
-  const prof = window.currentUserProfile || (typeof currentUserProfile !== 'undefined' ? currentUserProfile : null);
-  if (sbClient && prof && !prof.isGuest && prof.uuid) {
-    try {
-      await sbClient.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', prof.uuid);
-    } catch (e) {}
-  }
-}, 90000);
+async function fetchProfilesMap(userIds, seedMap = {}) {
+  const map = { ...seedMap };
+  const missingIds = [...new Set((userIds || []).filter((id) => id && !map[id]))];
+  if (missingIds.length === 0 || !sbClient) return map;
 
-// Monitor Auth on Load
-window.addEventListener('load', async () => {
-  if (!sbClient) return;
   try {
-    const { data: { session } } = await sbClient.auth.getSession();
-    await syncAuthWithProfile(session?.user || null);
-
-    sbClient.auth.onAuthStateChange(async (_event, session) => {
-      await syncAuthWithProfile(session?.user || null);
+    const { data: profiles } = await sbClient
+      .from('profiles')
+      .select('id, nickname, display_name, avatar')
+      .in('id', missingIds);
+    (profiles || []).forEach((p) => {
+      map[p.id] = p;
     });
-  } catch (e) {
-    console.warn('Auth check error:', e);
+  } catch (err) {
+    console.warn('fetchProfilesMap warning:', err?.message || err);
   }
-});
+  return map;
+}
 
-// ==========================================
-// Robust Universal Proxy for google.script.run
-// ==========================================
-const adapterImpl = {
-  // 1. Get Batches
-  getExamBatches: async function() {
+async function chunkInsert(table, rows, chunkSize = CONFIG.DB_INSERT_CHUNK_SIZE) {
+  const client = requireSupabaseClient();
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const { error } = await client.from(table).insert(rows.slice(i, i + chunkSize));
+    if (error) throw error;
+  }
+}
+
+function formatThaiDateTimeShort(isoOrDate) {
+  const d = new Date(isoOrDate);
+  if (Number.isNaN(d.getTime())) return '-';
+  return `${d.toLocaleDateString('th-TH')} ${d.toLocaleTimeString('th-TH', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })}`;
+}
+
+// ==============================================================================
+// 3. AUTH SERVICE & GUEST DEVICE ID
+// ==============================================================================
+function getOrCreateGuestDeviceId() {
+  const generateId = () => `GUEST-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+  try {
+    let deviceId = localStorage.getItem(CONFIG.STORAGE_KEYS.GUEST_DEVICE_ID) || '';
+    if (!deviceId) {
+      deviceId = generateId();
+      localStorage.setItem(CONFIG.STORAGE_KEYS.GUEST_DEVICE_ID, deviceId);
+    }
+    return deviceId;
+  } catch {
+    return generateId();
+  }
+}
+
+function buildGuestProfile() {
+  return {
+    uuid: getOrCreateGuestDeviceId(),
+    name: 'ผู้ใช้ทั่วไป (Guest)',
+    email: '',
+    avatar: '👤',
+    avatarUrl: null,
+    role: 'guest',
+    scanCredits: 10,
+    isGuest: true,
+    nickname: '',
+    age_group: '',
+    occupation: '',
+    target_exams: '',
+    referral_source: '',
+    is_onboarded: false
+  };
+}
+
+const AuthService = {
+  async signInWithGoogle() {
     try {
-      let data = null;
-      let profileMap = {};
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-
-      if (isHttp) {
-        try {
-          const bResp = await fetch('/api/batches-list');
-          if (bResp.ok) {
-            const bJson = await bResp.json();
-            if (bJson && bJson.success && Array.isArray(bJson.batches)) {
-              data = bJson.batches;
-              profileMap = bJson.profileMap || {};
-            }
-          }
-        } catch (bErr) {
-          console.warn('/api/batches-list failed, falling back to direct client query:', bErr);
+      if (!sbClient) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ Supabase ได้ กรุณารีเฟรชหน้าเว็บ', 'error');
         }
+        return;
+      }
+      const { error } = await sbClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error('Google Sign In Error:', err);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire('เข้าสู่ระบบไม่สำเร็จ', err?.message || String(err), 'error');
+      }
+    }
+  },
+
+  async signOutUser() {
+    try {
+      if (sbClient) await sbClient.auth.signOut();
+      localStorage.removeItem(CONFIG.STORAGE_KEYS.ACTIVE_PROFILE);
+    } catch (err) {
+      console.error('Sign Out Error:', err);
+    } finally {
+      window.location.reload();
+    }
+  },
+
+  async touchHeartbeat(userId) {
+    if (!sbClient || !userId) return;
+    try {
+      await sbClient
+        .from('profiles')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('id', userId);
+    } catch {
+      // Non-critical presence update
+    }
+  },
+
+  async resolveEffectiveRole(profile) {
+    let role = profile.role || 'student';
+    if (role === 'admin' || !sbClient) return role;
+
+    try {
+      const { data: roleRecords } = await sbClient
+        .from('scan_ledger')
+        .select('status')
+        .eq('user_id', profile.id)
+        .like('status', 'SYSTEM_ROLE:%')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (roleRecords?.length > 0) {
+        role = roleRecords[0].status.replace('SYSTEM_ROLE:', '');
+      }
+    } catch {
+      // Ignore fallback lookup failure
+    }
+    return role;
+  },
+
+  async syncAuthWithProfile(authUser) {
+    currentSupabaseUser = authUser;
+
+    if (!authUser) {
+      setActiveProfile(buildGuestProfile());
+      safeCallGlobal('updateNavbarProfile');
+      return;
+    }
+
+    try {
+      const client = requireSupabaseClient();
+      const googlePhotoUrl = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null;
+
+      let { data: profile, error } = await client
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        const { data: created, error: insertErr } = await client
+          .from('profiles')
+          .insert({
+            id: authUser.id,
+            email: authUser.email,
+            display_name:
+              authUser.user_metadata?.full_name ||
+              authUser.user_metadata?.name ||
+              authUser.email.split('@')[0],
+            avatar: googlePhotoUrl || '👤',
+            role: authUser.email === CONFIG.ADMIN_EMAIL ? 'admin' : 'student',
+            scan_credits: 500,
+            is_onboarded: false,
+            last_seen_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (!insertErr && created) profile = created;
       }
 
-      if (!data) {
-        if (!sbClient) throw new Error('sbClient is not initialized');
-        const { data: directData, error } = await sbClient.from('batches').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        data = directData;
-
-        // Get uploader profiles
-        try {
-          const uids = [...new Set((data || []).map(b => b.user_id).filter(Boolean))];
-          if (uids.length > 0) {
-            const { data: profs } = await sbClient.from('profiles').select('id, nickname, display_name, avatar').in('id', uids);
-            (profs || []).forEach(p => { profileMap[p.id] = p; });
+      if (profile) {
+        if (googlePhotoUrl && (!profile.avatar || !profile.avatar.startsWith('http'))) {
+          try {
+            await client.from('profiles').update({ avatar: googlePhotoUrl }).eq('id', profile.id);
+            profile.avatar = googlePhotoUrl;
+          } catch {
+            // Non-critical avatar update
           }
-        } catch (pe) {}
+        }
+
+        await this.touchHeartbeat(profile.id);
+
+        const effectiveAvatar =
+          profile.avatar?.startsWith('http') ? profile.avatar : googlePhotoUrl || '👤';
+        const effectiveRole = await this.resolveEffectiveRole(profile);
+
+        const mappedProfile = {
+          uuid: profile.id,
+          name: profile.nickname || profile.display_name || profile.email.split('@')[0],
+          email: profile.email,
+          avatar: effectiveAvatar,
+          avatarUrl: effectiveAvatar.startsWith('http') ? effectiveAvatar : null,
+          role: effectiveRole,
+          scanCredits: profile.scan_credits ?? 500,
+          isGuest: false,
+          nickname: profile.nickname || '',
+          age_group: profile.age_group || '',
+          occupation: profile.occupation || '',
+          target_exams: profile.target_exams || '',
+          referral_source: profile.referral_source || '',
+          is_onboarded: Boolean(profile.is_onboarded)
+        };
+
+        setActiveProfile(mappedProfile);
+        try {
+          localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_PROFILE, JSON.stringify(mappedProfile));
+        } catch {
+          // Ignore storage quota errors
+        }
+
+        safeCallGlobal('updateNavbarProfile');
+        safeCallGlobal('checkOnboardingStatus');
+      }
+    } catch (err) {
+      console.error('syncAuthWithProfile error:', err);
+    }
+
+    const pageDash = typeof document !== 'undefined' ? document.getElementById('page-dashboard') : null;
+    if (pageDash && !pageDash.classList.contains('hidden')) {
+      safeCallGlobal('loadUserDashboard');
+    }
+  }
+};
+
+// Expose Global Auth Hooks & Presence Monitors
+if (typeof window !== 'undefined') {
+  window.signInWithGoogle = () => AuthService.signInWithGoogle();
+  window.signOutUser = () => AuthService.signOutUser();
+  if (typeof window.handleGoogleLogin !== 'function') {
+    window.handleGoogleLogin = window.signInWithGoogle;
+  }
+
+  setInterval(() => {
+    const prof = getActiveProfile();
+    if (prof && !prof.isGuest && prof.uuid) {
+      AuthService.touchHeartbeat(prof.uuid);
+    }
+  }, CONFIG.HEARTBEAT_INTERVAL_MS);
+
+  window.addEventListener('load', async () => {
+    if (!sbClient) return;
+    try {
+      const { data: { session } } = await sbClient.auth.getSession();
+      await AuthService.syncAuthWithProfile(session?.user || null);
+
+      sbClient.auth.onAuthStateChange(async (_event, nextSession) => {
+        await AuthService.syncAuthWithProfile(nextSession?.user || null);
+      });
+    } catch (err) {
+      console.warn('Auth check error:', err);
+    }
+  });
+}
+
+// ==============================================================================
+// 4. BATCHES & QUESTIONS SERVICE
+// ==============================================================================
+const BatchesQuestionsService = {
+  async getExamBatches() {
+    try {
+      let batches = null;
+      let profileMap = {};
+
+      // 1. Prefer Serverless API
+      try {
+        const apiData = await fetchJsonApi('/api/batches-list');
+        if (apiData?.success && Array.isArray(apiData.batches)) {
+          batches = apiData.batches;
+          profileMap = apiData.profileMap || {};
+        }
+      } catch (apiErr) {
+        console.warn('/api/batches-list failed, falling back to direct client query:', apiErr);
       }
 
-      // Cache source_files in memory
-      (data || []).forEach(b => {
+      // 2. Fallback to direct Supabase query
+      if (!batches) {
+        const client = requireSupabaseClient();
+        const { data, error } = await client
+          .from('batches')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        batches = data || [];
+        profileMap = await fetchProfilesMap(batches.map((b) => b.user_id));
+      }
+
+      // Cache source_files in memory for instant Review preview
+      batches.forEach((b) => {
         if (Array.isArray(b.source_files)) {
-          b.source_files.forEach(f => {
-            if (f.id) localFilesCache[f.id] = f;
+          b.source_files.forEach((f) => {
+            if (f?.id) localFilesCache[f.id] = f;
           });
         }
       });
 
-      // Get attempted profiles per batch (Call serverless API /api/batch-attempts or fallback to direct query)
+      // Fetch attempted profiles per batch
       let batchAttemptsMap = {};
-      if (isHttp) {
-        try {
-          const atResp = await fetch('/api/batch-attempts');
-          if (atResp.ok) {
-            const atData = await atResp.json();
-            if (atData && atData.batchAttempts) {
-              batchAttemptsMap = atData.batchAttempts;
-            }
-          }
-        } catch (atErr) {
-          console.warn('Could not fetch /api/batch-attempts:', atErr);
+      try {
+        const atData = await fetchJsonApi('/api/batch-attempts');
+        if (atData?.batchAttempts) {
+          batchAttemptsMap = atData.batchAttempts;
         }
+      } catch (atErr) {
+        console.warn('Could not fetch /api/batch-attempts:', atErr);
       }
 
-      // Direct fallback if batchAttemptsMap is empty
-      if (Object.keys(batchAttemptsMap).length === 0) {
+      if (Object.keys(batchAttemptsMap).length === 0 && sbClient) {
         try {
-          const { data: attempts } = await sbClient.from('exam_attempts').select('batch_id, user_id, score, total_questions, percent');
-          if (attempts && attempts.length > 0) {
-            const attUids = [...new Set(attempts.map(a => a.user_id).filter(Boolean))];
-            let attProfMap = { ...profileMap };
-            if (attUids.length > 0) {
-              const { data: aProfs } = await sbClient.from('profiles').select('id, nickname, display_name, avatar').in('id', attUids);
-              (aProfs || []).forEach(p => { attProfMap[p.id] = p; });
-            }
-            attempts.forEach(a => {
+          const { data: attempts } = await sbClient
+            .from('exam_attempts')
+            .select('batch_id, user_id, score, total_questions, percent');
+
+          if (attempts?.length > 0) {
+            const attProfMap = await fetchProfilesMap(
+              attempts.map((a) => a.user_id),
+              profileMap
+            );
+            attempts.forEach((a) => {
               if (!a.batch_id || !a.user_id) return;
               if (!batchAttemptsMap[a.batch_id]) batchAttemptsMap[a.batch_id] = [];
-              const exists = batchAttemptsMap[a.batch_id].find(x => x.userId === a.user_id);
-              const p = attProfMap[a.user_id];
-              const scorePct = Number(a.percent || 0).toFixed(0) + '%';
-              const scoreTxt = `${a.score || 0}/${a.total_questions || 0}`;
-              if (!exists) {
-                batchAttemptsMap[a.batch_id].push({
-                  userId: a.user_id,
-                  name: p?.nickname || p?.display_name || 'ผู้ใช้',
-                  avatar: p?.avatar || '👤',
-                  percent: scorePct,
-                  scoreText: scoreTxt
-                });
-              }
+              if (batchAttemptsMap[a.batch_id].some((x) => x.userId === a.user_id)) return;
+
+              const prof = attProfMap[a.user_id];
+              batchAttemptsMap[a.batch_id].push({
+                userId: a.user_id,
+                name: prof?.nickname || prof?.display_name || 'ผู้ใช้',
+                avatar: prof?.avatar || '👤',
+                percent: `${Number(a.percent || 0).toFixed(0)}%`,
+                scoreText: `${a.score || 0}/${a.total_questions || 0}`
+              });
             });
           }
         } catch (directErr) {
-          console.warn('Direct attempt query fallback info:', directErr.message);
+          console.warn('Direct attempt query fallback info:', directErr?.message || directErr);
         }
       }
 
-      const mapped = (data || []).map((b, idx) => {
+      const mapped = batches.map((b, idx) => {
         const uploader = profileMap[b.user_id];
-        const sourceFileIds = Array.isArray(b.source_files) ? b.source_files.map(f => f.id) : [];
+        const sourceFileIds = Array.isArray(b.source_files) ? b.source_files.map((f) => f.id) : [];
         const totalQ = b.total_questions || 0;
-        const isAllVer = Boolean(b.is_verified);
-        const verifiedSummary = isAllVer ? `${totalQ}/${totalQ}` : `0/${totalQ}`;
+        const isAllVerified = Boolean(b.is_verified);
 
         return {
           rowIndex: idx + 1,
@@ -2049,55 +2242,646 @@ const adapterImpl = {
           fileType: b.file_type || 'DOCUMENT',
           savedState: '',
           sourceFiles: JSON.stringify(sourceFileIds),
-          isVerified: isAllVer,
-          verifiedSummary: verifiedSummary,
+          isVerified: isAllVerified,
+          verifiedSummary: isAllVerified ? `${totalQ}/${totalQ}` : `0/${totalQ}`,
           isCustomQuiz: b.file_type === 'CUSTOM_QUIZ',
           uploader: {
-            avatar: (uploader?.avatar && uploader.avatar.startsWith('http')) ? uploader.avatar : (uploader?.avatar || '👤'),
+            avatar: uploader?.avatar?.startsWith('http') ? uploader.avatar : uploader?.avatar || '👤',
             name: uploader?.nickname || uploader?.display_name || 'ระบบส่วนกลาง'
           },
           attemptedProfiles: batchAttemptsMap[b.id] || []
         };
       });
 
-      if (this._successHandler) this._successHandler(mapped);
-      return mapped;
+      return notifySuccess(this, mapped);
     } catch (err) {
       console.error('getExamBatches error:', err);
-      if (this._failureHandler) this._failureHandler(err);
+      return notifyFailure(this, err);
     }
   },
 
-  // 2. Get Questions
-  getQuestionsByBatch: async function(batchId) {
+  async getQuestionsByBatch(batchId) {
     try {
-      if (!sbClient) throw new Error('sbClient is not initialized');
+      const client = requireSupabaseClient();
 
-      // Fetch batch verification status
       let isBatchVerified = false;
       try {
-        const { data: bData } = await sbClient.from('batches').select('id, is_verified').eq('id', batchId).single();
-        if (bData && bData.is_verified) {
-          isBatchVerified = true;
-        }
+        const { data: batchData } = await client
+          .from('batches')
+          .select('id, is_verified')
+          .eq('id', batchId)
+          .single();
+        isBatchVerified = Boolean(batchData?.is_verified);
       } catch (be) {
-        console.warn('Could not read batch verification state:', be.message);
+        console.warn('Could not read batch verification state:', be?.message || be);
       }
 
-      const { data, error } = await sbClient.from('questions').select('*').eq('batch_id', batchId).order('question_no', { ascending: true });
+      const { data, error } = await client
+        .from('questions')
+        .select('*')
+        .eq('batch_id', batchId)
+        .order('question_no', { ascending: true });
       if (error) throw error;
 
-      const mapped = (data || []).map((q, idx) => {
-        // If batch is already verified, all questions are verified.
-        // If batch is unverified (newly uploaded), questions default to UNVERIFIED (false)
-        // unless explicitly marked as 'ยืนยันแล้ว'.
-        const isQVerified = isBatchVerified ? true : (q.source_type === 'ยืนยันแล้ว');
+      const mapped = (data || []).map((q, idx) => ({
+        row: idx + 1,
+        id: q.id,
+        qNo: String(q.question_no || idx + 1),
+        batchId: q.batch_id,
+        category: '',
+        text: q.question_text,
+        a: q.choice_a || '',
+        b: q.choice_b || '',
+        c: q.choice_c || '',
+        d: q.choice_d || '',
+        e: q.choice_e || '',
+        f: q.choice_f || '',
+        g: q.choice_g || '',
+        h: q.choice_h || '',
+        answer: q.answer || 'ก',
+        sourceType: q.source_type || 'เฉลยไฟล์',
+        explanation: q.explanation || '',
+        lastResult: '',
+        userChoice: '',
+        isVerified: isBatchVerified ? true : q.source_type === 'ยืนยันแล้ว',
+        isFreeQuestion: Boolean(q.is_free_question)
+      }));
+
+      return notifySuccess(this, mapped);
+    } catch (err) {
+      console.error('getQuestionsByBatch error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async deleteExamBatch(batchId, userProfile) {
+    try {
+      try {
+        const data = await fetchJsonApi('/api/batch-delete', {
+          method: 'POST',
+          body: { batchId, userProfile }
+        });
+        if (data) return notifySuccess(this, data);
+      } catch (apiErr) {
+        console.warn('/api/batch-delete error, falling back to direct delete:', apiErr);
+      }
+
+      if (sbClient) {
+        await sbClient.from('questions').delete().eq('batch_id', batchId);
+        await sbClient.from('exam_attempts').delete().eq('batch_id', batchId);
+        await sbClient.from('batches').delete().eq('id', batchId);
+      }
+
+      return notifySuccess(this, { success: true });
+    } catch (err) {
+      console.error('deleteExamBatch error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  deleteMyBatch(batchId, userProfile) {
+    return BatchesQuestionsService.deleteExamBatch.call(this, batchId, userProfile);
+  },
+
+  async saveVirtualBatchToLibrary(customName, batchCategory, sourceSummary, questions, examResult, userProfile) {
+    try {
+      const client = requireSupabaseClient();
+      const batchId = `BATCH-${Date.now()}`;
+      const userId = resolveUserId(userProfile);
+      const safeQuestions = Array.isArray(questions) ? questions : [];
+
+      const { error: batchErr } = await client.from('batches').insert({
+        id: batchId,
+        user_id: userId,
+        batch_name: customName || 'ชุดข้อสอบคัดสรรพิเศษ',
+        batch_category: batchCategory || 'ทั่วไป',
+        total_questions: safeQuestions.length,
+        file_type: 'CUSTOM_QUIZ',
+        source_files: [],
+        is_verified: true
+      });
+      if (batchErr) throw batchErr;
+
+      const questionRows = safeQuestions.map((q, idx) => ({
+        id: `${batchId}-Q${idx + 1}`,
+        batch_id: batchId,
+        question_no: idx + 1,
+        question_text: q.text || q.question_text || '',
+        choice_a: q.a || q.choice_a || '',
+        choice_b: q.b || q.choice_b || '',
+        choice_c: q.c || q.choice_c || '',
+        choice_d: q.d || q.choice_d || '',
+        choice_e: q.e || q.choice_e || '',
+        choice_f: q.f || q.choice_f || '',
+        choice_g: q.g || q.choice_g || '',
+        choice_h: q.h || q.choice_h || '',
+        answer: q.answer || 'ก',
+        source_type: 'เฉลยไฟล์',
+        explanation: q.explanation || '',
+        is_free_question: Boolean(q.isFreeQuestion)
+      }));
+
+      await chunkInsert('questions', questionRows);
+      return notifySuccess(this, { success: true, batchId, batchName: customName });
+    } catch (err) {
+      console.error('saveVirtualBatchToLibrary error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async getFileBase64ForReview(fileId) {
+    const buildFileResult = (fileObj) => ({
+      success: true,
+      dataUri: fileObj.dataUri || fileObj.data || '',
+      mimeType: fileObj.mimeType || 'text/plain',
+      fileName: fileObj.name || 'ไฟล์ต้นฉบับ'
+    });
+
+    try {
+      if (localFilesCache[fileId]) {
+        return notifySuccess(this, buildFileResult(localFilesCache[fileId]));
+      }
+
+      if (sbClient) {
+        let batchId = String(fileId).split('-FILE-')[0];
+        if (batchId === fileId) batchId = String(fileId).split('-f')[0];
+
+        let matchedFile = null;
+        if (batchId && batchId !== fileId) {
+          const { data: batch } = await sbClient
+            .from('batches')
+            .select('source_files')
+            .eq('id', batchId)
+            .single();
+          if (Array.isArray(batch?.source_files)) {
+            matchedFile = batch.source_files.find((f) => f.id === fileId) || null;
+          }
+        }
+
+        if (!matchedFile) {
+          const { data: batches } = await sbClient
+            .from('batches')
+            .select('source_files')
+            .not('source_files', 'is', null)
+            .limit(20);
+
+          for (const b of batches || []) {
+            if (Array.isArray(b.source_files)) {
+              const found = b.source_files.find((f) => f.id === fileId);
+              if (found) {
+                matchedFile = found;
+                break;
+              }
+            }
+          }
+        }
+
+        if (matchedFile) {
+          localFilesCache[fileId] = matchedFile;
+          return notifySuccess(this, buildFileResult(matchedFile));
+        }
+      }
+
+      return notifySuccess(this, { success: false, message: 'ไม่พบไฟล์ต้นฉบับในระบบ' });
+    } catch (err) {
+      console.error('getFileBase64ForReview error:', err);
+      const errRes = { success: false, message: err?.message || 'ไม่สามารถดึงไฟล์ได้' };
+      return notifyFailure(this, errRes, errRes);
+    }
+  },
+
+  getFilePreview(fileId) {
+    return BatchesQuestionsService.getFileBase64ForReview.call(this, fileId);
+  },
+
+  async saveReviewedQuestions(batchId, updatedData, verifiedRows, extraMeta) {
+    try {
+      try {
+        const apiRes = await fetchJsonApi('/api/batch-review-save', {
+          method: 'POST',
+          body: {
+            batchId,
+            updatedData,
+            verifiedRows,
+            extraMeta,
+            userProfile: getActiveProfile()
+          }
+        });
+        if (apiRes?.success) return notifySuccess(this, apiRes);
+      } catch (apiErr) {
+        console.warn('/api/batch-review-save failed, falling back to direct client update:', apiErr);
+      }
+
+      const client = requireSupabaseClient();
+      const safeData = Array.isArray(updatedData) ? updatedData : [];
+      const verifiedSet = new Set((verifiedRows || []).map((r) => String(r)));
+      const verifiedCount = verifiedSet.size;
+      const totalQ = safeData.length;
+      const isBatchAllVerified = totalQ > 0 && verifiedCount === totalQ;
+
+      const batchUpdatePayload = {
+        is_verified: isBatchAllVerified,
+        total_questions: totalQ,
+        updated_at: new Date().toISOString(),
+        ...(extraMeta?.batchName ? { batch_name: extraMeta.batchName } : {}),
+        ...(extraMeta?.batchCategory ? { batch_category: extraMeta.batchCategory } : {})
+      };
+
+      const { error: batchErr } = await client
+        .from('batches')
+        .update(batchUpdatePayload)
+        .eq('id', batchId);
+      if (batchErr) console.warn('Update batch error:', batchErr);
+
+      for (const q of safeData) {
+        const isVerified = verifiedSet.has(String(q.row));
+        const updatePayload = {
+          question_text: q.text,
+          choice_a: q.a || '',
+          choice_b: q.b || '',
+          choice_c: q.c || '',
+          choice_d: q.d || '',
+          choice_e: q.e || '',
+          choice_f: q.f || '',
+          choice_g: q.g || '',
+          choice_h: q.h || '',
+          answer: q.answer,
+          source_type: isVerified ? 'ยืนยันแล้ว' : q.sourceType || 'รอตรวจ',
+          is_free_question: Boolean(q.isFreeQuestion || q.isFree || q.answer === 'FREE')
+        };
+
+        if (q.id) {
+          await client.from('questions').update(updatePayload).eq('id', q.id);
+        } else {
+          await client
+            .from('questions')
+            .update(updatePayload)
+            .match({ batch_id: batchId, question_no: parseInt(q.row, 10) });
+        }
+      }
+
+      return notifySuccess(this, {
+        success: true,
+        message: 'บันทึกการตรวจสอบและแก้ไขเรียบร้อยแล้ว',
+        updatedBatchName: extraMeta?.batchName,
+        updatedBatchCategory: extraMeta?.batchCategory,
+        verifiedSummary: `${verifiedCount}/${totalQ}`
+      });
+    } catch (err) {
+      console.error('saveReviewedQuestions error:', err);
+      const fail = { success: false, message: err?.message || String(err) };
+      return notifyFailure(this, fail, fail);
+    }
+  },
+
+  async deleteSingleQuestion(batchId, row) {
+    try {
+      const client = requireSupabaseClient();
+      await client
+        .from('questions')
+        .delete()
+        .match({ batch_id: batchId, question_no: parseInt(row, 10) });
+
+      const { data: remaining } = await client
+        .from('questions')
+        .select('source_type')
+        .eq('batch_id', batchId);
+
+      const newTotal = (remaining || []).length;
+      const verifiedCount = (remaining || []).filter((q) => q.source_type === 'ยืนยันแล้ว').length;
+
+      await client.from('batches').update({ total_questions: newTotal }).eq('id', batchId);
+
+      return notifySuccess(this, {
+        success: true,
+        newTotal,
+        newSummary: `${verifiedCount}/${newTotal}`
+      });
+    } catch (err) {
+      console.error('deleteSingleQuestion error:', err);
+      return notifyFailure(this, err);
+    }
+  }
+};
+
+// ==============================================================================
+// 5. EXAM, CUSTOM QUIZ & STATS SERVICE
+// ==============================================================================
+const ExamStatsService = {
+  async recordExamAttempt(batchIdOrResultData, resultsOrProfile, timeStr, userProfile, batchName) {
+    try {
+      const client = requireSupabaseClient();
+      let batchId = batchIdOrResultData;
+      let userId = null;
+      let resolvedBatchName = batchName || 'ชุดข้อสอบ';
+      let correct = 0;
+      let total = 0;
+      let percent = 0;
+      let timeSpent = timeStr || '-';
+      let answersJson = {};
+
+      if (typeof batchIdOrResultData === 'object' && batchIdOrResultData !== null) {
+        const rd = batchIdOrResultData;
+        userId = resolveUserId(resultsOrProfile);
+        batchId = rd.batchId;
+        resolvedBatchName = rd.batchName || 'ชุดข้อสอบ';
+        correct = rd.score || 0;
+        total = rd.totalQuestions || 0;
+        percent = parseFloat(rd.percentage) || 0;
+        timeSpent = rd.timeSpentStr || '-';
+        answersJson = rd.userAnswers || {};
+      } else {
+        userId = resolveUserId(userProfile);
+        const results = Array.isArray(resultsOrProfile) ? resultsOrProfile : [];
+        total = results.length;
+        correct = results.filter((r) => r.isCorrect).length;
+        percent = total > 0 ? parseFloat(((correct / total) * 100).toFixed(1)) : 0;
+        answersJson = results;
+      }
+
+      if (!userId) {
+        return notifySuccess(this, { success: true, message: 'Guest attempt ignored' });
+      }
+
+      const { data, error } = await client
+        .from('exam_attempts')
+        .insert({
+          user_id: userId,
+          batch_id: batchId,
+          batch_name: resolvedBatchName,
+          score: correct,
+          total_questions: total,
+          percent,
+          time_spent_str: timeSpent,
+          answers_json: answersJson
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return notifySuccess(this, { success: true, id: data?.id || null });
+    } catch (err) {
+      console.error('recordExamAttempt error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  saveExamAttempt(...args) {
+    return ExamStatsService.recordExamAttempt.apply(this, args);
+  },
+
+  async getUserDashboardStats(userProfile, scope = 'personal') {
+    try {
+      const client = requireSupabaseClient();
+      const isAllScope = userProfile?.role === 'admin' && scope === 'all';
+      const userId = resolveUserId(userProfile);
+
+      if (!isAllScope && !userId) {
+        return notifySuccess(this, {
+          success: true,
+          stats: { totalAttempts: 0, totalQuestionsDone: 0, avgAccuracy: '0.0%', avgTimeStr: '-' },
+          recentAttempts: []
+        });
+      }
+
+      let query = client
+        .from('exam_attempts')
+        .select('*, profiles(display_name, nickname, avatar)')
+        .order('created_at', { ascending: false });
+
+      if (!isAllScope) query = query.eq('user_id', userId);
+
+      const { data: attempts, error } = await query;
+      if (error) throw error;
+
+      const safeAttempts = attempts || [];
+      let totalQuestionsDone = 0;
+      let totalCorrect = 0;
+      let totalTimeMinutes = 0;
+      let timedAttemptCount = 0;
+
+      const recentAttempts = safeAttempts.map((a) => {
+        const totalQ = a.total_questions || 0;
+        const score = a.score || 0;
+        const wrong = Math.max(0, totalQ - score);
+        totalQuestionsDone += totalQ;
+        totalCorrect += score;
+
+        const timeStr = a.time_spent_str || '-';
+        if (timeStr !== '-') {
+          const [mStr, sStr] = timeStr.split(':');
+          if (sStr !== undefined) {
+            totalTimeMinutes += (parseInt(mStr, 10) || 0) + (parseInt(sStr, 10) || 0) / 60;
+            timedAttemptCount++;
+          }
+        }
+
+        const prof = a.profiles;
+        return {
+          batchId: a.batch_id,
+          batchName: a.batch_name,
+          createdAt: formatThaiDateTimeShort(a.created_at),
+          rawCreatedAt: a.created_at,
+          correct: score,
+          wrong,
+          percent: `${Number(a.percent || 0).toFixed(1)}%`,
+          timeSpent: timeStr,
+          userName: prof?.nickname || prof?.display_name || 'ผู้ใช้',
+          avatar: prof?.avatar || '👤'
+        };
+      });
+
+      const avgAccuracy =
+        totalQuestionsDone > 0 ? `${((totalCorrect / totalQuestionsDone) * 100).toFixed(1)}%` : '0.0%';
+      const avgTimeStr =
+        timedAttemptCount > 0 ? `${(totalTimeMinutes / timedAttemptCount).toFixed(1)} นาที` : '-';
+
+      return notifySuccess(this, {
+        success: true,
+        stats: {
+          totalAttempts: safeAttempts.length,
+          totalQuestionsDone,
+          avgAccuracy,
+          avgTimeStr
+        },
+        recentAttempts
+      });
+    } catch (err) {
+      console.error('getUserDashboardStats error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  getUserDashboardData(...args) {
+    return ExamStatsService.getUserDashboardStats.apply(this, args);
+  },
+
+  async generateExplanation(row, qData) {
+    try {
+      const prompt = [
+        `คุณคือครูผู้เชี่ยวชาญการติวสอบ อธิบายเฉลยข้อนี้แบบกระชับ ชัดเจน เข้าใจง่าย เป็นภาษาไทยล้วน ว่าทำไมถึงตอบข้อ "${qData.answer}":`,
+        `โจทย์: ${qData.text}`,
+        `ก. ${qData.a || ''}`,
+        `ข. ${qData.b || ''}`,
+        `ค. ${qData.c || ''}`,
+        `ง. ${qData.d || ''}${qData.e ? `\nจ. ${qData.e}` : ''}${qData.f ? `\nฉ. ${qData.f}` : ''}`,
+        '',
+        'รูปแบบคำตอบ:',
+        'ให้สรุปเหตุผลสั้นๆ 2-4 บรรทัด ว่าทำไมตัวเลือกที่ถูกต้องจึงถูก และข้ออื่นผิดอย่างไร'
+      ].join('\n');
+
+      const resJson = await callOpenRouterApi(
+        {
+          model: CONFIG.MODEL_SOLVER,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 1024
+        },
+        'QuizSilo Auto Explain'
+      );
+
+      const explanationText = resJson?.choices?.[0]?.message?.content?.trim() || 'ไม่มีคำอธิบายเพิ่มเติม';
+
+      if (qData?.id && sbClient) {
+        try {
+          await sbClient.from('questions').update({ explanation: explanationText }).eq('id', qData.id);
+        } catch (cacheErr) {
+          console.warn('Could not cache explanation:', cacheErr);
+        }
+      }
+
+      return notifySuccess(this, explanationText);
+    } catch (err) {
+      console.error('generateExplanation error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async getAvailableVerifiedCategories(userProfile, sourceScope) {
+    try {
+      const client = requireSupabaseClient();
+      const userId = resolveUserId(userProfile);
+      const isMyUploads = sourceScope === 'my_uploads' && Boolean(userProfile);
+
+      let query = client
+        .from('batches')
+        .select('id, batch_name, batch_category, total_questions, is_verified, user_id')
+        .eq('is_verified', true);
+
+      if (isMyUploads && userId) query = query.eq('user_id', userId);
+
+      const { data: verifiedBatches, error } = await query;
+      if (error) throw error;
+
+      if (!verifiedBatches?.length) {
+        return notifySuccess(this, { success: true, categories: [], totalVerified: 0 });
+      }
+
+      const categoryCounts = Object.create(null);
+      let totalVerified = 0;
+
+      verifiedBatches.forEach((b) => {
+        const cat = (b.batch_category || 'ทั่วไป').split('|')[0].trim() || 'ทั่วไป';
+        const qCount = b.total_questions || 0;
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + qCount;
+        totalVerified += qCount;
+      });
+
+      const categories = Object.entries(categoryCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+
+      return notifySuccess(this, { success: true, categories, totalVerified });
+    } catch (err) {
+      console.error('getAvailableVerifiedCategories error:', err);
+      const fail = { success: false, message: err?.message || String(err), categories: [], totalVerified: 0 };
+      return notifyFailure(this, fail, fail);
+    }
+  },
+
+  getCustomQuizCategories(userProfile, sourceScope) {
+    return ExamStatsService.getAvailableVerifiedCategories.call(this, userProfile, sourceScope);
+  },
+
+  async generateAdvancedRandomExam(selectedCategories, requestedCount, isQuickRandom, sourceScope, userProfile) {
+    try {
+      const client = requireSupabaseClient();
+      const userId = resolveUserId(userProfile);
+      const isMyUploads = sourceScope === 'my_uploads' && Boolean(userProfile);
+
+      let query = client
+        .from('batches')
+        .select('id, batch_name, batch_category, is_verified, user_id')
+        .eq('is_verified', true);
+
+      if (isMyUploads && userId) query = query.eq('user_id', userId);
+
+      const { data: verifiedBatches, error: batchErr } = await query;
+      if (batchErr) throw batchErr;
+
+      if (!verifiedBatches?.length) {
+        const fail = {
+          success: false,
+          error: 'NO_VERIFIED_QUESTIONS',
+          message: isMyUploads
+            ? 'ไม่พบข้อสอบที่ผ่านการ Review ในชุดที่คุณอัปโหลด กรุณาตรวจทานข้อสอบอย่างน้อย 1 ชุด'
+            : 'ไม่พบข้อสอบที่ผ่านการ Review ในคลัง กรุณาตรวจทานข้อสอบในหน้า Review & Edit อย่างน้อย 1 ชุด'
+        };
+        return notifyFailure(this, fail, fail);
+      }
+
+      const selectedCatSet = new Set((selectedCategories || []).map((c) => String(c).trim().toLowerCase()));
+      const batchMap = Object.create(null);
+      const targetBatchIds = [];
+
+      verifiedBatches.forEach((b) => {
+        const cleanCat = (b.batch_category || 'ทั่วไป').split('|')[0].trim();
+        const lowerCat = cleanCat.toLowerCase();
+        const matches =
+          isQuickRandom ||
+          selectedCatSet.size === 0 ||
+          [...selectedCatSet].some((sc) => sc === 'all' || lowerCat.includes(sc) || sc.includes(lowerCat));
+
+        if (matches) {
+          batchMap[b.id] = { ...b, cleanCat };
+          targetBatchIds.push(b.id);
+        }
+      });
+
+      if (targetBatchIds.length === 0) {
+        const fail = {
+          success: false,
+          error: 'NO_VERIFIED_QUESTIONS',
+          message: 'ไม่พบข้อสอบในหมวดหมู่วิชาที่เลือกที่ผ่านการตรวจสอบแล้ว'
+        };
+        return notifyFailure(this, fail, fail);
+      }
+
+      const { data: questions, error: qErr } = await client
+        .from('questions')
+        .select('*')
+        .in('batch_id', targetBatchIds);
+      if (qErr) throw qErr;
+
+      if (!questions?.length) {
+        const fail = {
+          success: false,
+          error: 'NO_VERIFIED_QUESTIONS',
+          message: 'ไม่พบรายการคำถามในชุดข้อสอบที่เลือก'
+        };
+        return notifyFailure(this, fail, fail);
+      }
+
+      const candidates = questions.map((q, idx) => {
+        const bInfo = batchMap[q.batch_id] || {};
         return {
           row: idx + 1,
           id: q.id,
-          qNo: String(q.question_no || (idx + 1)),
+          origQNo: String(q.question_no || idx + 1),
           batchId: q.batch_id,
-          category: '',
+          originBatchId: q.batch_id,
+          originBatchName: bInfo.batch_name || 'ชุดข้อสอบ',
+          category: bInfo.cleanCat || 'ทั่วไป',
           text: q.question_text,
           a: q.choice_a || '',
           b: q.choice_b || '',
@@ -2110,461 +2894,79 @@ const adapterImpl = {
           answer: q.answer || 'ก',
           sourceType: q.source_type || 'เฉลยไฟล์',
           explanation: q.explanation || '',
-          lastResult: '',
-          userChoice: '',
-          isVerified: isQVerified,
-          isFreeQuestion: q.is_free_question || false
-        };
-      });
-      if (this._successHandler) this._successHandler(mapped);
-      return mapped;
-    } catch (err) {
-      console.error('getQuestionsByBatch error:', err);
-      if (this._failureHandler) this._failureHandler(err);
-    }
-  },
-
-  // 3. Save / Record Exam Attempt
-  recordExamAttempt: async function(batchIdOrResultData, resultsOrProfile, timeStr, userProfile, batchName) {
-    try {
-      if (!sbClient) throw new Error('sbClient is not initialized');
-      let batchId = batchIdOrResultData;
-      let uId = null;
-      let bName = batchName || 'ชุดข้อสอบ';
-      let correct = 0;
-      let total = 0;
-      let pct = 0;
-      let timeSpent = timeStr || '-';
-      let answersJson = {};
-
-      if (typeof batchIdOrResultData === 'object' && batchIdOrResultData !== null) {
-        // Called with (resultData, currentUserProfile)
-        const rd = batchIdOrResultData;
-        const prof = resultsOrProfile;
-        uId = (prof && !prof.isGuest && prof.uuid) ? prof.uuid : null;
-        batchId = rd.batchId;
-        bName = rd.batchName || 'ชุดข้อสอบ';
-        correct = rd.score || 0;
-        total = rd.totalQuestions || 0;
-        pct = parseFloat(rd.percentage) || 0;
-        timeSpent = rd.timeSpentStr || '-';
-        answersJson = rd.userAnswers || {};
-      } else {
-        // Called with (batchId, results, timeStr, userProfile, batchName)
-        const prof = userProfile;
-        uId = (prof && !prof.isGuest && prof.uuid) ? prof.uuid : null;
-        const results = Array.isArray(resultsOrProfile) ? resultsOrProfile : [];
-        total = results.length;
-        correct = results.filter(r => r.isCorrect).length;
-        pct = total > 0 ? parseFloat(((correct / total) * 100).toFixed(1)) : 0;
-        answersJson = results;
-      }
-
-      if (!uId) {
-        if (this._successHandler) this._successHandler({ success: true, message: 'Guest attempt ignored' });
-        return { success: true };
-      }
-
-      const { data, error } = await sbClient.from('exam_attempts').insert({
-        user_id: uId,
-        batch_id: batchId,
-        batch_name: bName,
-        score: correct,
-        total_questions: total,
-        percent: pct,
-        time_spent_str: timeSpent,
-        answers_json: answersJson
-      }).select().single();
-
-      if (error) throw error;
-      const res = { success: true, id: data ? data.id : null };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('recordExamAttempt error:', err);
-      if (this._failureHandler) this._failureHandler(err);
-    }
-  },
-  saveExamAttempt: function(...args) {
-    return this.recordExamAttempt(...args);
-  },
-
-  // 4. Get User Dashboard Statistics
-  getUserDashboardStats: async function(userProfile, scope = 'personal') {
-    try {
-      if (!sbClient) throw new Error('sbClient not ready');
-      const isAdmin = userProfile && userProfile.role === 'admin';
-      const isAllScope = isAdmin && scope === 'all';
-      const userId = (userProfile && !userProfile.isGuest && userProfile.uuid) ? userProfile.uuid : null;
-
-      let query = sbClient.from('exam_attempts').select('*, profiles(display_name, nickname, avatar)').order('created_at', { ascending: false });
-      if (!isAllScope) {
-        if (!userId) {
-          const empty = {
-            success: true,
-            stats: { totalAttempts: 0, totalQuestionsDone: 0, avgAccuracy: '0.0%', avgTimeStr: '-' },
-            recentAttempts: []
-          };
-          if (this._successHandler) this._successHandler(empty);
-          return empty;
-        }
-        query = query.eq('user_id', userId);
-      }
-
-      const { data: attempts, error } = await query;
-      if (error) throw error;
-
-      const totalAttempts = (attempts || []).length;
-      let totalQuestionsDone = 0;
-      let totalCorrect = 0;
-      let totalTimeMinutes = 0;
-      let timeCount = 0;
-
-      const recentAttempts = (attempts || []).map(a => {
-        const totalQ = a.total_questions || 0;
-        const score = a.score || 0;
-        const wrong = Math.max(0, totalQ - score);
-        totalQuestionsDone += totalQ;
-        totalCorrect += score;
-
-        const timeStr = a.time_spent_str || '-';
-        if (timeStr && timeStr !== '-') {
-          const parts = timeStr.split(':');
-          if (parts.length === 2) {
-            const m = parseInt(parts[0], 10) || 0;
-            const s = parseInt(parts[1], 10) || 0;
-            totalTimeMinutes += m + (s / 60);
-            timeCount++;
-          }
-        }
-
-        const prof = a.profiles;
-        return {
-          batchId: a.batch_id,
-          batchName: a.batch_name,
-          createdAt: new Date(a.created_at).toLocaleDateString('th-TH') + ' ' + new Date(a.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-          rawCreatedAt: a.created_at,
-          correct: score,
-          wrong: wrong,
-          percent: Number(a.percent || 0).toFixed(1) + '%',
-          timeSpent: timeStr,
-          userName: prof?.nickname || prof?.display_name || 'ผู้ใช้',
-          avatar: prof?.avatar || '👤'
+          isVerified: true,
+          isFreeQuestion: Boolean(q.is_free_question)
         };
       });
 
-      const avgAccuracy = totalQuestionsDone > 0 ? ((totalCorrect / totalQuestionsDone) * 100).toFixed(1) + '%' : '0.0%';
-      const avgTimeStr = timeCount > 0 ? (totalTimeMinutes / timeCount).toFixed(1) + ' นาที' : '-';
+      // Fisher-Yates Shuffle
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
 
-      const res = {
+      const targetCount = Math.min(Math.max(parseInt(requestedCount, 10) || 20, 1), candidates.length);
+      const chosenQuestions = candidates.slice(0, targetCount).map((q, idx) => ({
+        ...q,
+        qNo: String(idx + 1)
+      }));
+
+      const compositionMap = Object.create(null);
+      chosenQuestions.forEach((q) => {
+        const bName = q.originBatchName || `ชุดรหัส #${String(q.originBatchId).slice(-4)}`;
+        compositionMap[bName] = (compositionMap[bName] || 0) + 1;
+      });
+
+      const sourceSummary = Object.entries(compositionMap)
+        .map(([name, count]) => ({
+          batchName: name,
+          count,
+          percent: ((count / chosenQuestions.length) * 100).toFixed(1)
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      const now = new Date();
+      const createdAtFormatted = `${formatThaiDateTimeShort(now)} น.`;
+      const virtualBatchId = `VIRTUAL-${now.getTime()}`;
+
+      let catLabel = 'รวมทุกวิชา';
+      if (!isQuickRandom && selectedCategories?.length > 0) {
+        catLabel =
+          selectedCategories.length <= 2
+            ? selectedCategories.join(', ')
+            : `${selectedCategories[0]} และอื่นๆ (${selectedCategories.length} วิชา)`;
+      }
+
+      const batchName = isQuickRandom
+        ? `ชุดสุ่มด่วนรวมทุกวิชา (${chosenQuestions.length} ข้อ)`
+        : `ชุดสุ่มฝึกซ้อม: ${catLabel} (${chosenQuestions.length} ข้อ)`;
+
+      return notifySuccess(this, {
         success: true,
-        stats: {
-          totalAttempts: totalAttempts,
-          totalQuestionsDone: totalQuestionsDone,
-          avgAccuracy: avgAccuracy,
-          avgTimeStr: avgTimeStr
-        },
-        recentAttempts: recentAttempts
-      };
-
-      if (this._successHandler) this._successHandler(res);
-      return res;
+        batchId: virtualBatchId,
+        batchName,
+        batchCategory: catLabel,
+        totalQuestions: chosenQuestions.length,
+        createdAtFormatted,
+        createdAt: now.toISOString(),
+        sourceSummary,
+        questions: chosenQuestions,
+        isVirtual: true,
+        availablePoolCount: candidates.length
+      });
     } catch (err) {
-      console.error('getUserDashboardStats error:', err);
-      if (this._failureHandler) this._failureHandler(err);
+      console.error('generateAdvancedRandomExam error:', err);
+      const fail = { success: false, message: `เกิดข้อผิดพลาดในการสุ่ม: ${err?.message || err}` };
+      return notifyFailure(this, fail, fail);
     }
-  },
-  getUserDashboardData: function(...args) {
-    return this.getUserDashboardStats(...args);
-  },
+  }
+};
 
-  // 5. Admin Console Statistics & User Insights
-  getAdminConsoleStats: async function() {
-    try {
-      // 1. Try Vercel Serverless Function first (Bypasses RLS with Service Role Key)
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        try {
-          const sResp = await fetch('/api/admin-stats');
-          if (sResp.ok) {
-            const res = await sResp.json();
-            if (res && res.success) {
-              if (this._successHandler) this._successHandler(res);
-              return res;
-            }
-          }
-        } catch (apiErr) {
-          console.warn('/api/admin-stats failed, falling back to direct client query:', apiErr);
-        }
-      }
-
-      if (!sbClient) throw new Error('sbClient is not initialized');
-
-      // Fetch Profiles
-      const { data: profiles, error: pErr } = await sbClient.from('profiles').select('*').order('created_at', { ascending: false });
-      if (pErr) throw pErr;
-
-      // Fetch Exam Attempts
-      const { data: attempts, error: aErr } = await sbClient.from('exam_attempts').select('*');
-      if (aErr) throw aErr;
-
-      // Fetch Batches
-      const { data: batches, error: bErr } = await sbClient.from('batches').select('*');
-      if (bErr) throw bErr;
-
-      const now = Date.now();
-      const fiveMinsMs = 5 * 60 * 1000;
-      let activeNowCount = 0;
-
-      // Insights maps
-      const targetExamsMap = {};
-      const referralMap = {};
-
-      const userStatsMap = {};
-      (profiles || []).forEach(p => {
-        const lastSeen = p.last_seen_at ? new Date(p.last_seen_at).getTime() : 0;
-        const isOnline = (now - lastSeen) < fiveMinsMs;
-        if (isOnline) activeNowCount++;
-
-        // Collect Insights
-        if (p.target_exams) {
-          const t = p.target_exams.trim();
-          targetExamsMap[t] = (targetExamsMap[t] || 0) + 1;
-        }
-        if (p.referral_source) {
-          const r = p.referral_source.trim();
-          referralMap[r] = (referralMap[r] || 0) + 1;
-        }
-
-        userStatsMap[p.id] = {
-          id: p.id,
-          name: p.nickname || p.display_name || p.email.split('@')[0],
-          email: p.email,
-          avatar: p.avatar,
-          role: p.role,
-          targetExams: p.target_exams || 'ยังไม่ระบุ',
-          occupation: p.occupation || 'ยังไม่ระบุ',
-          ageGroup: p.age_group || 'ยังไม่ระบุ',
-          referralSource: p.referral_source || 'ยังไม่ระบุ',
-          createdAt: new Date(p.created_at).toLocaleDateString('th-TH'),
-          lastSeenStr: isOnline ? 'ออนไลน์' : (p.last_seen_at ? new Date(p.last_seen_at).toLocaleDateString('th-TH') : '-'),
-          isOnline: isOnline,
-          attemptsCount: 0,
-          questionsCount: 0,
-          totalScore: 0,
-          uploadBatches: 0,
-          uploadQuestions: 0,
-          categoriesDone: {}
-        };
-      });
-
-      // Aggregate attempts
-      let totalQuestionsAllUsers = 0;
-      let totalScoreAllUsers = 0;
-      (attempts || []).forEach(a => {
-        totalQuestionsAllUsers += (a.total_questions || 0);
-        totalScoreAllUsers += (a.score || 0);
-        if (userStatsMap[a.user_id]) {
-          userStatsMap[a.user_id].attemptsCount++;
-          userStatsMap[a.user_id].questionsCount += (a.total_questions || 0);
-          userStatsMap[a.user_id].totalScore += (a.score || 0);
-        }
-      });
-
-      // Aggregate uploads
-      (batches || []).forEach(b => {
-        if (b.user_id && userStatsMap[b.user_id]) {
-          userStatsMap[b.user_id].uploadBatches++;
-          userStatsMap[b.user_id].uploadQuestions += (b.total_questions || 0);
-        }
-      });
-
-      const userList = Object.values(userStatsMap).map(u => {
-        const accuracy = u.questionsCount > 0 ? ((u.totalScore / u.questionsCount) * 100).toFixed(1) + '%' : '-';
-        return {
-          ...u,
-          accuracy: accuracy
-        };
-      });
-
-      const systemAvgAccuracy = totalQuestionsAllUsers > 0 ? ((totalScoreAllUsers / totalQuestionsAllUsers) * 100).toFixed(1) + '%' : '0%';
-
-      const res = {
-        success: true,
-        kpis: {
-          totalUsers: (profiles || []).length,
-          activeUsers: activeNowCount,
-          totalAttempts: (attempts || []).length,
-          totalQuestionsDone: totalQuestionsAllUsers,
-          avgAccuracy: systemAvgAccuracy
-        },
-        insights: {
-          targetExams: Object.keys(targetExamsMap).map(k => ({ label: k, count: targetExamsMap[k] })),
-          referrals: Object.keys(referralMap).map(k => ({ label: k, count: referralMap[k] }))
-        },
-        users: userList
-      };
-
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('getAdminConsoleStats error:', err);
-      if (this._failureHandler) this._failureHandler(err);
-    }
-  },
-
-  // 6. AI Explanation (Tutor)
-  generateExplanation: async function(row, qData) {
-    try {
-      const prompt = `คุณคือครูผู้เชี่ยวชาญการติวสอบ อธิบายเฉลยข้อนี้แบบกระชับ ชัดเจน เข้าใจง่าย เป็นภาษาไทยล้วน ว่าทำไมถึงตอบข้อ "${qData.answer}":
-โจทย์: ${qData.text}
-ก. ${qData.a || ''}
-ข. ${qData.b || ''}
-ค. ${qData.c || ''}
-ง. ${qData.d || ''}${qData.e ? '\nจ. ' + qData.e : ''}${qData.f ? '\nฉ. ' + qData.f : ''}
-
-รูปแบบคำตอบ:
-ให้สรุปเหตุผลสั้นๆ 2-4 บรรทัด ว่าทำไมตัวเลือกที่ถูกต้องจึงถูก และข้ออื่นผิดอย่างไร`;
-
-      const resJson = await callOpenRouterApi({
-        model: MODEL_SOLVER,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-        max_tokens: 1024
-      }, 'QuizSilo Auto Explain');
-      const explanationText = resJson.choices?.[0]?.message?.content?.trim() || 'ไม่มีคำอธิบายเพิ่มเติม';
-
-      // Cache explanation into Supabase questions table if id is known
-      try {
-        if (qData.id && sbClient) {
-          await sbClient.from('questions').update({ explanation: explanationText }).eq('id', qData.id);
-        }
-      } catch (cacheErr) {
-        console.warn('Could not cache explanation:', cacheErr);
-      }
-
-      if (this._successHandler) this._successHandler(explanationText);
-      return explanationText;
-    } catch (err) {
-      console.error('generateExplanation error:', err);
-      if (this._failureHandler) this._failureHandler(err);
-    }
-  },
-
-  // 7. Client-Side AI Exam Extraction (Background Queue with Right-hand Progress Table)
-  enqueueUploadJob: async function(filesArray, customBatchName, selectedCategory, userProfile) {
-    try {
-      if (!filesArray || filesArray.length === 0) {
-        throw new Error('ไม่พบไฟล์ที่เลือกสำหรับสกัดข้อสอบ');
-      }
-
-      // Check Authentication & Guest Quota
-      const isGuest = !userProfile || userProfile.isGuest || !userProfile.uuid;
-      const userId = (!isGuest && userProfile && userProfile.uuid) 
-        ? userProfile.uuid 
-        : (currentSupabaseUser ? currentSupabaseUser.id : null);
-
-      if (isGuest) {
-        // Verify Guest Quota (Max 3 files, 100 questions lifetime)
-        const usage = (typeof window.getUserLifetimeUsage === 'function') 
-          ? window.getUserLifetimeUsage(userProfile) 
-          : { files: 0, questions: 0 };
-        if (usage.files + filesArray.length > 3 || usage.questions >= 100) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'โควต้าผู้เยี่ยมชมเต็มแล้ว',
-            html: `คุณใช้โควต้าสำหรับผู้เยี่ยมชมครบ 3 ไฟล์ (100 ข้อ) แล้ว<br><br>กรุณาเข้าสู่ระบบด้วย Google เพื่อรับโควต้าสมาชิก <b>10 ไฟล์ (500 ข้อ)</b> ฟรี!`,
-            confirmButtonText: 'เข้าสู่ระบบด้วย Google',
-            showCancelButton: true,
-            cancelButtonText: 'ยกเลิก'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              window.signInWithGoogle();
-            }
-          });
-          return { success: false, message: 'Guest quota exceeded' };
-        }
-      }
-
-      const batchId = 'BATCH-' + Date.now();
-      const isPdf = filesArray.some(f => f.mimeType === 'application/pdf');
-      const isTxt = filesArray.some(f => f.name.endsWith('.txt') || f.name.endsWith('.md'));
-      const fileTypeLabel = isPdf ? 'PDF' : (isTxt ? 'TXT' : 'ภาพ');
-      const finalBatchName = (customBatchName || '').trim() || (filesArray[0].name || 'ชุดข้อสอบใหม่').replace(/\.[^/.]+$/, '');
-
-      // Create Active Queue Item for Right-Hand Status Table
-      const queueJob = {
-        batchId: batchId,
-        shortBatchId: batchId.slice(-4),
-        batchName: finalBatchName,
-        category: (selectedCategory === 'AUTO_AI' || !selectedCategory) ? 'AI จัดหมวดหมู่อัตโนมัติ' : selectedCategory,
-        createdAt: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        status: 'PROCESSING',
-        errorMessage: 'Step 1/3: AI กำลังอ่านไฟล์และสกัดโจทย์...',
-        fileType: fileTypeLabel,
-        totalQuestions: 0,
-        uploader: {
-          name: (userProfile && userProfile.name) || (currentUserProfile && currentUserProfile.name) || 'ผู้ใช้',
-          avatar: (userProfile && userProfile.avatar) || (currentUserProfile && currentUserProfile.avatar) || '👤'
-        }
-      };
-
-      activeQueueJobs.unshift(queueJob);
-
-      // Trigger Queue UI refresh immediately
-      if (typeof window.loadQueueStatus === 'function') {
-        window.loadQueueStatus(false);
-      }
-
-      // Return immediately to caller so form resets without blocking UI
-      if (this._successHandler) this._successHandler({ success: true, batchId: batchId });
-
-      // Run AI Extraction in Asynchronous Task (non-blocking)
-      (async () => {
-        try {
-          // Prepare Source Files backup
-          const sourceFilesList = filesArray.map((f, fIdx) => {
-            const fid = batchId + '-FILE-' + (fIdx + 1);
-            const mime = f.mimeType || (f.name.endsWith('.txt') ? 'text/plain' : 'application/pdf');
-            const dataUri = 'data:' + mime + ';base64,' + f.base64;
-            const fileObj = {
-              id: fid,
-              name: f.name || 'document',
-              mimeType: mime,
-              dataUri: dataUri
-            };
-            localFilesCache[fid] = fileObj;
-            return fileObj;
-          });
-
-          // Prepare Multi-modal Payload for OpenRouter
-          const contentParts = [];
-          for (const f of filesArray) {
-            if (f.mimeType === 'application/pdf' || f.mimeType.startsWith('image/')) {
-              contentParts.push({
-                type: 'image_url',
-                image_url: {
-                  url: 'data:' + f.mimeType + ';base64,' + f.base64
-                }
-              });
-            } else {
-              let textDecoded = '';
-              try {
-                textDecoded = decodeURIComponent(escape(atob(f.base64)));
-              } catch(e) {
-                textDecoded = atob(f.base64);
-              }
-              contentParts.push({
-                type: 'text',
-                text: '\n\n--- [เนื้อหาไฟล์ข้อสอบต้นฉบับ: ' + (f.name || 'document.txt') + '] ---\n' + textDecoded + '\n--- [สิ้นสุดเนื้อหาไฟล์] ---\n'
-              });
-            }
-          }
-
-          const isAutoAI = !selectedCategory || selectedCategory === 'AUTO_AI';
-
-          // Step 1: Extraction Prompt matching original Google Script Spec
-          const prompt1 = `คุณคือผู้เชี่ยวชาญการคัดลอกข้อสอบจากเอกสาร
+// ==============================================================================
+// 6. AI UPLOAD QUEUE SERVICE
+// ==============================================================================
+function buildExtractionPrompt() {
+  return `คุณคือผู้เชี่ยวชาญการคัดลอกข้อสอบจากเอกสาร
 หน้าที่ของคุณในขั้นตอนนี้: สกัดเฉพาะ "โจทย์ ตัวเลือกทั้งหมด และเฉลยตามที่ตาเห็น" จากเอกสารอย่างเที่ยงตรง 100% ถ่ายทอดตามที่ปรากฏจริง
 
 ข้อกำหนดสำคัญ:
@@ -2599,243 +3001,368 @@ const adapterImpl = {
     }
   ]
 }`;
+}
 
-          contentParts.unshift({ type: 'text', text: prompt1 });
+function buildSolverPrompt(rawQuestions) {
+  const header =
+    'คุณคือผู้เข้าสอบที่เก่งที่สุด จงอ่านข้อสอบต่อไปนี้และวิเคราะห์หาคำตอบที่ถูกต้องที่สุด (ตอบเป็นตัวอักษร เช่น ก, ข, ค, หรือ ง) ตอบกลับเป็น JSON โครงสร้าง {"answers": ["ก", "ข", "ค", ...]} เรียงลำดับให้ครบทุกข้อ:\n\n';
 
-          queueJob.errorMessage = 'Step 1/3: AI กำลังอ่านไฟล์และสกัดโจทย์...';
-          if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
+  const body = rawQuestions
+    .map(
+      (q, idx) =>
+        `ข้อ ${q.no || idx + 1}: ${q.t}\nก. ${q.a}\nข. ${q.b}\nค. ${q.c}\nง. ${q.d}` +
+        `${q.e ? `\nจ. ${q.e}` : ''}${q.f ? `\nฉ. ${q.f}` : ''}`
+    )
+    .join('\n\n');
 
-          const resJson1 = await callOpenRouterApi({
-            model: MODEL_EXTRACTION,
-            messages: [{ role: 'user', content: contentParts }],
-            temperature: 0.0,
-            response_format: { type: 'json_object' }
-          }, 'QuizSilo Extraction');
-          const parsed1 = safeParseJsonString(resJson1.choices?.[0]?.message?.content);
+  return header + body;
+}
 
-          const rawQuestions = Array.isArray(parsed1.q) ? parsed1.q : [];
-          if (rawQuestions.length === 0) {
-            throw new Error('ไม่พบข้อสอบที่สมบูรณ์จากไฟล์ที่ส่ง');
-          }
+function reconcileExtractedQuestions(rawQuestions, aiAnswersArr, batchId, isAutoAI, selectedCategory) {
+  let detectedCategory = isAutoAI ? CONFIG.DEFAULT_CATEGORY : selectedCategory;
 
-          // Step 2: Answer Verification / Solver Double-Check
-          queueJob.errorMessage = 'Step 2/3: สกัดได้ ' + rawQuestions.length + ' ข้อ AI กำลังตรวจเฉลยสำรอง...';
-          if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
+  const questionsToInsert = rawQuestions.map((q, idx) => {
+    if (isAutoAI && idx === 0) {
+      const catIndex = parseInt(q.cat, 10);
+      if (Number.isInteger(catIndex) && catIndex >= 0 && catIndex < CATEGORIES_LIST.length) {
+        detectedCategory = CATEGORIES_LIST[catIndex];
+      }
+    }
 
-          let aiAnswersArr = [];
-          try {
-            let prompt2 = `คุณคือผู้เข้าสอบที่เก่งที่สุด จงอ่านข้อสอบต่อไปนี้และวิเคราะห์หาคำตอบที่ถูกต้องที่สุด (ตอบเป็นตัวอักษร เช่น ก, ข, ค, หรือ ง) ตอบกลับเป็น JSON โครงสร้าง {"answers": ["ก", "ข", "ค", ...]} เรียงลำดับให้ครบทุกข้อ:\n\n`;
-            rawQuestions.forEach((q, idx) => {
-              prompt2 += `ข้อ ${q.no || (idx + 1)}: ${q.t}\nก. ${q.a}\nข. ${q.b}\nค. ${q.c}\nง. ${q.d}${q.e ? '\nจ. ' + q.e : ''}${q.f ? '\nฉ. ' + q.f : ''}\n\n`;
+    const rawFileAns = q.ans ? String(q.ans).trim() : '';
+    const hasFileAns = Boolean(rawFileAns);
+    const normalizedFileAns = hasFileAns ? normalizeAnswerText(rawFileAns) : '';
+    const normalizedAiAns = aiAnswersArr[idx] ? normalizeAnswerText(aiAnswersArr[idx]) : '';
+
+    const validChoices = ['ก', 'ข', 'ค', 'ง'];
+    if (q.e) validChoices.push('จ');
+    if (q.f) validChoices.push('ฉ');
+    if (q.g) validChoices.push('ช');
+    if (q.h) validChoices.push('ซ');
+
+    let finalAns = 'ก';
+    let sourceType = 'เฉลยไฟล์';
+
+    if (hasFileAns) {
+      finalAns = normalizedFileAns || 'ก';
+      if (!validChoices.includes(finalAns) && finalAns !== 'FREE') {
+        sourceType = `[INVALID] เฉลยไม่ตรงช้อยส์ (${finalAns})`;
+      } else {
+        sourceType = 'เฉลยไฟล์';
+      }
+    } else {
+      finalAns = normalizedAiAns || 'ก';
+      sourceType = 'ไม่มีเฉลยในเอกสาร (AI ช่วยตอบ)';
+    }
+
+    return {
+      id: `${batchId}-Q${idx + 1}`,
+      batch_id: batchId,
+      question_no: q.no ? parseInt(q.no, 10) : idx + 1,
+      question_text: String(q.t || '').trim(),
+      choice_a: String(q.a || '').trim(),
+      choice_b: String(q.b || '').trim(),
+      choice_c: String(q.c || '').trim(),
+      choice_d: String(q.d || '').trim(),
+      choice_e: String(q.e || '').trim(),
+      choice_f: String(q.f || '').trim(),
+      choice_g: String(q.g || '').trim(),
+      choice_h: String(q.h || '').trim(),
+      answer: finalAns,
+      source_type: sourceType,
+      explanation: '',
+      is_free_question: finalAns === 'FREE'
+    };
+  });
+
+  return { questionsToInsert, determinedCategory: detectedCategory };
+}
+
+function trackGuestBatchId(batchId) {
+  try {
+    const guestBatches = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.GUEST_BATCH_IDS) || '[]');
+    if (Array.isArray(guestBatches) && !guestBatches.includes(batchId)) {
+      guestBatches.push(batchId);
+      localStorage.setItem(CONFIG.STORAGE_KEYS.GUEST_BATCH_IDS, JSON.stringify(guestBatches));
+    }
+  } catch {
+    // Ignore storage error
+  }
+}
+
+const UploadQueueService = {
+  async enqueueUploadJob(filesArray, customBatchName, selectedCategory, userProfile) {
+    try {
+      if (!Array.isArray(filesArray) || filesArray.length === 0) {
+        throw new Error('ไม่พบไฟล์ที่เลือกสำหรับสกัดข้อสอบ');
+      }
+
+      const activeProfile = getActiveProfile(userProfile);
+      const isGuest = !activeProfile || activeProfile.isGuest || !activeProfile.uuid;
+      const userId = !isGuest ? activeProfile.uuid : currentSupabaseUser?.id || null;
+
+      // Enforce Guest Quota (Max 3 files, 100 questions lifetime)
+      if (isGuest) {
+        const usage =
+          typeof window !== 'undefined' && typeof window.getUserLifetimeUsage === 'function'
+            ? window.getUserLifetimeUsage(activeProfile)
+            : { files: 0, questions: 0 };
+
+        if (
+          usage.files + filesArray.length > CONFIG.GUEST_MAX_FILES ||
+          usage.questions >= CONFIG.GUEST_MAX_QUESTIONS
+        ) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'warning',
+              title: 'โควต้าผู้เยี่ยมชมเต็มแล้ว',
+              html: `คุณใช้โควต้าสำหรับผู้เยี่ยมชมครบ ${CONFIG.GUEST_MAX_FILES} ไฟล์ (${CONFIG.GUEST_MAX_QUESTIONS} ข้อ) แล้ว<br><br>กรุณาเข้าสู่ระบบด้วย Google เพื่อรับโควต้าสมาชิก <b>10 ไฟล์ (500 ข้อ)</b> ฟรี!`,
+              confirmButtonText: 'เข้าสู่ระบบด้วย Google',
+              showCancelButton: true,
+              cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+              if (result.isConfirmed) safeCallGlobal('signInWithGoogle');
             });
-
-            const resJson2 = await callOpenRouterApi({
-              model: MODEL_SOLVER,
-              messages: [{ role: 'user', content: prompt2 }],
-              temperature: 0.1,
-              response_format: { type: 'json_object' }
-            }, 'QuizSilo Solver');
-
-            const parsed2 = safeParseJsonString(resJson2.choices?.[0]?.message?.content);
-            if (parsed2 && Array.isArray(parsed2.answers)) {
-              aiAnswersArr = parsed2.answers;
-            }
-          } catch (solveErr) {
-            console.warn('Step 2 Solver warning:', solveErr);
           }
-
-          // Step 3: Reconciliation Engine & Anomaly Flagging
-          queueJob.errorMessage = 'Step 3/3: กำลังตรวจสอบความสอดคล้องและบันทึกลง Supabase...';
-          if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
-
-          const questionsToInsert = rawQuestions.map((q, idx) => {
-            let finalCat = 'ภาค ก: ความรู้ความสามารถทั่วไป';
-            if (isAutoAI) {
-              const cIdx = parseInt(q.cat, 10);
-              if (Number.isInteger(cIdx) && cIdx >= 0 && cIdx < CATEGORIES_LIST.length) {
-                finalCat = CATEGORIES_LIST[cIdx];
-              }
-            } else {
-              finalCat = selectedCategory;
-            }
-
-            const rawFileAns = q.ans ? String(q.ans).trim() : '';
-            const hasFileAns = Boolean(rawFileAns);
-            const normalizedFileAns = hasFileAns ? normalizeAnswerText(rawFileAns) : '';
-            const normalizedAiAns = aiAnswersArr[idx] ? normalizeAnswerText(aiAnswersArr[idx]) : '';
-
-            let finalAns = 'ก';
-            let sourceType = 'เฉลยไฟล์';
-
-            const validChoices = ['ก', 'ข', 'ค', 'ง'];
-            if (q.e) validChoices.push('จ');
-            if (q.f) validChoices.push('ฉ');
-            if (q.g) validChoices.push('ช');
-            if (q.h) validChoices.push('ซ');
-
-            if (hasFileAns) {
-              finalAns = normalizedFileAns || 'ก';
-              if (!validChoices.includes(finalAns) && finalAns !== 'FREE') {
-                // กรณี: ช้อยส์ผิดปกติ
-                sourceType = '[INVALID] เฉลยไม่ตรงช้อยส์ (' + finalAns + ')';
-              } else {
-                // กรณี: เฉลยสมบูรณ์ เชื่อถือเฉลยจากไฟล์ 100% (ไม่ตอบแข่งเพื่อลด Anomaly Flag ผิดพลาด)
-                sourceType = 'เฉลยไฟล์';
-              }
-            } else {
-              // กรณี: ไม่มีเฉลยในเอกสาร ให้ AI ช่วยตอบ
-              finalAns = normalizedAiAns || 'ก';
-              sourceType = 'ไม่มีเฉลยในเอกสาร (AI ช่วยตอบ)';
-            }
-
-            return {
-              id: batchId + '-Q' + (idx + 1),
-              batch_id: batchId,
-              question_no: q.no ? parseInt(q.no, 10) : (idx + 1),
-              question_text: String(q.t || '').trim(),
-              choice_a: String(q.a || '').trim(),
-              choice_b: String(q.b || '').trim(),
-              choice_c: String(q.c || '').trim(),
-              choice_d: String(q.d || '').trim(),
-              choice_e: String(q.e || '').trim(),
-              choice_f: String(q.f || '').trim(),
-              choice_g: String(q.g || '').trim(),
-              choice_h: String(q.h || '').trim(),
-              answer: finalAns,
-              source_type: sourceType,
-              explanation: '',
-              is_free_question: finalAns === 'FREE'
-            };
-          });
-
-          const determinedCategory = isAutoAI ? (questionsToInsert[0]?.category || 'ภาค ก: ความรู้ความสามารถทั่วไป') : selectedCategory;
-
-          // 1 & 2. Save Batch and Questions via Serverless Function /api/batch-save (Uses Service Key to bypass RLS)
-          let savedViaApi = false;
-          const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-          if (isHttp) {
-            try {
-              const saveRes = await fetch('/api/batch-save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  batch: {
-                    id: batchId,
-                    user_id: userId,
-                    batch_name: finalBatchName,
-                    batch_category: determinedCategory,
-                    total_questions: questionsToInsert.length,
-                    file_type: fileTypeLabel,
-                    source_files: sourceFilesList,
-                    is_verified: false
-                  },
-                  questions: questionsToInsert,
-                  userProfile: currentUserProfile
-                })
-              });
-              if (saveRes.ok) {
-                const sData = await saveRes.json();
-                if (sData && sData.success) savedViaApi = true;
-              }
-            } catch (apiErr) {
-              console.warn('/api/batch-save failed, attempting direct insert fallback:', apiErr);
-            }
-          }
-
-          if (!savedViaApi) {
-            // Direct sbClient fallback
-            const { error: batchErr } = await sbClient.from('batches').insert({
-              id: batchId,
-              user_id: userId,
-              batch_name: finalBatchName,
-              batch_category: determinedCategory,
-              total_questions: questionsToInsert.length,
-              file_type: fileTypeLabel,
-              source_files: sourceFilesList,
-              is_verified: false
-            });
-            if (batchErr) throw batchErr;
-
-            for (let i = 0; i < questionsToInsert.length; i += 50) {
-              const chunk = questionsToInsert.slice(i, i + 50);
-              const { error: qErr } = await sbClient.from('questions').insert(chunk);
-              if (qErr) throw qErr;
-            }
-
-            try {
-              await sbClient.from('scan_ledger').insert({
-                user_id: userId,
-                batch_id: batchId,
-                questions_scanned: questionsToInsert.length,
-                status: 'SUCCESS'
-              });
-            } catch (e) {}
-          }
-
-          // Complete Job
-          queueJob.status = 'COMPLETED';
-          queueJob.totalQuestions = questionsToInsert.length;
-          queueJob.errorMessage = `สกัดสำเร็จ ${questionsToInsert.length} ข้อ (ไปตรวจทานที่หน้าแดชบอร์ด)`;
-
-          if (typeof window.recordUserUploadUsage === 'function') {
-            window.recordUserUploadUsage(filesArray.length, questionsToInsert.length, currentUserProfile);
-          }
-
-          // If Guest, track batchId in guest storage for Dashboard visibility
-          if (isGuest) {
-            try {
-              const guestBatches = JSON.parse(localStorage.getItem('quizsilo_guest_batch_ids') || '[]');
-              if (!guestBatches.includes(batchId)) guestBatches.push(batchId);
-              localStorage.setItem('quizsilo_guest_batch_ids', JSON.stringify(guestBatches));
-            } catch (ge) {}
-          }
-
-          try {
-            adapterImpl.logActivity({
-              action: 'UPLOAD_BATCH',
-              user_id: userId,
-              user_name: currentUserProfile?.name || (isGuest ? 'ผู้เยี่ยมชม (Guest)' : 'ผู้ใช้'),
-              user_avatar: currentUserProfile?.avatar || '👤',
-              user_role: currentUserProfile?.role || (isGuest ? 'guest' : 'member'),
-              batch_id: batchId,
-              batch_name: finalBatchName,
-              batch_category: determinedCategory,
-              question_count: questionsToInsert.length,
-              details: isGuest ? 'สกัดข้อสอบผ่าน AI (โหมดผู้เยี่ยมชม)' : 'สกัดข้อสอบสำเร็จผ่าน AI'
-            });
-          } catch (le) {
-            console.warn('logActivity error:', le);
-          }
-
-          if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
-          if (typeof window.loadBatches === 'function') window.loadBatches(true);
-
-          if (typeof showToast === 'function') {
-            showToast('success', `🎉 สกัดข้อสอบ "${finalBatchName}" สำเร็จ (${questionsToInsert.length} ข้อ)! กรุณาไปตรวจทานใน "ชุดข้อสอบของฉัน" ที่หน้าแดชบอร์ด`, 6000);
-          }
-
-        } catch (taskErr) {
-          console.error('AI Queue Task Error:', taskErr);
-          queueJob.status = 'ERROR';
-          queueJob.errorMessage = taskErr.message || 'การสกัดข้อสอบล้มเหลว';
-          if (typeof window.loadQueueStatus === 'function') window.loadQueueStatus(false);
-          if (typeof showToast === 'function') {
-            showToast('error', 'สกัดข้อสอบไม่สำเร็จ: ' + (taskErr.message || taskErr));
-          }
+          return { success: false, message: 'Guest quota exceeded' };
         }
-      })();
+      }
 
-      return { success: true, batchId: batchId };
+      const batchId = `BATCH-${Date.now()}`;
+      const isPdf = filesArray.some((f) => f.mimeType === 'application/pdf');
+      const isTxt = filesArray.some((f) => f.name?.endsWith('.txt') || f.name?.endsWith('.md'));
+      const fileTypeLabel = isPdf ? 'PDF' : isTxt ? 'TXT' : 'ภาพ';
+      const finalBatchName =
+        (customBatchName || '').trim() ||
+        (filesArray[0].name || 'ชุดข้อสอบใหม่').replace(/\.[^/.]+$/, '');
 
+      const queueJob = {
+        batchId,
+        shortBatchId: batchId.slice(-4),
+        batchName: finalBatchName,
+        category: !selectedCategory || selectedCategory === 'AUTO_AI' ? 'AI จัดหมวดหมู่อัตโนมัติ' : selectedCategory,
+        createdAt: new Date().toLocaleTimeString('th-TH', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }),
+        status: 'PROCESSING',
+        errorMessage: 'Step 1/3: AI กำลังอ่านไฟล์และสกัดโจทย์...',
+        fileType: fileTypeLabel,
+        totalQuestions: 0,
+        uploader: {
+          name: activeProfile?.name || 'ผู้ใช้',
+          avatar: activeProfile?.avatar || '👤'
+        }
+      };
+
+      activeQueueJobs.unshift(queueJob);
+      safeCallGlobal('loadQueueStatus', false);
+
+      // Acknowledge immediately so upload form resets without blocking UI
+      notifySuccess(this, { success: true, batchId });
+
+      // Run 3-step AI Extraction asynchronously
+      UploadQueueService._processExtractionTask({
+        queueJob,
+        batchId,
+        filesArray,
+        finalBatchName,
+        selectedCategory,
+        fileTypeLabel,
+        isGuest,
+        userId
+      });
+
+      return { success: true, batchId };
     } catch (err) {
       console.error('enqueueUploadJob error:', err);
-      if (typeof showToast === 'function') showToast('error', err.message || err);
-      if (this._failureHandler) this._failureHandler(err);
+      safeCallGlobal('showToast', 'error', err?.message || String(err));
+      return notifyFailure(this, err);
     }
   },
 
-  // 8. Queue Status (combines active in-flight jobs + recent batches from Supabase)
-  getJobQueueStatus: async function() {
+  async _processExtractionTask({
+    queueJob,
+    batchId,
+    filesArray,
+    finalBatchName,
+    selectedCategory,
+    fileTypeLabel,
+    isGuest,
+    userId
+  }) {
+    const refreshQueueUi = () => safeCallGlobal('loadQueueStatus', false);
+
+    try {
+      // Cache source files for Review viewer
+      const sourceFilesList = filesArray.map((f, fIdx) => {
+        const fid = `${batchId}-FILE-${fIdx + 1}`;
+        const mime = f.mimeType || (f.name?.endsWith('.txt') ? 'text/plain' : 'application/pdf');
+        const fileObj = {
+          id: fid,
+          name: f.name || 'document',
+          mimeType: mime,
+          dataUri: `data:${mime};base64,${f.base64}`
+        };
+        localFilesCache[fid] = fileObj;
+        return fileObj;
+      });
+
+      // Build multi-modal content payload
+      const contentParts = [{ type: 'text', text: buildExtractionPrompt() }];
+      for (const f of filesArray) {
+        if (f.mimeType === 'application/pdf' || f.mimeType?.startsWith('image/')) {
+          contentParts.push({
+            type: 'image_url',
+            image_url: { url: `data:${f.mimeType};base64,${f.base64}` }
+          });
+        } else {
+          const textDecoded = decodeBase64ToUtf8(f.base64);
+          contentParts.push({
+            type: 'text',
+            text: `\n\n--- [เนื้อหาไฟล์ข้อสอบต้นฉบับ: ${f.name || 'document.txt'}] ---\n${textDecoded}\n--- [สิ้นสุดเนื้อหาไฟล์] ---\n`
+          });
+        }
+      }
+
+      // Step 1: Extract Questions
+      queueJob.errorMessage = 'Step 1/3: AI กำลังอ่านไฟล์และสกัดโจทย์...';
+      refreshQueueUi();
+
+      const resJson1 = await callOpenRouterApi(
+        {
+          model: CONFIG.MODEL_EXTRACTION,
+          messages: [{ role: 'user', content: contentParts }],
+          temperature: 0.0,
+          response_format: { type: 'json_object' }
+        },
+        'QuizSilo Extraction'
+      );
+      const parsed1 = safeParseJsonString(resJson1?.choices?.[0]?.message?.content);
+      const rawQuestions = Array.isArray(parsed1?.q) ? parsed1.q : [];
+      if (rawQuestions.length === 0) {
+        throw new Error('ไม่พบข้อสอบที่สมบูรณ์จากไฟล์ที่ส่ง');
+      }
+
+      // Step 2: Solver Double-Check
+      queueJob.errorMessage = `Step 2/3: สกัดได้ ${rawQuestions.length} ข้อ AI กำลังตรวจเฉลยสำรอง...`;
+      refreshQueueUi();
+
+      let aiAnswersArr = [];
+      try {
+        const resJson2 = await callOpenRouterApi(
+          {
+            model: CONFIG.MODEL_SOLVER,
+            messages: [{ role: 'user', content: buildSolverPrompt(rawQuestions) }],
+            temperature: 0.1,
+            response_format: { type: 'json_object' }
+          },
+          'QuizSilo Solver'
+        );
+        const parsed2 = safeParseJsonString(resJson2?.choices?.[0]?.message?.content);
+        if (Array.isArray(parsed2?.answers)) {
+          aiAnswersArr = parsed2.answers;
+        }
+      } catch (solveErr) {
+        console.warn('Step 2 Solver warning:', solveErr);
+      }
+
+      // Step 3: Reconcile & Persist to Supabase
+      queueJob.errorMessage = 'Step 3/3: กำลังตรวจสอบความสอดคล้องและบันทึกลง Supabase...';
+      refreshQueueUi();
+
+      const isAutoAI = !selectedCategory || selectedCategory === 'AUTO_AI';
+      const { questionsToInsert, determinedCategory } = reconcileExtractedQuestions(
+        rawQuestions,
+        aiAnswersArr,
+        batchId,
+        isAutoAI,
+        selectedCategory
+      );
+
+      const batchPayload = {
+        id: batchId,
+        user_id: userId,
+        batch_name: finalBatchName,
+        batch_category: determinedCategory,
+        total_questions: questionsToInsert.length,
+        file_type: fileTypeLabel,
+        source_files: sourceFilesList,
+        is_verified: false
+      };
+
+      const latestProfile = getActiveProfile();
+      let savedViaApi = false;
+
+      try {
+        const saveRes = await fetchJsonApi('/api/batch-save', {
+          method: 'POST',
+          body: { batch: batchPayload, questions: questionsToInsert, userProfile: latestProfile }
+        });
+        savedViaApi = Boolean(saveRes?.success);
+      } catch (apiErr) {
+        console.warn('/api/batch-save failed, attempting direct insert fallback:', apiErr);
+      }
+
+      if (!savedViaApi) {
+        const client = requireSupabaseClient();
+        const { error: batchErr } = await client.from('batches').insert(batchPayload);
+        if (batchErr) throw batchErr;
+
+        await chunkInsert('questions', questionsToInsert);
+
+        try {
+          await client.from('scan_ledger').insert({
+            user_id: userId,
+            batch_id: batchId,
+            questions_scanned: questionsToInsert.length,
+            status: 'SUCCESS'
+          });
+        } catch {
+          // Non-critical ledger log
+        }
+      }
+
+      // Finalize Job State
+      queueJob.status = 'COMPLETED';
+      queueJob.totalQuestions = questionsToInsert.length;
+      queueJob.errorMessage = `สกัดสำเร็จ ${questionsToInsert.length} ข้อ (ไปตรวจทานที่หน้าแดชบอร์ด)`;
+
+      safeCallGlobal('recordUserUploadUsage', filesArray.length, questionsToInsert.length, latestProfile);
+      if (isGuest) trackGuestBatchId(batchId);
+
+      AdminAuditService.logActivity({
+        action: 'UPLOAD_BATCH',
+        user_id: userId,
+        user_name: latestProfile?.name || (isGuest ? 'ผู้เยี่ยมชม (Guest)' : 'ผู้ใช้'),
+        user_avatar: latestProfile?.avatar || '👤',
+        user_role: latestProfile?.role || (isGuest ? 'guest' : 'member'),
+        batch_id: batchId,
+        batch_name: finalBatchName,
+        batch_category: determinedCategory,
+        question_count: questionsToInsert.length,
+        details: isGuest ? 'สกัดข้อสอบผ่าน AI (โหมดผู้เยี่ยมชม)' : 'สกัดข้อสอบสำเร็จผ่าน AI'
+      }).catch((le) => console.warn('logActivity error:', le));
+
+      refreshQueueUi();
+      safeCallGlobal('loadBatches', true);
+      safeCallGlobal(
+        'showToast',
+        'success',
+        `🎉 สกัดข้อสอบ "${finalBatchName}" สำเร็จ (${questionsToInsert.length} ข้อ)! กรุณาไปตรวจทานใน "ชุดข้อสอบของฉัน" ที่หน้าแดชบอร์ด`,
+        6000
+      );
+    } catch (taskErr) {
+      console.error('AI Queue Task Error:', taskErr);
+      queueJob.status = 'ERROR';
+      queueJob.errorMessage = taskErr?.message || 'การสกัดข้อสอบล้มเหลว';
+      refreshQueueUi();
+      safeCallGlobal('showToast', 'error', `สกัดข้อสอบไม่สำเร็จ: ${taskErr?.message || taskErr}`);
+    }
+  },
+
+  async getJobQueueStatus() {
     try {
       let remoteItems = [];
       if (sbClient) {
@@ -2845,14 +3372,14 @@ const adapterImpl = {
           .order('created_at', { ascending: false })
           .limit(10);
 
-        remoteItems = (batches || []).map(b => {
+        remoteItems = (batches || []).map((b) => {
           const prof = b.profiles;
           return {
             batchId: b.id,
             shortBatchId: b.id.slice(-4),
             batchName: b.batch_name,
             category: b.batch_category,
-            createdAt: new Date(b.created_at).toLocaleDateString('th-TH') + ' ' + new Date(b.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+            createdAt: formatThaiDateTimeShort(b.created_at),
             status: 'COMPLETED',
             errorMessage: `สกัดแล้ว ${b.total_questions || 0} ข้อ`,
             fileType: b.file_type || 'เอกสาร',
@@ -2865,641 +3392,323 @@ const adapterImpl = {
         });
       }
 
-      // Filter out remote items that are already in activeQueueJobs
-      const activeIds = new Set(activeQueueJobs.map(j => j.batchId));
-      const combinedItems = [...activeQueueJobs, ...remoteItems.filter(r => !activeIds.has(r.batchId))];
-
-      const pendingCount = combinedItems.filter(i => i.status === 'PENDING').length;
-      const processingCount = combinedItems.filter(i => i.status === 'PROCESSING').length;
-
-      const res = { pending: pendingCount, processing: processingCount, items: combinedItems.slice(0, 15) };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (e) {
-      const fallback = { pending: 0, processing: 0, items: activeQueueJobs };
-      if (this._successHandler) this._successHandler(fallback);
-      return fallback;
-    }
-  },
-
-  getQueueStatus: async function() {
-    return await adapterImpl.getJobQueueStatus.apply(this, arguments);
-  },
-
-  // 9. Categories for Verified Custom / Random Quiz
-  getAvailableVerifiedCategories: async function(userProfile, sourceScope) {
-    try {
-      if (!sbClient) throw new Error('sbClient is not initialized');
-      const isMyUploads = sourceScope === 'my_uploads' && userProfile;
-      const userId = (userProfile && !userProfile.isGuest && userProfile.uuid) ? userProfile.uuid : null;
-
-      let bQuery = sbClient.from('batches').select('id, batch_name, batch_category, total_questions, is_verified, user_id').eq('is_verified', true);
-      if (isMyUploads && userId) {
-        bQuery = bQuery.eq('user_id', userId);
-      }
-
-      const { data: verifiedBatches, error: bErr } = await bQuery;
-      if (bErr) throw bErr;
-
-      if (!verifiedBatches || verifiedBatches.length === 0) {
-        const emptyRes = { success: true, categories: [], totalVerified: 0 };
-        if (this._successHandler) this._successHandler(emptyRes);
-        return emptyRes;
-      }
-
-      const catMap = {};
-      let totalVerified = 0;
-      verifiedBatches.forEach(b => {
-        const cat = (b.batch_category || 'ทั่วไป').split('|')[0].trim() || 'ทั่วไป';
-        const qCount = b.total_questions || 0;
-        catMap[cat] = (catMap[cat] || 0) + qCount;
-        totalVerified += qCount;
-      });
-
-      const categories = Object.keys(catMap).map(k => ({
-        name: k,
-        count: catMap[k]
-      })).sort((a, b) => b.count - a.count);
-
-      const res = { success: true, categories: categories, totalVerified: totalVerified };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('getAvailableVerifiedCategories error:', err);
-      const fail = { success: false, message: err.message, categories: [], totalVerified: 0 };
-      if (this._failureHandler) this._failureHandler(fail);
-      return fail;
-    }
-  },
-  getCustomQuizCategories: async function(userProfile, sourceScope) {
-    return await this.getAvailableVerifiedCategories(userProfile, sourceScope);
-  },
-
-  // 10. Generate Advanced Random Exam
-  generateAdvancedRandomExam: async function(selectedCategories, requestedCount, isQuickRandom, sourceScope, userProfile) {
-    try {
-      if (!sbClient) throw new Error('sbClient is not initialized');
-      const isMyUploads = sourceScope === 'my_uploads' && userProfile;
-      const userId = (userProfile && !userProfile.isGuest && userProfile.uuid) ? userProfile.uuid : null;
-
-      let bQuery = sbClient.from('batches').select('id, batch_name, batch_category, is_verified, user_id').eq('is_verified', true);
-      if (isMyUploads && userId) {
-        bQuery = bQuery.eq('user_id', userId);
-      }
-
-      const { data: verifiedBatches, error: bErr } = await bQuery;
-      if (bErr) throw bErr;
-
-      if (!verifiedBatches || verifiedBatches.length === 0) {
-        const emptyMsg = isMyUploads
-          ? 'ไม่พบข้อสอบที่ผ่านการ Review ในชุดที่คุณอัปโหลด กรุณาตรวจทานข้อสอบอย่างน้อย 1 ชุด'
-          : 'ไม่พบข้อสอบที่ผ่านการ Review ในคลัง กรุณาตรวจทานข้อสอบในหน้า Review & Edit อย่างน้อย 1 ชุด';
-        const fail = { success: false, error: 'NO_VERIFIED_QUESTIONS', message: emptyMsg };
-        if (this._failureHandler) this._failureHandler(fail);
-        return fail;
-      }
-
-      const selectedCatSet = new Set((selectedCategories || []).map(c => String(c).trim().toLowerCase()));
-      const batchMap = {};
-      const targetBatchIds = [];
-
-      verifiedBatches.forEach(b => {
-        const cleanCat = (b.batch_category || 'ทั่วไป').split('|')[0].trim();
-        let match = false;
-        if (isQuickRandom || selectedCatSet.size === 0) {
-          match = true;
-        } else {
-          const lower = cleanCat.toLowerCase();
-          for (const sc of selectedCatSet) {
-            if (sc === 'all' || lower.includes(sc) || sc.includes(lower)) {
-              match = true;
-              break;
-            }
-          }
-        }
-        if (match) {
-          batchMap[b.id] = { ...b, cleanCat };
-          targetBatchIds.push(b.id);
-        }
-      });
-
-      if (targetBatchIds.length === 0) {
-        const fail = {
-          success: false,
-          error: 'NO_VERIFIED_QUESTIONS',
-          message: 'ไม่พบข้อสอบในหมวดหมู่วิชาที่เลือกที่ผ่านการตรวจสอบแล้ว'
-        };
-        if (this._failureHandler) this._failureHandler(fail);
-        return fail;
-      }
-
-      // Fetch all questions from eligible verified batches
-      const { data: questions, error: qErr } = await sbClient.from('questions').select('*').in('batch_id', targetBatchIds);
-      if (qErr) throw qErr;
-
-      if (!questions || questions.length === 0) {
-        const fail = {
-          success: false,
-          error: 'NO_VERIFIED_QUESTIONS',
-          message: 'ไม่พบรายการคำถามในชุดข้อสอบที่เลือก'
-        };
-        if (this._failureHandler) this._failureHandler(fail);
-        return fail;
-      }
-
-      // Map candidates
-      const candidateQuestions = questions.map((q, idx) => {
-        const bInfo = batchMap[q.batch_id] || {};
-        return {
-          row: idx + 1,
-          id: q.id,
-          origQNo: String(q.question_no || (idx + 1)),
-          batchId: q.batch_id,
-          originBatchId: q.batch_id,
-          originBatchName: bInfo.batch_name || 'ชุดข้อสอบ',
-          category: bInfo.cleanCat || 'ทั่วไป',
-          text: q.question_text,
-          a: q.choice_a || '',
-          b: q.choice_b || '',
-          c: q.choice_c || '',
-          d: q.choice_d || '',
-          e: q.choice_e || '',
-          f: q.choice_f || '',
-          g: q.choice_g || '',
-          h: q.choice_h || '',
-          answer: q.answer || 'ก',
-          sourceType: q.source_type || 'เฉลยไฟล์',
-          explanation: q.explanation || '',
-          isVerified: true,
-          isFreeQuestion: q.is_free_question || false
-        };
-      });
-
-      // Fisher-Yates Shuffle
-      for (let i = candidateQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = candidateQuestions[i];
-        candidateQuestions[i] = candidateQuestions[j];
-        candidateQuestions[j] = temp;
-      }
-
-      // Slice target count
-      const targetCount = Math.min(Math.max(parseInt(requestedCount, 10) || 20, 1), candidateQuestions.length);
-      const chosenQuestions = candidateQuestions.slice(0, targetCount);
-
-      // Re-index question numbers 1..N
-      chosenQuestions.forEach((q, idx) => {
-        q.qNo = String(idx + 1);
-      });
-
-      // Calculate source composition
-      const compMap = {};
-      chosenQuestions.forEach(q => {
-        const bName = q.originBatchName || ('ชุดรหัส #' + String(q.originBatchId).slice(-4));
-        compMap[bName] = (compMap[bName] || 0) + 1;
-      });
-
-      const sourceCompositionArray = Object.keys(compMap).map(name => ({
-        batchName: name,
-        count: compMap[name],
-        percent: ((compMap[name] / chosenQuestions.length) * 100).toFixed(1)
-      })).sort((a, b) => b.count - a.count);
-
-      const now = new Date();
-      const createdAtFormatted = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
-      const virtualBatchId = 'VIRTUAL-' + now.getTime();
-
-      let catLabel = 'รวมทุกวิชา';
-      if (!isQuickRandom && selectedCategories && selectedCategories.length > 0) {
-        catLabel = selectedCategories.length <= 2 ? selectedCategories.join(', ') : `${selectedCategories[0]} และอื่นๆ (${selectedCategories.length} วิชา)`;
-      }
-
-      const batchName = isQuickRandom
-        ? `ชุดสุ่มด่วนรวมทุกวิชา (${chosenQuestions.length} ข้อ)`
-        : `ชุดสุ่มฝึกซ้อม: ${catLabel} (${chosenQuestions.length} ข้อ)`;
+      const activeIds = new Set(activeQueueJobs.map((j) => j.batchId));
+      const combinedItems = [...activeQueueJobs, ...remoteItems.filter((r) => !activeIds.has(r.batchId))];
 
       const res = {
-        success: true,
-        batchId: virtualBatchId,
-        batchName: batchName,
-        batchCategory: catLabel,
-        totalQuestions: chosenQuestions.length,
-        createdAtFormatted: createdAtFormatted,
-        createdAt: now.toISOString(),
-        sourceSummary: sourceCompositionArray,
-        questions: chosenQuestions,
-        isVirtual: true,
-        availablePoolCount: candidateQuestions.length
+        pending: combinedItems.filter((i) => i.status === 'PENDING').length,
+        processing: combinedItems.filter((i) => i.status === 'PROCESSING').length,
+        items: combinedItems.slice(0, 15)
       };
 
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('generateAdvancedRandomExam error:', err);
-      const fail = { success: false, message: 'เกิดข้อผิดพลาดในการสุ่ม: ' + err.message };
-      if (this._failureHandler) this._failureHandler(fail);
-      return fail;
+      return notifySuccess(this, res);
+    } catch {
+      return notifySuccess(this, { pending: 0, processing: 0, items: activeQueueJobs });
     }
   },
 
-  // 10. Delete Batch (By Owner or Admin)
-  deleteExamBatch: async function(batchId, userProfile) {
+  getQueueStatus() {
+    return UploadQueueService.getJobQueueStatus.call(this);
+  }
+};
+
+// ==============================================================================
+// 7. ADMIN & AUDIT LOG SERVICE
+// ==============================================================================
+const AdminAuditService = {
+  async getAdminConsoleStats() {
     try {
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        try {
-          const resp = await fetch('/api/batch-delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ batchId, userProfile })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (this._successHandler) this._successHandler(data);
-            return data;
-          }
-        } catch (e) {
-          console.warn('/api/batch-delete error:', e);
+      // 1. Prefer Serverless API (bypasses RLS via Service Role Key)
+      try {
+        const apiRes = await fetchJsonApi('/api/admin-stats');
+        if (apiRes?.success) return notifySuccess(this, apiRes);
+      } catch (apiErr) {
+        console.warn('/api/admin-stats failed, falling back to direct client query:', apiErr);
+      }
+
+      const client = requireSupabaseClient();
+      const [
+        { data: profiles, error: pErr },
+        { data: attempts, error: aErr },
+        { data: batches, error: bErr }
+      ] = await Promise.all([
+        client.from('profiles').select('*').order('created_at', { ascending: false }),
+        client.from('exam_attempts').select('*'),
+        client.from('batches').select('*')
+      ]);
+
+      if (pErr) throw pErr;
+      if (aErr) throw aErr;
+      if (bErr) throw bErr;
+
+      const now = Date.now();
+      let activeNowCount = 0;
+      const targetExamsMap = Object.create(null);
+      const referralMap = Object.create(null);
+      const userStatsMap = Object.create(null);
+
+      (profiles || []).forEach((p) => {
+        const lastSeen = p.last_seen_at ? new Date(p.last_seen_at).getTime() : 0;
+        const isOnline = now - lastSeen < CONFIG.ONLINE_THRESHOLD_MS;
+        if (isOnline) activeNowCount++;
+
+        if (p.target_exams) {
+          const key = p.target_exams.trim();
+          targetExamsMap[key] = (targetExamsMap[key] || 0) + 1;
         }
+        if (p.referral_source) {
+          const key = p.referral_source.trim();
+          referralMap[key] = (referralMap[key] || 0) + 1;
+        }
+
+        userStatsMap[p.id] = {
+          id: p.id,
+          name: p.nickname || p.display_name || p.email.split('@')[0],
+          email: p.email,
+          avatar: p.avatar,
+          role: p.role,
+          targetExams: p.target_exams || 'ยังไม่ระบุ',
+          occupation: p.occupation || 'ยังไม่ระบุ',
+          ageGroup: p.age_group || 'ยังไม่ระบุ',
+          referralSource: p.referral_source || 'ยังไม่ระบุ',
+          createdAt: new Date(p.created_at).toLocaleDateString('th-TH'),
+          lastSeenStr: isOnline
+            ? 'ออนไลน์'
+            : p.last_seen_at
+              ? new Date(p.last_seen_at).toLocaleDateString('th-TH')
+              : '-',
+          isOnline,
+          attemptsCount: 0,
+          questionsCount: 0,
+          totalScore: 0,
+          uploadBatches: 0,
+          uploadQuestions: 0,
+          categoriesDone: {}
+        };
+      });
+
+      let totalQuestionsAllUsers = 0;
+      let totalScoreAllUsers = 0;
+
+      (attempts || []).forEach((a) => {
+        totalQuestionsAllUsers += a.total_questions || 0;
+        totalScoreAllUsers += a.score || 0;
+        const stats = userStatsMap[a.user_id];
+        if (stats) {
+          stats.attemptsCount++;
+          stats.questionsCount += a.total_questions || 0;
+          stats.totalScore += a.score || 0;
+        }
+      });
+
+      (batches || []).forEach((b) => {
+        const stats = b.user_id ? userStatsMap[b.user_id] : null;
+        if (stats) {
+          stats.uploadBatches++;
+          stats.uploadQuestions += b.total_questions || 0;
+        }
+      });
+
+      const users = Object.values(userStatsMap).map((u) => ({
+        ...u,
+        accuracy: u.questionsCount > 0 ? `${((u.totalScore / u.questionsCount) * 100).toFixed(1)}%` : '-'
+      }));
+
+      const avgAccuracy =
+        totalQuestionsAllUsers > 0
+          ? `${((totalScoreAllUsers / totalQuestionsAllUsers) * 100).toFixed(1)}%`
+          : '0%';
+
+      return notifySuccess(this, {
+        success: true,
+        kpis: {
+          totalUsers: (profiles || []).length,
+          activeUsers: activeNowCount,
+          totalAttempts: (attempts || []).length,
+          totalQuestionsDone: totalQuestionsAllUsers,
+          avgAccuracy
+        },
+        insights: {
+          targetExams: Object.entries(targetExamsMap).map(([label, count]) => ({ label, count })),
+          referrals: Object.entries(referralMap).map(([label, count]) => ({ label, count }))
+        },
+        users
+      });
+    } catch (err) {
+      console.error('getAdminConsoleStats error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async resetBatchStats(batchId, adminProfile) {
+    try {
+      try {
+        const data = await fetchJsonApi('/api/admin-reset-stats', {
+          method: 'POST',
+          body: { batchId, adminProfile }
+        });
+        if (data) return notifySuccess(this, data);
+      } catch (apiErr) {
+        console.warn('/api/admin-reset-stats error, falling back to direct delete:', apiErr);
       }
 
       if (sbClient) {
-        await sbClient.from('questions').delete().eq('batch_id', batchId);
-        await sbClient.from('exam_attempts').delete().eq('batch_id', batchId);
-        await sbClient.from('batches').delete().eq('id', batchId);
-      }
-      const res = { success: true };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      if (this._failureHandler) this._failureHandler(err);
-    }
-  },
-  deleteMyBatch: function(batchId, userProfile) {
-    return this.deleteExamBatch(batchId, userProfile);
-  },
-
-  // 10.1 Reset Batch Statistics (Super Admin Only)
-  resetBatchStats: async function(batchId, adminProfile) {
-    try {
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        try {
-          const resp = await fetch('/api/admin-reset-stats', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ batchId, adminProfile })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (this._successHandler) this._successHandler(data);
-            return data;
-          }
-        } catch (e) {
-          console.warn('/api/admin-reset-stats error:', e);
-        }
-      }
-
-      if (sbClient) {
         await sbClient.from('exam_attempts').delete().eq('batch_id', batchId);
       }
-      const res = { success: true, message: 'ล้างสถิติเรียบร้อยแล้ว' };
-      if (this._successHandler) this._successHandler(res);
-      return res;
+
+      return notifySuccess(this, { success: true, message: 'ล้างสถิติเรียบร้อยแล้ว' });
     } catch (err) {
-      if (this._failureHandler) this._failureHandler(err);
+      console.error('resetBatchStats error:', err);
+      return notifyFailure(this, err);
     }
   },
 
-  // 10.2 Set User Role (Super Admin Only)
-  setUserRole: async function(targetUserId, newRole) {
+  async setUserRole(targetUserId, newRole) {
     try {
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        try {
-          const resp = await fetch('/api/admin-set-role', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ targetUserId, newRole })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (this._successHandler) this._successHandler(data);
-            return data;
-          }
-        } catch (e) {
-          console.warn('/api/admin-set-role error:', e);
-        }
+      try {
+        const data = await fetchJsonApi('/api/admin-set-role', {
+          method: 'POST',
+          body: { targetUserId, newRole }
+        });
+        if (data) return notifySuccess(this, data);
+      } catch (apiErr) {
+        console.warn('/api/admin-set-role error, falling back to direct update:', apiErr);
       }
 
       if (sbClient) {
         await sbClient.from('profiles').update({ role: newRole }).eq('id', targetUserId);
       }
-      const res = { success: true, role: newRole };
-      if (this._successHandler) this._successHandler(res);
-      return res;
+
+      return notifySuccess(this, { success: true, role: newRole });
     } catch (err) {
-      if (this._failureHandler) this._failureHandler(err);
+      console.error('setUserRole error:', err);
+      return notifyFailure(this, err);
     }
   },
 
-  // 10.3 Activity Logs (Exam Audit Log)
-  getActivityLogs: async function() {
+  async getActivityLogs() {
     try {
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        try {
-          const resp = await fetch('/api/activity-logs');
-          if (resp.ok) {
-            const data = await resp.json();
-            if (this._successHandler) this._successHandler(data);
-            return data;
-          }
-        } catch (e) {
-          console.warn('/api/activity-logs error:', e);
-        }
+      try {
+        const data = await fetchJsonApi('/api/activity-logs');
+        if (data) return notifySuccess(this, data);
+      } catch (apiErr) {
+        console.warn('/api/activity-logs error:', apiErr);
       }
 
-      const res = { success: true, logs: [] };
-      if (this._successHandler) this._successHandler(res);
-      return res;
+      return notifySuccess(this, { success: true, logs: [] });
     } catch (err) {
-      if (this._failureHandler) this._failureHandler(err);
+      console.error('getActivityLogs error:', err);
+      return notifyFailure(this, err);
     }
   },
 
-  logActivity: async function(payload) {
+  async logActivity(payload) {
     try {
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        await fetch('/api/activity-logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      }
-    } catch (e) {}
-  },
-
-  // 11. Save Virtual Batch to Library
-  saveVirtualBatchToLibrary: async function(customName, batchCategory, sourceSummary, questions, examResult, currentUserProfile) {
-    try {
-      if (!sbClient) throw new Error('sbClient not ready');
-      const batchId = 'BATCH-' + Date.now();
-      const userId = (currentUserProfile && !currentUserProfile.isGuest && currentUserProfile.uuid) ? currentUserProfile.uuid : null;
-
-      const { error: bErr } = await sbClient.from('batches').insert({
-        id: batchId,
-        user_id: userId,
-        batch_name: customName || 'ชุดข้อสอบคัดสรรพิเศษ',
-        batch_category: batchCategory || 'ทั่วไป',
-        total_questions: questions.length,
-        file_type: 'CUSTOM_QUIZ',
-        source_files: [],
-        is_verified: true
+      await fetchJsonApi('/api/activity-logs', {
+        method: 'POST',
+        body: payload
       });
-      if (bErr) throw bErr;
-
-      const qInserts = questions.map((q, idx) => ({
-        id: batchId + '-Q' + (idx + 1),
-        batch_id: batchId,
-        question_no: idx + 1,
-        question_text: q.text || q.question_text || '',
-        choice_a: q.a || q.choice_a || '',
-        choice_b: q.b || q.choice_b || '',
-        choice_c: q.c || q.choice_c || '',
-        choice_d: q.d || q.choice_d || '',
-        choice_e: q.e || q.choice_e || '',
-        choice_f: q.f || q.choice_f || '',
-        choice_g: q.g || q.choice_g || '',
-        choice_h: q.h || q.choice_h || '',
-        answer: q.answer || 'ก',
-        source_type: 'เฉลยไฟล์',
-        explanation: q.explanation || '',
-        is_free_question: q.isFreeQuestion || false
-      }));
-
-      for (let i = 0; i < qInserts.length; i += 50) {
-        await sbClient.from('questions').insert(qInserts.slice(i, i + 50));
-      }
-
-      const res = { success: true, batchId: batchId, batchName: customName };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('saveVirtualBatchToLibrary error:', err);
-      if (this._failureHandler) this._failureHandler(err);
-    }
-  },
-
-  // 12. Review & Edit: Get File Base64 / DataURI for Left Split-Screen Viewer
-  getFileBase64ForReview: async function(fileId) {
-    try {
-      // 1. Check local cache
-      if (localFilesCache[fileId]) {
-        const f = localFilesCache[fileId];
-        const res = { success: true, dataUri: f.dataUri || f.data || '', mimeType: f.mimeType || 'text/plain', fileName: f.name || 'ไฟล์ต้นฉบับ' };
-        if (this._successHandler) this._successHandler(res);
-        return res;
-      }
-
-      // 2. Query Supabase batches
-      if (sbClient) {
-        let batchId = String(fileId).split('-FILE-')[0];
-        if (batchId === fileId) batchId = String(fileId).split('-f')[0];
-        let match = null;
-        if (batchId && batchId !== fileId) {
-          const { data: batch } = await sbClient.from('batches').select('source_files').eq('id', batchId).single();
-          if (batch && Array.isArray(batch.source_files)) {
-            match = batch.source_files.find(f => f.id === fileId);
-          }
-        }
-        if (!match) {
-          const { data: batches } = await sbClient.from('batches').select('source_files').not('source_files', 'is', null).limit(20);
-          if (batches) {
-            for (const b of batches) {
-              if (Array.isArray(b.source_files)) {
-                const found = b.source_files.find(f => f.id === fileId);
-                if (found) { match = found; break; }
-              }
-            }
-          }
-        }
-        if (match) {
-          localFilesCache[fileId] = match;
-          const res = { success: true, dataUri: match.dataUri || match.data || '', mimeType: match.mimeType || 'text/plain', fileName: match.name || 'ไฟล์ต้นฉบับ' };
-          if (this._successHandler) this._successHandler(res);
-          return res;
-        }
-      }
-
-      const failRes = { success: false, message: 'ไม่พบไฟล์ต้นฉบับในระบบ' };
-      if (this._successHandler) this._successHandler(failRes);
-      return failRes;
-    } catch (e) {
-      console.error('getFileBase64ForReview error:', e);
-      const errRes = { success: false, message: e.message || 'ไม่สามารถดึงไฟล์ได้' };
-      if (this._failureHandler) this._failureHandler(errRes);
-      return errRes;
-    }
-  },
-
-  getFilePreview: async function(fileId) {
-    return await adapterImpl.getFileBase64ForReview.apply(this, arguments);
-  },
-
-  // 13. Review & Edit: Save Reviewed Questions and Finalize Batch
-  saveReviewedQuestions: async function(batchId, updatedData, verifiedRows, extraMeta) {
-    try {
-      const isHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
-      if (isHttp) {
-        try {
-          const prof = window.currentUserProfile || (typeof currentUserProfile !== 'undefined' ? currentUserProfile : null);
-          const sResp = await fetch('/api/batch-review-save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ batchId, updatedData, verifiedRows, extraMeta, userProfile: prof })
-          });
-          if (sResp.ok) {
-            const sData = await sResp.json();
-            if (sData && sData.success) {
-              if (this._successHandler) this._successHandler(sData);
-              return sData;
-            }
-          }
-        } catch (apiErr) {
-          console.warn('/api/batch-review-save failed, falling back to direct client update:', apiErr);
-        }
-      }
-
-      if (!sbClient) throw new Error('sbClient is not initialized');
-
-      const verifiedSet = new Set((verifiedRows || []).map(r => String(r)));
-      const verifiedCount = verifiedSet.size;
-      const totalQ = (updatedData || []).length;
-      const isBatchAllVerified = (verifiedCount === totalQ && totalQ > 0);
-
-      // 1. Update Batch Metadata & Verification Status
-      const batchUpdatePayload = {
-        is_verified: isBatchAllVerified,
-        total_questions: totalQ,
-        updated_at: new Date().toISOString()
-      };
-      if (extraMeta) {
-        if (extraMeta.batchName) batchUpdatePayload.batch_name = extraMeta.batchName;
-        if (extraMeta.batchCategory) batchUpdatePayload.batch_category = extraMeta.batchCategory;
-      }
-      const { error: bErr } = await sbClient.from('batches').update(batchUpdatePayload).eq('id', batchId);
-      if (bErr) console.warn('Update batch error:', bErr);
-
-      // 2. Update Questions
-      for (const q of (updatedData || [])) {
-        const isVer = verifiedSet.has(String(q.row));
-        const updatePayload = {
-          question_text: q.text,
-          choice_a: q.a || '',
-          choice_b: q.b || '',
-          choice_c: q.c || '',
-          choice_d: q.d || '',
-          choice_e: q.e || '',
-          choice_f: q.f || '',
-          choice_g: q.g || '',
-          choice_h: q.h || '',
-          answer: q.answer,
-          source_type: isVer ? 'ยืนยันแล้ว' : (q.sourceType || 'รอตรวจ'),
-          is_free_question: q.isFree || (q.answer === 'FREE')
-        };
-
-        if (q.id) {
-          await sbClient.from('questions').update(updatePayload).eq('id', q.id);
-        } else {
-          await sbClient.from('questions').update(updatePayload).match({ batch_id: batchId, question_no: parseInt(q.row, 10) });
-        }
-      }
-
-      const res = {
-        success: true,
-        message: 'บันทึกการตรวจสอบและแก้ไขเรียบร้อยแล้ว',
-        updatedBatchName: extraMeta?.batchName,
-        updatedBatchCategory: extraMeta?.batchCategory,
-        verifiedSummary: `${verifiedCount}/${totalQ}`
-      };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('saveReviewedQuestions error:', err);
-      const fail = { success: false, message: err.message };
-      if (this._failureHandler) this._failureHandler(fail);
-      return fail;
-    }
-  },
-
-  // 14. Review & Edit: Delete Single Question
-  deleteSingleQuestion: async function(batchId, row) {
-    try {
-      if (!sbClient) throw new Error('sbClient not ready');
-      await sbClient.from('questions').delete().match({ batch_id: batchId, question_no: parseInt(row, 10) });
-
-      // Update total questions count in batch
-      const { count } = await sbClient.from('questions').select('*', { count: 'exact', head: true }).eq('batch_id', batchId);
-      await sbClient.from('batches').update({ total_questions: count || 0 }).eq('id', batchId);
-
-      const res = { success: true };
-      if (this._successHandler) this._successHandler(res);
-      return res;
-    } catch (err) {
-      console.error('deleteSingleQuestion error:', err);
-      if (this._failureHandler) this._failureHandler(err);
+    } catch {
+      // Non-critical audit logging
     }
   }
+};
+
+// ==============================================================================
+// 8. UNIFIED ADAPTER IMPLEMENTATION & GOOGLE.SCRIPT.RUN PROXY WRAPPER
+// ==============================================================================
+const adapterImpl = {
+  // Batches & Questions
+  getExamBatches: BatchesQuestionsService.getExamBatches,
+  getQuestionsByBatch: BatchesQuestionsService.getQuestionsByBatch,
+  deleteExamBatch: BatchesQuestionsService.deleteExamBatch,
+  deleteMyBatch: BatchesQuestionsService.deleteMyBatch,
+  saveVirtualBatchToLibrary: BatchesQuestionsService.saveVirtualBatchToLibrary,
+  getFileBase64ForReview: BatchesQuestionsService.getFileBase64ForReview,
+  getFilePreview: BatchesQuestionsService.getFilePreview,
+  saveReviewedQuestions: BatchesQuestionsService.saveReviewedQuestions,
+  deleteSingleQuestion: BatchesQuestionsService.deleteSingleQuestion,
+
+  // Exam, Custom Quiz & Stats
+  recordExamAttempt: ExamStatsService.recordExamAttempt,
+  saveExamAttempt: ExamStatsService.saveExamAttempt,
+  getUserDashboardStats: ExamStatsService.getUserDashboardStats,
+  getUserDashboardData: ExamStatsService.getUserDashboardData,
+  generateExplanation: ExamStatsService.generateExplanation,
+  getAvailableVerifiedCategories: ExamStatsService.getAvailableVerifiedCategories,
+  getCustomQuizCategories: ExamStatsService.getCustomQuizCategories,
+  generateAdvancedRandomExam: ExamStatsService.generateAdvancedRandomExam,
+
+  // AI Upload Queue
+  enqueueUploadJob: UploadQueueService.enqueueUploadJob,
+  _processExtractionTask: UploadQueueService._processExtractionTask,
+  getJobQueueStatus: UploadQueueService.getJobQueueStatus,
+  getQueueStatus: UploadQueueService.getQueueStatus,
+
+  // Admin & Audit
+  getAdminConsoleStats: AdminAuditService.getAdminConsoleStats,
+  resetBatchStats: AdminAuditService.resetBatchStats,
+  setUserRole: AdminAuditService.setUserRole,
+  getActivityLogs: AdminAuditService.getActivityLogs,
+  logActivity: AdminAuditService.logActivity
 };
 
 function createGoogleScriptRunner() {
   let successFn = null;
   let failureFn = null;
 
-  const proxy = new Proxy({}, {
-    get: function(target, prop) {
-      if (prop === 'withSuccessHandler') {
-        return function(fn) {
-          successFn = fn;
-          return proxy;
-        };
-      }
-      if (prop === 'withFailureHandler') {
-        return function(fn) {
-          failureFn = fn;
-          return proxy;
-        };
-      }
-
-      return async function(...args) {
-        const ctx = Object.assign({}, adapterImpl, { _successHandler: successFn, _failureHandler: failureFn });
-        if (typeof adapterImpl[prop] === 'function') {
-          try {
-            return await adapterImpl[prop].apply(ctx, args);
-          } catch (err) {
-            console.error('Adapter method error [' + prop + ']:', err);
-            if (failureFn) failureFn(err);
-          }
-        } else {
-          console.warn('Unhandled method on adapter:', prop, args);
-          if (successFn) successFn({ success: true });
+  const proxy = new Proxy(
+    {},
+    {
+      get(_target, prop) {
+        if (prop === 'withSuccessHandler') {
+          return function (fn) {
+            successFn = fn;
+            return proxy;
+          };
         }
-      };
+        if (prop === 'withFailureHandler') {
+          return function (fn) {
+            failureFn = fn;
+            return proxy;
+          };
+        }
+
+        return async function (...args) {
+          const ctx = Object.assign({}, adapterImpl, {
+            _successHandler: successFn,
+            _failureHandler: failureFn
+          });
+
+          if (typeof adapterImpl[prop] === 'function') {
+            try {
+              return await adapterImpl[prop].apply(ctx, args);
+            } catch (err) {
+              console.error(`Adapter method error [${String(prop)}]:`, err);
+              if (typeof failureFn === 'function') failureFn(err);
+            }
+          } else {
+            console.warn('Unhandled method on adapter:', prop, args);
+            if (typeof successFn === 'function') successFn({ success: true });
+          }
+        };
+      }
     }
-  });
+  );
 
   return proxy;
 }
 
-window.google = window.google || {};
-window.google.script = window.google.script || {};
-Object.defineProperty(window.google.script, 'run', {
-  get: function() {
-    return createGoogleScriptRunner();
-  }
-});
+if (typeof window !== 'undefined') {
+  window.google = window.google || {};
+  window.google.script = window.google.script || {};
+  Object.defineProperty(window.google.script, 'run', {
+    configurable: true,
+    get() {
+      return createGoogleScriptRunner();
+    }
+  });
+}
 
 </script>
 
