@@ -97,6 +97,56 @@ module.exports = async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
+    // Branch 1.5: Get flagged questions for a specific batch (Review & Edit mode)
+    // -------------------------------------------------------------
+    if (flag === 'get_batch_flags') {
+      if (!batchId) return res.status(400).json({ error: 'Missing batchId' });
+      const ledgerRes = await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?batch_id=eq.${encodeURIComponent(batchId)}&or=(status.like.FLAG_QUESTION*,status.like.RESOLVE_FLAG*)&select=*&order=created_at.desc&limit=60`, { headers });
+      const ledgerRows = await ledgerRes.json();
+
+      const resolvedMap = {};
+      (Array.isArray(ledgerRows) ? ledgerRows : []).forEach(row => {
+        if (row.status && row.status.startsWith('RESOLVE_FLAG:')) {
+          try {
+            const raw = row.status.replace('RESOLVE_FLAG:', '');
+            const p = JSON.parse(raw);
+            if (p.flag_ledger_id) resolvedMap[p.flag_ledger_id] = p;
+          } catch (e) {}
+        }
+      });
+
+      const flags = [];
+      (Array.isArray(ledgerRows) ? ledgerRows : []).forEach(row => {
+        if (row.status && row.status.startsWith('FLAG_QUESTION:')) {
+          try {
+            const raw = row.status.replace('FLAG_QUESTION:', '');
+            const p = JSON.parse(raw);
+            const isResolved = Boolean(resolvedMap[row.id]);
+            flags.push({
+              ledgerId: row.id,
+              batchId: p.batch_id,
+              questionIndex: p.question_index,
+              questionId: p.question_id,
+              questionText: p.question_text || '',
+              issueType: p.issue_type || 'ANSWER_WRONG',
+              userNote: p.user_note || '',
+              reporterName: p.reporter_name || 'ผู้เรียน',
+              createdAt: p.created_at || row.created_at,
+              status: isResolved ? 'RESOLVED' : 'PENDING'
+            });
+          } catch (e) {}
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        batchId,
+        flags,
+        pendingFlags: flags.filter(f => f.status === 'PENDING')
+      });
+    }
+
+    // -------------------------------------------------------------
     // Branch 2: Resolve a Flagged Question (Admin Action)
     // -------------------------------------------------------------
     if (flag === 'resolve_flag') {

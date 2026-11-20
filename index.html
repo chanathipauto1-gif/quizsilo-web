@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.15.51</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.16.35</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -1367,9 +1367,10 @@
         </div>
         <div class="flex items-center gap-2 self-start sm:self-auto">
           <select id="admin-flags-filter-status" onchange="renderAdminFlagsTable()" class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
-            <option value="ALL">รายงานทั้งหมด</option>
-            <option value="PENDING" selected>⏳ รอการตรวจสอบ</option>
-            <option value="RESOLVED">✓ ตรวจสอบแล้ว</option>
+            <option value="ALL">ชุดข้อสอบทั้งหมด</option>
+            <option value="PENDING" selected>⏳ มีข้อรอตรวจสอบ</option>
+            <option value="AUTO_HIDDEN">🚨 ถูกระงับ (> 10 รายงาน)</option>
+            <option value="RESOLVED">✓ ตรวจสอบครบแล้ว</option>
           </select>
           <button onclick="loadAdminFlags(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 shadow-2xs transition-all cursor-pointer">
             <i data-lucide="refresh-cw" id="admin-flags-refresh-icon" class="w-3.5 h-3.5"></i>
@@ -1383,18 +1384,16 @@
         <table class="w-full text-left border-collapse text-xs">
           <thead>
             <tr class="bg-slate-100/70 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-              <th class="py-3 px-4 w-36">วันเวลา</th>
-              <th class="py-3 px-3 min-w-[200px]">ชุดข้อสอบ & ข้อที่</th>
-              <th class="py-3 px-3 w-32">ประเภทปัญหา</th>
-              <th class="py-3 px-4 min-w-[220px]">รายละเอียดที่ผู้ใช้แจ้ง</th>
-              <th class="py-3 px-3 min-w-[140px]">ผู้รายงาน</th>
-              <th class="py-3 px-3 text-center w-28">สถานะ</th>
-              <th class="py-3 px-4 text-center w-36">การจัดการ</th>
+              <th class="py-3 px-4 w-36">สถานะชุดข้อสอบ</th>
+              <th class="py-3 px-3 min-w-[200px]">ชุดข้อสอบ & หมวดหมู่</th>
+              <th class="py-3 px-3 min-w-[140px]">ผู้สร้าง / เจ้าของชุด</th>
+              <th class="py-3 px-3 text-center w-36">สรุปรายงาน</th>
+              <th class="py-3 px-4 text-center min-w-[240px]">การจัดการชุดข้อสอบ</th>
             </tr>
           </thead>
           <tbody id="admin-flags-table-body" class="divide-y divide-slate-100 text-slate-700">
             <tr>
-              <td colspan="7" class="py-12 text-center text-slate-400">
+              <td colspan="5" class="py-12 text-center text-slate-400">
                 <div class="flex flex-col items-center justify-center space-y-2">
                   <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-brand-500"></i>
                   <span>กำลังโหลดรายการรายงานข้อสอบ...</span>
@@ -2343,6 +2342,8 @@ const BatchesQuestionsService = {
         const metaObj = Array.isArray(b.source_files) ? (b.source_files.find(f => f && f._meta) || {}) : {};
         const isHidden = Boolean(metaObj.is_hidden);
         const isFeatured = Boolean(metaObj.is_featured);
+        const autoHidden = Boolean(metaObj.auto_hidden || Number(metaObj.flag_count) > 10);
+        const flagCount = Number(metaObj.flag_count || 0);
         const ratingAvg = Number(metaObj.rating_avg || 0);
         const ratingCount = Number(metaObj.rating_count || 0);
         const totalQ = b.total_questions || 0;
@@ -2370,6 +2371,8 @@ const BatchesQuestionsService = {
           isCustomQuiz: b.file_type === 'CUSTOM_QUIZ',
           isHidden: isHidden,
           isFeatured: isFeatured,
+          autoHidden: autoHidden,
+          flagCount: flagCount,
           ratingAvg: ratingAvg,
           ratingCount: ratingCount,
           uploader: {
@@ -3874,6 +3877,23 @@ const AdminAuditService = {
       console.error('unhideBatch error:', err);
       return notifyFailure(this, err);
     }
+  },
+
+  async getBatchFlags(batchId) {
+    try {
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'get_batch_flags',
+          batchId
+        }
+      });
+      if (data?.success) return notifySuccess(this, data);
+      return notifySuccess(this, { success: true, flags: [], pendingFlags: [] });
+    } catch (err) {
+      console.warn('getBatchFlags error:', err);
+      return notifySuccess(this, { success: true, flags: [], pendingFlags: [] });
+    }
   }
 };
 
@@ -3920,7 +3940,8 @@ const adapterImpl = {
   reportQuestionIssue: AdminAuditService.reportQuestionIssue,
   getFlaggedQuestions: AdminAuditService.getFlaggedQuestions,
   resolveFlaggedQuestion: AdminAuditService.resolveFlaggedQuestion,
-  unhideBatch: AdminAuditService.unhideBatch
+  unhideBatch: AdminAuditService.unhideBatch,
+  getBatchFlags: AdminAuditService.getBatchFlags
 };
 
 function createGoogleScriptRunner() {
@@ -4900,32 +4921,48 @@ if (typeof window !== 'undefined') {
            </span>` 
         : '';
 
-      const statusBadge = isVerified 
-        ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
-             <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i> เผยแพร่ในคลังแล้ว (✓ ครบ)
+      const isAutoHidden = Boolean(b.autoHidden || Number(b.flagCount) > 10);
+
+      const statusBadge = isAutoHidden
+        ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-rose-50 text-rose-700 border border-rose-300">
+             <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-600"></i> ถูกระงับ (> 10 รายงาน)
            </span>`
-        : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300">
-             <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> รอตรวจ (${b.verifiedSummary || '0/' + b.totalQuestions})
-           </span>`;
+        : (isVerified 
+            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
+                 <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i> เผยแพร่ในคลังแล้ว (✓ ครบ)
+               </span>`
+            : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                 <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> รอตรวจ (${b.verifiedSummary || '0/' + b.totalQuestions})
+               </span>`);
 
       const deleteBtn = `<button onclick="confirmDeleteMyBatch('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="ลบชุดข้อสอบนี้"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
 
-      const actionBtn = isVerified
-        ? `<div class="inline-flex items-center gap-1.5">
-             <button onclick="startExam('${b.batchId}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
-               <i data-lucide="play" class="w-3.5 h-3.5"></i> <span>ทำข้อสอบ</span>
-             </button>
-             <button onclick="openReviewMode('${b.batchId}')" class="p-1.5 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all cursor-pointer" title="ตรวจสอบและแก้ไข (Review)">
-               <i data-lucide="pen-line" class="w-4 h-4"></i>
-             </button>
-             ${deleteBtn}
-           </div>`
-        : `<div class="inline-flex items-center gap-1.5">
-             <button onclick="openReviewMode('${b.batchId}')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
-               <i data-lucide="pen-line" class="w-3.5 h-3.5"></i> <span>ตรวจเฉลย (Review)</span>
-             </button>
-             ${deleteBtn}
-           </div>`;
+      let actionBtn = '';
+      if (isAutoHidden) {
+        actionBtn = `<div class="inline-flex items-center gap-1.5">
+          <button onclick="openReviewMode('${b.batchId}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer animate-pulse" title="ชุดข้อสอบถูกระงับชั่วคราวเนื่องจากถูกรายงาน ต้องตรวจทานและแก้ไขให้ครบ 100% จึงจะปลดระงับได้">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> <span>แก้ไขข้อสอบ (ถูกระงับ)</span>
+          </button>
+          ${deleteBtn}
+        </div>`;
+      } else if (isVerified) {
+        actionBtn = `<div class="inline-flex items-center gap-1.5">
+          <button onclick="startExam('${b.batchId}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i> <span>ทำข้อสอบ</span>
+          </button>
+          <button onclick="openReviewMode('${b.batchId}')" class="p-1.5 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all cursor-pointer" title="ตรวจสอบและแก้ไข (Review)">
+            <i data-lucide="pen-line" class="w-4 h-4"></i>
+          </button>
+          ${deleteBtn}
+        </div>`;
+      } else {
+        actionBtn = `<div class="inline-flex items-center gap-1.5">
+          <button onclick="openReviewMode('${b.batchId}')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+            <i data-lucide="pen-line" class="w-3.5 h-3.5"></i> <span>ตรวจเฉลย (Review)</span>
+          </button>
+          ${deleteBtn}
+        </div>`;
+      }
 
       const cleanCat = b.batchCategory ? b.batchCategory.split('|')[0].trim() : 'ทั่วไป';
 
@@ -4937,7 +4974,7 @@ if (typeof window !== 'undefined') {
               ${fileTypeBadge}
               ${hiddenBadge}
               ${featuredBadge}
-              <span class="hover:text-brand-600 cursor-pointer transition-colors" onclick="${isVerified ? `startExam('${b.batchId}')` : `openReviewMode('${b.batchId}')`}">
+              <span class="hover:text-brand-600 cursor-pointer transition-colors" onclick="${isAutoHidden ? `openReviewMode('${b.batchId}')` : (isVerified ? `startExam('${b.batchId}')` : `openReviewMode('${b.batchId}')`)}">
                 ${escapeHtml(b.batchName)}
               </span>
             </div>
@@ -6100,6 +6137,24 @@ if (typeof window !== 'undefined') {
    * ---------------------------------------------------------- */
   function startExam(batchId, isRetake = false) {
     const batch = allBatches.find(b => b.batchId === batchId);
+    if (batch && (batch.autoHidden || Number(batch.flagCount) > 10)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ชุดข้อสอบนี้ถูกระงับชั่วคราว ⚠️',
+        html: `ชุดข้อสอบ <b>"${escapeHtml(batch.batchName)}"</b> มีรายงานข้อผิดพลาดสะสมเกิน 10 ครั้ง<br><br><span class="text-xs text-slate-600">ระบบจึงระงับการเข้าสอบชั่วคราวเพื่อรักษามาตรฐานคุณภาพ กรุณาเข้าสู่โหมด Review & Edit เพื่อตรวจสอบและแก้ไขเฉลยให้ครบ 100% จึงจะสามารถปลดระงับได้ครับ</span>`,
+        confirmButtonColor: '#e11d48',
+        confirmButtonText: '✏️ เข้าสู่หน้าแก้ไขข้อสอบ',
+        showCancelButton: true,
+        cancelButtonText: 'ปิด',
+        customClass: { popup: 'rounded-3xl' }
+      }).then(res => {
+        if (res.isConfirmed) {
+          openReviewMode(batchId);
+        }
+      });
+      return;
+    }
+
     currentExamBatch = batch ? Object.assign({}, batch) : { batchId: batchId, batchName: 'ชุดข้อสอบ', batchCategory: 'ทั่วไป', savedState: '' };
     if (isRetake) {
       clearProfileDraft(batchId);
@@ -6713,6 +6768,17 @@ if (typeof window !== 'undefined') {
   // ==========================================
   // Question Issue Reporting (Flagged Questions)
   // ==========================================
+  function getIssueTypeLabel(type) {
+    const map = {
+      'ANSWER_WRONG': '❌ เฉลยไม่ถูกต้อง (ผิดข้อ)',
+      'QUESTION_UNCLEAR': '❓ โจทย์ไม่ชัดเจน / ข้อมูลตกหล่น',
+      'TYPO_ERROR': '🔤 พิมพ์ผิด / ตัวเลือกไม่ครบ',
+      'CHOICE_DUPLICATE': '🔄 ตัวเลือกซ้ำ / ไม่มีข้อที่ถูก',
+      'OTHER': '📝 อื่นๆ'
+    };
+    return map[type] || type || 'ข้อบกพร่อง';
+  }
+
   function openFlagQuestionModal() {
     if (!currentQuestions || currentQuestions.length === 0 || !currentExamBatch) {
       showToast('info', 'ไม่พบข้อสอบที่กำลังทำอยู่');
@@ -6905,26 +6971,55 @@ if (typeof window !== 'undefined') {
     }
 
     currentExamBatch = batch;
-    Swal.fire({ title: 'กำลังดึงข้อมูลต้นฉบับ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังดึงข้อมูลต้นฉบับและรายงานข้อสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-    google.script.run
-      .withSuccessHandler(questions => {
-        Swal.close();
-        if (!questions || questions.length === 0) {
-          Swal.fire('ไม่พบข้อมูล', 'ชุดข้อสอบนี้ไม่มีรายการโจทย์', 'info');
-          return;
-        }
-        
-        currentQuestions = questions;
-        setupReviewHeaderMeta(batch);
-        resetPreviewZoom();
-        renderReviewFiles(batch.sourceFiles);
-        renderReviewForm(questions);
-        switchReviewMobileTab('questions');
-        switchPage('review');
+    Promise.all([
+      new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .getQuestionsByBatch(batchId);
+      }),
+      new Promise((resolve) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(() => resolve({ success: true, flags: [], pendingFlags: [] }))
+          .getBatchFlags(batchId);
       })
-      .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message, 'error'))
-      .getQuestionsByBatch(batchId);
+    ]).then(([questions, flagsRes]) => {
+      Swal.close();
+      if (!questions || questions.length === 0) {
+        Swal.fire('ไม่พบข้อมูล', 'ชุดข้อสอบนี้ไม่มีรายการโจทย์', 'info');
+        return;
+      }
+
+      const pendingFlags = (flagsRes && flagsRes.pendingFlags) ? flagsRes.pendingFlags : [];
+      const flagMapByQuestionIndex = {};
+      pendingFlags.forEach(f => {
+        if (f.questionIndex !== undefined && f.questionIndex !== null) {
+          flagMapByQuestionIndex[Number(f.questionIndex)] = f;
+        }
+      });
+
+      questions.forEach((q, idx) => {
+        const flag = flagMapByQuestionIndex[idx];
+        if (flag) {
+          q.flaggedReport = flag;
+          // Unverify this question so admin/owner must re-verify it!
+          q.isVerified = false;
+        }
+      });
+
+      currentQuestions = questions;
+      setupReviewHeaderMeta(batch);
+      resetPreviewZoom();
+      renderReviewFiles(batch.sourceFiles);
+      renderReviewForm(questions);
+      switchReviewMobileTab('questions');
+      switchPage('review');
+    }).catch(err => {
+      Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error');
+    });
   }
 
   // [แก้ข้อ 2] ดึงรูปภาพทั้งหมดมาเรนเดอร์เรียงกัน
@@ -7107,8 +7202,13 @@ if (typeof window !== 'undefined') {
     questions.forEach((q, idx) => {
       const meta = getSourceFlagMeta(q.sourceType);
       const isVer = !!q.isVerified;
-      const flagBadge = meta.isFlag ? ('<span class="absolute -top-1 -right-1 text-[10px]" title="' + meta.tooltip + '">⚠️</span>') : '';
-      let bgClass = isVer ? 'bg-sky-500 text-white border-sky-600' : meta.gridCls;
+      const isFlagged = !!q.flaggedReport;
+      const flagBadge = isFlagged
+        ? '<span class="absolute -top-1.5 -right-1.5 text-[11px] animate-bounce" title="ผู้ใช้รายงานข้อนี้ผิด">🚩</span>'
+        : (meta.isFlag ? ('<span class="absolute -top-1 -right-1 text-[10px]" title="' + meta.tooltip + '">⚠️</span>') : '');
+      let bgClass = isFlagged
+        ? 'bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-400 font-black'
+        : (isVer ? 'bg-sky-500 text-white border-sky-600' : meta.gridCls);
       const dispNo = q.qNo || q.no || (idx + 1);
       gridHtml += `<button id="review-grid-btn-${idx}" type="button" onclick="document.getElementById('review-q-item-${idx}').scrollIntoView({behavior: 'smooth', block: 'center'})" class="relative h-8 rounded-lg font-bold text-xs ${bgClass} border hover:opacity-90 transition-all shadow-sm">${dispNo}${flagBadge}</button>`;
     });
@@ -7118,11 +7218,16 @@ if (typeof window !== 'undefined') {
     let formHtml = questions.map((q, idx) => {
       const meta = getSourceFlagMeta(q.sourceType);
       const isVer = !!q.isVerified;
+      const isFlagged = !!q.flaggedReport;
       const isFree = !!q.isFreeQuestion || q.answer === 'FREE';
       const dispNo = q.qNo || q.no || (idx + 1);
       
-      let borderStyle = isVer ? 'border-sky-400 bg-sky-50/40' : meta.cardBorder;
-      let flagBadge = `<span class="px-2 py-0.5 rounded text-[10px] border ${meta.badgeCls}">${meta.label}</span>`;
+      let borderStyle = isFlagged
+        ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-300'
+        : (isVer ? 'border-sky-400 bg-sky-50/40' : meta.cardBorder);
+      let flagBadge = isFlagged
+        ? `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">🚩 มีรายงาน (${getIssueTypeLabel(q.flaggedReport.issueType)})</span>`
+        : `<span class="px-2 py-0.5 rounded text-[10px] border ${meta.badgeCls}">${meta.label}</span>`;
       let freeBadge = `<span id="review-free-badge-${idx}" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 ${isFree ? '' : 'hidden'}">🎁 ข้อฟรี</span>`;
 
       // Three-Tier Auto-Detection Engine (กฎตรวจจับ 3 ชั้น)
@@ -7181,6 +7286,27 @@ if (typeof window !== 'undefined') {
               </label>
             </div>
           </div>
+
+          ${q.flaggedReport ? `
+            <div class="p-3 bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-300 rounded-xl text-xs space-y-1.5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5 font-extrabold text-rose-800">
+                  <span class="text-sm">🚩</span>
+                  <span>มีรายงานข้อบกพร่องจากผู้เรียน: <u>${getIssueTypeLabel(q.flaggedReport.issueType)}</u></span>
+                </div>
+                <span class="text-[10px] text-rose-500 font-mono">${q.flaggedReport.createdAt ? new Date(q.flaggedReport.createdAt).toLocaleDateString('th-TH') : ''}</span>
+              </div>
+              ${q.flaggedReport.userNote ? `
+                <div class="text-slate-700 bg-white/85 p-2 rounded-lg border border-rose-100 italic text-[11px] leading-relaxed">
+                  "${escapeHtml(q.flaggedReport.userNote)}"
+                </div>
+              ` : ''}
+              <div class="text-[10px] text-slate-500 flex items-center justify-between pt-0.5">
+                <span>ผู้รายงาน: <b>${escapeHtml(q.flaggedReport.reporterName || 'ผู้เรียน')}</b></span>
+                <span class="text-rose-600 font-bold">⚠️ ปลดสถานะตรวจแล้ว เพื่อให้ท่านตรวจทานข้อนี้ใหม่</span>
+              </div>
+            </div>
+          ` : ''}
 
           <div id="review-free-banner-${idx}" class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center gap-2 ${isFree ? '' : 'hidden'}">
             <span class="text-base">🎁</span>
@@ -7469,7 +7595,19 @@ if (typeof window !== 'undefined') {
     google.script.run
       .withSuccessHandler(res => {
         if (res.success) {
-          showToast('success', '✅ บันทึกการแก้ไขและข้อมูลชุดข้อสอบเรียบร้อย!');
+          if (res.unhidden || res.wasAutoHidden) {
+            Swal.fire({
+              icon: 'success',
+              title: 'ตรวจทานครบ 100% เรียบร้อย! 🎉',
+              html: `ชุดข้อสอบ <b>"${escapeHtml(res.updatedBatchName || currentExamBatch.batchName)}"</b> ได้รับการตรวจทานเฉลยครบทุกข้อแล้ว<br><br><span class="text-xs text-emerald-700 font-semibold">ระบบได้ปลดการระงับ คืนสถานะแสดงผลในคลังสาธารณะ และรีเซ็ตคะแนนรายงานข้อผิดพลาดเป็น 0 ให้อัตโนมัติแล้วครับ</span>`,
+              confirmButtonColor: '#10b981',
+              confirmButtonText: 'ยอดเยี่ยม!',
+              customClass: { popup: 'rounded-3xl' }
+            });
+          } else {
+            showToast('success', '✅ บันทึกการแก้ไขและข้อมูลชุดข้อสอบเรียบร้อย!');
+          }
+
           if (res.updatedBatchName && currentExamBatch) {
             currentExamBatch.batchName = res.updatedBatchName;
           }
@@ -7484,6 +7622,11 @@ if (typeof window !== 'undefined') {
             if (res.updatedBatchName) allBatches[bIndex].batchName = res.updatedBatchName;
             if (res.updatedBatchCategory) allBatches[bIndex].batchCategory = res.updatedBatchCategory;
             if (res.verifiedSummary) allBatches[bIndex].verifiedSummary = res.verifiedSummary;
+            if (res.isBatchAllVerified) {
+              allBatches[bIndex].autoHidden = false;
+              allBatches[bIndex].flagCount = 0;
+              allBatches[bIndex].isHidden = false;
+            }
           }
           switchPage('dashboard');
           loadBatches(true);
@@ -8566,82 +8709,246 @@ if (typeof window !== 'undefined') {
     const tbody = document.getElementById('admin-flags-table-body');
     if (!tbody) return;
 
-    const filterVal = document.getElementById('admin-flags-filter-status')?.value || 'ALL';
-    let filtered = allAdminFlags;
-    if (filterVal === 'PENDING') {
-      filtered = allAdminFlags.filter(f => f.status === 'PENDING');
+    const filterVal = document.getElementById('admin-flags-filter-status')?.value || 'PENDING';
+
+    // 1. Group flags by batchId
+    const groupsByBatch = {};
+    (allAdminFlags || []).forEach(flag => {
+      const bId = flag.batchId;
+      if (!groupsByBatch[bId]) {
+        groupsByBatch[bId] = {
+          batchId: bId,
+          batchName: flag.batchName || 'ชุดข้อสอบ',
+          category: 'ทั่วไป',
+          uploader: { name: 'ผู้ใช้', avatar: '👤' },
+          totalQuestions: 0,
+          isAutoHidden: false,
+          flagCount: 0,
+          flags: []
+        };
+      }
+      groupsByBatch[bId].flags.push(flag);
+    });
+
+    // 2. Merge information from allBatches & allAutoHiddenBatches
+    (allAutoHiddenBatches || []).forEach(ab => {
+      if (!groupsByBatch[ab.batchId]) {
+        groupsByBatch[ab.batchId] = {
+          batchId: ab.batchId,
+          batchName: ab.batchName || 'ชุดข้อสอบ',
+          category: ab.category || 'ทั่วไป',
+          uploader: { name: 'ผู้ใช้', avatar: '👤' },
+          totalQuestions: ab.totalQuestions || 0,
+          isAutoHidden: true,
+          flagCount: ab.flagCount || 0,
+          flags: []
+        };
+      } else {
+        groupsByBatch[ab.batchId].isAutoHidden = true;
+        groupsByBatch[ab.batchId].flagCount = Math.max(groupsByBatch[ab.batchId].flagCount, ab.flagCount || 0);
+      }
+    });
+
+    // Enrich with allBatches data (uploader, category, etc.)
+    Object.values(groupsByBatch).forEach(group => {
+      const matchBatch = (allBatches || []).find(b => b.batchId === group.batchId);
+      if (matchBatch) {
+        group.batchName = matchBatch.batchName || group.batchName;
+        group.category = (matchBatch.batchCategory ? matchBatch.batchCategory.split('|')[0].trim() : group.category);
+        group.uploader = matchBatch.uploader || group.uploader;
+        group.totalQuestions = matchBatch.totalQuestions || group.totalQuestions;
+        if (matchBatch.autoHidden || Number(matchBatch.flagCount) > 10) {
+          group.isAutoHidden = true;
+          group.flagCount = Math.max(group.flagCount, Number(matchBatch.flagCount) || 0);
+        }
+      }
+      if (!group.flagCount) {
+        group.flagCount = group.flags.length;
+      }
+    });
+
+    let groupList = Object.values(groupsByBatch);
+
+    // 3. Filter groups
+    if (filterVal === 'AUTO_HIDDEN') {
+      groupList = groupList.filter(g => g.isAutoHidden);
+    } else if (filterVal === 'PENDING') {
+      groupList = groupList.filter(g => g.flags.some(f => f.status === 'PENDING') || g.isAutoHidden);
     } else if (filterVal === 'RESOLVED') {
-      filtered = allAdminFlags.filter(f => f.status === 'RESOLVED');
+      groupList = groupList.filter(g => g.flags.length > 0 && g.flags.every(f => f.status === 'RESOLVED') && !g.isAutoHidden);
     }
 
-    if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-slate-400">ไม่พบรายการรายงานข้อสอบตามเงื่อนไขที่เลือก</td></tr>';
+    if (groupList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center text-slate-400">ไม่พบชุดข้อสอบตามเงื่อนไขที่เลือก</td></tr>';
       return;
     }
 
+    // Sort: Auto-hidden first, then pending flags count desc, then total flags count desc
+    groupList.sort((a, b) => {
+      if (a.isAutoHidden && !b.isAutoHidden) return -1;
+      if (!a.isAutoHidden && b.isAutoHidden) return 1;
+      const aPending = a.flags.filter(f => f.status === 'PENDING').length;
+      const bPending = b.flags.filter(f => f.status === 'PENDING').length;
+      if (aPending !== bPending) return bPending - aPending;
+      return b.flags.length - a.flags.length;
+    });
+
     const issueTypeLabels = {
       'ANSWER_WRONG': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">❌ เฉลยผิด</span>',
-      'QUESTION_UNCLEAR': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">❓ โจทย์ไม่ชัดเจน</span>',
-      'TYPO_ERROR': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">🔤 พิมพ์ผิด/ชอยส์แหว่ง</span>',
-      'CHOICE_DUPLICATE': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">🔄 ตัวเลือกซ้ำ</span>',
+      'QUESTION_UNCLEAR': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">❓ โจทย์ไม่ชัด</span>',
+      'TYPO_ERROR': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">🔤 พิมพ์ผิด</span>',
+      'CHOICE_DUPLICATE': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">🔄 ชอยส์ซ้ำ</span>',
       'OTHER': '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">📝 อื่นๆ</span>'
     };
 
-    tbody.innerHTML = filtered.map(item => {
-      const timeStr = item.createdAt ? new Date(item.createdAt).toLocaleString('th-TH') : '-';
-      const typeBadge = issueTypeLabels[item.issueType] || `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(item.issueType)}</span>`;
-      const isResolved = item.status === 'RESOLVED';
-
-      const avatarHtml = (item.reporterAvatar && item.reporterAvatar.startsWith('http'))
-        ? `<img src="${item.reporterAvatar}" class="w-6 h-6 rounded-full border border-slate-200 object-cover" alt="avatar">`
+    tbody.innerHTML = groupList.map((g, gIdx) => {
+      const pendingCount = g.flags.filter(f => f.status === 'PENDING').length;
+      const resolvedCount = g.flags.filter(f => f.status === 'RESOLVED').length;
+      const uploaderAvatar = (g.uploader && g.uploader.avatar && g.uploader.avatar.startsWith('http'))
+        ? `<img src="${g.uploader.avatar}" class="w-6 h-6 rounded-full border border-slate-200 object-cover" alt="avatar">`
         : `<div class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px]">👤</div>`;
+      const uploaderName = (g.uploader && g.uploader.name) ? g.uploader.name : 'ผู้ใช้';
+
+      let statusBadge = '';
+      if (g.isAutoHidden) {
+        statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">🚨 ถูกระงับ (> 10)</span>';
+      } else if (pendingCount > 0) {
+        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">⏳ รอตรวจ (${pendingCount} ข้อ)</span>`;
+      } else {
+        statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ แก้ไขแล้ว</span>';
+      }
+
+      // Sub-rows HTML
+      const subRowsHtml = g.flags.map(f => {
+        const timeStr = f.createdAt ? new Date(f.createdAt).toLocaleString('th-TH') : '-';
+        const typeBadge = issueTypeLabels[f.issueType] || `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(f.issueType)}</span>`;
+        const isResolved = f.status === 'RESOLVED';
+        const rAvatar = (f.reporterAvatar && f.reporterAvatar.startsWith('http'))
+          ? `<img src="${f.reporterAvatar}" class="w-5 h-5 rounded-full border border-slate-200 object-cover" alt="avatar">`
+          : `<div class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[9px]">👤</div>`;
+
+        return `
+          <tr class="hover:bg-rose-50/40 transition-colors border-b border-slate-100">
+            <td class="py-2.5 px-3 font-bold text-slate-800 whitespace-nowrap text-center">
+              <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-700">ข้อที่ ${(f.questionIndex || 0) + 1}</span>
+            </td>
+            <td class="py-2.5 px-3 whitespace-nowrap">${typeBadge}</td>
+            <td class="py-2.5 px-3">
+              <div class="text-slate-700 font-medium text-xs leading-relaxed max-w-md">
+                ${escapeHtml(f.userNote || '-')}
+              </div>
+              ${f.questionText ? `
+                <div class="text-[10px] text-slate-400 mt-0.5 line-clamp-1 italic" title="${escapeHtml(f.questionText)}">
+                  โจทย์: "${escapeHtml(f.questionText)}"
+                </div>
+              ` : ''}
+            </td>
+            <td class="py-2.5 px-3">
+              <div class="flex items-center gap-1.5">
+                ${rAvatar}
+                <div class="min-w-0">
+                  <div class="text-[11px] font-bold text-slate-700 truncate max-w-[120px]">${escapeHtml(f.reporterName)}</div>
+                  <div class="text-[9px] text-slate-400 font-mono">${timeStr}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              ${isResolved
+                ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ ปิดเคสแล้ว</span>'
+                : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">⏳ รอตรวจสอบ</span>'
+              }
+            </td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="goToEditFlaggedQuestion('${g.batchId}', ${f.questionIndex})" class="px-2 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="เปิดหน้าแก้ไขชุดข้อสอบนี้">
+                  <i data-lucide="pen-line" class="w-3 h-3"></i>
+                  <span>แก้ข้อนี้</span>
+                </button>
+                ${!isResolved ? `
+                  <button onclick="resolveAdminFlag('${f.ledgerId}', '${g.batchId}', ${f.questionIndex})" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="ทำเครื่องหมายว่าตรวจสอบ/แก้ไขแล้ว">
+                    <i data-lucide="check" class="w-3 h-3"></i>
+                    <span>ปิดเคส</span>
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
       return `
-        <tr class="hover:bg-slate-50/70 transition-colors">
-          <td class="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">${timeStr}</td>
+        <!-- Main Batch Summary Row -->
+        <tr class="hover:bg-slate-50/80 transition-colors ${g.isAutoHidden ? 'bg-rose-50/30' : ''}">
+          <td class="py-3 px-4 whitespace-nowrap">${statusBadge}</td>
           <td class="py-3 px-3">
-            <div class="font-bold text-slate-800 truncate max-w-xs" title="${escapeHtml(item.batchName)}">
-              ${escapeHtml(item.batchName)}
+            <div class="font-extrabold text-slate-800 text-xs truncate max-w-xs" title="${escapeHtml(g.batchName)}">
+              ${escapeHtml(g.batchName)}
             </div>
-            <div class="text-[11px] font-bold text-brand-600 mt-0.5">
-              ข้อที่ ${(item.questionIndex || 0) + 1}
+            <div class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-medium">${escapeHtml(g.category)}</span>
+              <span>•</span>
+              <span>${g.totalQuestions || 0} ข้อ</span>
             </div>
-          </td>
-          <td class="py-3 px-3 whitespace-nowrap">${typeBadge}</td>
-          <td class="py-3 px-4">
-            <div class="text-slate-800 font-medium text-xs leading-relaxed max-w-sm">
-              ${escapeHtml(item.userNote || '-')}
-            </div>
-            ${item.questionText ? `
-              <div class="text-[10px] text-slate-400 mt-1 line-clamp-1 italic" title="${escapeHtml(item.questionText)}">
-                โจทย์: "${escapeHtml(item.questionText)}"
-              </div>
-            ` : ''}
           </td>
           <td class="py-3 px-3">
             <div class="flex items-center gap-2">
-              ${avatarHtml}
-              <span class="font-semibold text-slate-700 truncate max-w-[120px]">${escapeHtml(item.reporterName)}</span>
+              ${uploaderAvatar}
+              <span class="font-bold text-slate-700 text-xs truncate max-w-[120px]">${escapeHtml(uploaderName)}</span>
             </div>
           </td>
           <td class="py-3 px-3 text-center whitespace-nowrap">
-            ${isResolved
-              ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ แก้ไขแล้ว</span>'
-              : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">⏳ รอตรวจสอบ</span>'
-            }
+            <div class="font-extrabold text-xs ${g.isAutoHidden ? 'text-rose-600' : 'text-slate-700'}">
+              🚩 ${g.flags.length} ข้อ
+            </div>
+            <div class="text-[10px] text-slate-400">
+              (สะสม ${g.flagCount} ครั้ง)
+            </div>
           </td>
           <td class="py-3 px-4 text-center whitespace-nowrap">
-            <div class="flex items-center justify-center gap-1.5">
-              <button onclick="goToEditFlaggedQuestion('${item.batchId}', ${item.questionIndex})" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="เปิดหน้าแก้ไขชุดข้อสอบนี้">
-                <i data-lucide="pen-line" class="w-3 h-3"></i>
-                <span>แก้ไขข้อนี้</span>
+            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+              <button onclick="toggleBatchFlagsAccordion('${g.batchId}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
+                <i data-lucide="chevron-down" id="admin-flags-chevron-${g.batchId}" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                <span>ดูข้อที่ถูกรายงาน (${g.flags.length})</span>
               </button>
-              ${!isResolved ? `
-                <button onclick="resolveAdminFlag('${item.ledgerId}', '${item.batchId}', ${item.questionIndex})" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="ทำเครื่องหมายว่าตรวจสอบ/แก้ไขแล้ว">
-                  <i data-lucide="check" class="w-3 h-3"></i>
-                  <span>ปิดเคส</span>
+              <button onclick="openReviewMode('${g.batchId}')" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="เปิดหน้า Review & Edit เพื่อตรวจสอบเฉลยทั้งชุด">
+                <i data-lucide="pen-line" class="w-3.5 h-3.5"></i>
+                <span>ตรวจทาน & แก้ไขทั้งชุด</span>
+              </button>
+              ${g.isAutoHidden ? `
+                <button onclick="adminUnhideBatch('${g.batchId}')" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs" title="ปลดบล็อกและเปิดแสดงในคลังทันที">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                  <span>ปลดบล็อก</span>
                 </button>
               ` : ''}
+            </div>
+          </td>
+        </tr>
+
+        <!-- Accordion Sub-Table Row -->
+        <tr id="admin-flags-sub-${g.batchId}" class="hidden bg-slate-50/80">
+          <td colspan="5" class="p-3 sm:p-4">
+            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+              <div class="p-2.5 bg-slate-100/70 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 flex items-center justify-between">
+                <span>📋 รายการข้อสอบที่ได้รับรายงานในชุดนี้ (${g.flags.length} ข้อ)</span>
+                <span class="text-[10px] text-slate-400 font-normal">คลิก "แก้ข้อนี้" เพื่อกระโดดไปโฟกัสข้อนั้นในหน้า Review หรือ "ปิดเคส" หากแก้ไขแล้ว</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-100">
+                      <th class="py-2 px-3 text-center w-20">ข้อที่</th>
+                      <th class="py-2 px-3 w-28">ประเภท</th>
+                      <th class="py-2 px-3 min-w-[200px]">ข้อความจากผู้เรียน</th>
+                      <th class="py-2 px-3 w-40">ผู้รายงาน</th>
+                      <th class="py-2 px-3 text-center w-24">สถานะ</th>
+                      <th class="py-2 px-3 text-right w-36">การกระทำ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${subRowsHtml || '<tr><td colspan="6" class="py-4 text-center text-slate-400 text-xs">ไม่มีรายละเอียดรายข้อ</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </td>
         </tr>
@@ -8649,6 +8956,17 @@ if (typeof window !== 'undefined') {
     }).join('');
 
     if (window.lucide) lucide.createIcons();
+  }
+
+  function toggleBatchFlagsAccordion(batchId) {
+    const row = document.getElementById('admin-flags-sub-' + batchId);
+    const chevron = document.getElementById('admin-flags-chevron-' + batchId);
+    if (!row) return;
+    const isHidden = row.classList.contains('hidden');
+    row.classList.toggle('hidden', !isHidden);
+    if (chevron) {
+      chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
   }
 
   function goToEditFlaggedQuestion(batchId, questionIndex) {
@@ -8854,6 +9172,7 @@ if (typeof window !== 'undefined') {
   window.goToEditFlaggedQuestion = goToEditFlaggedQuestion;
   window.resolveAdminFlag = resolveAdminFlag;
   window.adminUnhideBatch = adminUnhideBatch;
+  window.toggleBatchFlagsAccordion = toggleBatchFlagsAccordion;
 </script>
 
 

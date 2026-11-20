@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
     const totalQ = (updatedData || []).length;
     const isBatchAllVerified = (verifiedCount === totalQ && totalQ > 0);
 
-    // 1. Update Batch
+    // 1. Update Batch (and auto-unhide if fully verified)
     const batchUpdatePayload = {
       is_verified: isBatchAllVerified,
       total_questions: totalQ,
@@ -37,6 +37,27 @@ module.exports = async function handler(req, res) {
     if (extraMeta) {
       if (extraMeta.batchName) batchUpdatePayload.batch_name = extraMeta.batchName;
       if (extraMeta.batchCategory) batchUpdatePayload.batch_category = extraMeta.batchCategory;
+    }
+
+    let wasAutoHidden = false;
+    if (isBatchAllVerified) {
+      try {
+        const curBatchRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}&select=id,batch_name,batch_category,source_files,total_questions&limit=1`, { headers });
+        const curBatchList = await curBatchRes.json();
+        const curBatch = (Array.isArray(curBatchList) && curBatchList.length > 0) ? curBatchList[0] : null;
+        if (curBatch) {
+          const sFiles = Array.isArray(curBatch.source_files) ? [...curBatch.source_files] : [];
+          const mIdx = sFiles.findIndex(f => f && f._meta);
+          const cMeta = mIdx >= 0 ? sFiles[mIdx] : { _meta: true };
+          if (cMeta.auto_hidden || Number(cMeta.flag_count) > 0 || cMeta.is_hidden) {
+            wasAutoHidden = Boolean(cMeta.auto_hidden || Number(cMeta.flag_count) > 10);
+            const upMeta = { ...cMeta, is_hidden: false, auto_hidden: false, flag_count: 0, _meta: true };
+            if (mIdx >= 0) sFiles[mIdx] = upMeta;
+            else sFiles.push(upMeta);
+            batchUpdatePayload.source_files = sFiles;
+          }
+        }
+      } catch (errB) {}
     }
 
     const bRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}`, {
@@ -90,8 +111,34 @@ module.exports = async function handler(req, res) {
         const uName = userProfile?.nickname || userProfile?.name || 'ผู้ตรวจทาน';
         const uAvatar = userProfile?.avatar || '👤';
         const uRole = userProfile?.role || 'member';
+
+        // Auto-resolve any pending flags on this batch
+        try {
+          const flagLedgerRes = await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?batch_id=eq.${encodeURIComponent(batchId)}&status=like.FLAG_QUESTION*&select=id`, { headers });
+          const flagRows = await flagLedgerRes.json();
+          if (Array.isArray(flagRows) && flagRows.length > 0) {
+            for (const fl of flagRows) {
+              await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                  user_id: userProfile?.uuid || null,
+                  batch_id: batchId,
+                  questions_scanned: 0,
+                  status: 'RESOLVE_FLAG:' + JSON.stringify({
+                    flag_ledger_id: fl.id,
+                    resolution_note: 'ตรวจทานเฉลยครบ 100% ทั้งชุดเรียบร้อยแล้ว',
+                    resolved_by: uName,
+                    resolved_at: new Date().toISOString()
+                  })
+                })
+              });
+            }
+          }
+        } catch (fErr) {}
+
         const logPayload = {
-          action: 'VERIFY_BATCH',
+          action: wasAutoHidden ? 'UNHIDE_BATCH' : 'VERIFY_BATCH',
           user_name: uName,
           user_avatar: uAvatar,
           user_role: uRole,
@@ -99,7 +146,9 @@ module.exports = async function handler(req, res) {
           batch_name: extraMeta?.batchName || 'ชุดข้อสอบ',
           batch_category: extraMeta?.batchCategory || 'ทั่วไป',
           question_count: totalQ,
-          details: 'ตรวจสอบเฉลยครบทุกข้อและเผยแพร่สู่คลังข้อสอบ'
+          details: wasAutoHidden
+            ? 'ตรวจสอบเฉลยครบ 100% ปลดการระงับและเผยแพร่สู่คลังข้อสอบอีกครั้ง'
+            : 'ตรวจสอบเฉลยครบทุกข้อและเผยแพร่สู่คลังข้อสอบ'
         };
         await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
           method: 'POST',
@@ -118,11 +167,15 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: 'บันทึกการตรวจสอบและแก้ไขเรียบร้อยแล้ว',
+      message: wasAutoHidden
+        ? 'ตรวจทานครบ 100% เรียบร้อย! ปลดการระงับและเผยแพร่สู่คลังแล้ว'
+        : 'บันทึกการตรวจสอบและแก้ไขเรียบร้อยแล้ว',
       updatedBatchName: extraMeta?.batchName,
       updatedBatchCategory: extraMeta?.batchCategory,
       verifiedSummary: `${verifiedCount}/${totalQ}`,
-      isBatchAllVerified
+      isBatchAllVerified,
+      wasAutoHidden,
+      unhidden: wasAutoHidden
     });
   } catch (err) {
     console.error('batch-review-save error:', err);
