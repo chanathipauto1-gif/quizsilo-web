@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.14.37</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.14.51</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2631,10 +2631,11 @@ const BatchesQuestionsService = {
       const userIdentifier = activeProfile?.uuid || activeProfile?.email || (typeof localStorage !== 'undefined' ? localStorage.getItem(CONFIG.STORAGE_KEYS.GUEST_DEVICE_ID) : 'guest');
       const raterName = activeProfile?.nickname || activeProfile?.name || 'ผู้เรียน';
 
-      const apiRes = await fetchJsonApi('/api/batch-rate', {
+      const apiRes = await fetchJsonApi('/api/batch-flag', {
         method: 'POST',
         body: {
           batchId,
+          flag: 'rate',
           rating,
           userIdentifier,
           raterName
@@ -3674,7 +3675,7 @@ const AdminAuditService = {
   async setUserQuota(targetUserId, action, files, questions, adminProfile) {
     try {
       const activeAdmin = getActiveProfile(adminProfile);
-      const data = await fetchJsonApi('/api/admin-set-quota', {
+      const data = await fetchJsonApi('/api/admin-set-role', {
         method: 'POST',
         body: { targetUserId, action, files, questions, adminProfile: activeAdmin }
       });
