@@ -41,6 +41,7 @@ module.exports = async function handler(req, res) {
 
       let newBonusFiles = currentBonusFiles;
       let newBonusQuestions = currentBonusQuestions;
+      let resetAt = null;
       let detailsText = '';
 
       if (action === 'ADD_QUOTA') {
@@ -50,11 +51,10 @@ module.exports = async function handler(req, res) {
         newBonusQuestions += addQ;
         detailsText = `เพิ่มโควต้าพิเศษ +${addF} ไฟล์ (+${addQ} ข้อ)`;
       } else if (action === 'RESET_QUOTA') {
-        const usedF = parseInt(files, 10) || 0;
-        const usedQ = parseInt(questions, 10) || 0;
-        newBonusFiles = Math.max(newBonusFiles, usedF);
-        newBonusQuestions = Math.max(newBonusQuestions, usedQ);
-        detailsText = `รีเซ็ตโควต้าอัปโหลด คืนสิทธิ์เต็มจำนวน (10 ไฟล์ / 500 ข้อ)`;
+        newBonusFiles = 0;
+        newBonusQuestions = 0;
+        resetAt = new Date().toISOString();
+        detailsText = `รีเซ็ตโควต้าอัปโหลด ล้างสถิติเป็น 0 คืนสิทธิ์พื้นฐานเต็มจำนวน`;
       }
 
       // Persist in scan_ledger
@@ -68,6 +68,7 @@ module.exports = async function handler(req, res) {
           status: 'SYSTEM_QUOTA:' + JSON.stringify({
             bonusFiles: newBonusFiles,
             bonusQuestions: newBonusQuestions,
+            resetAt: resetAt,
             updatedAt: new Date().toISOString()
           })
         })
@@ -108,7 +109,8 @@ module.exports = async function handler(req, res) {
         success: true,
         targetUserId,
         bonusFiles: newBonusFiles,
-        bonusQuestions: newBonusQuestions
+        bonusQuestions: newBonusQuestions,
+        resetAt: resetAt
       });
     }
 

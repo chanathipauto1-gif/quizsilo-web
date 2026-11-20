@@ -47,7 +47,8 @@ module.exports = async function handler(req, res) {
           const parsed = JSON.parse(raw);
           quotaMap[q.user_id] = {
             bonusFiles: Number(parsed.bonusFiles || 0),
-            bonusQuestions: Number(parsed.bonusQuestions || 0)
+            bonusQuestions: Number(parsed.bonusQuestions || 0),
+            resetAt: parsed.resetAt || null
           };
         } catch (e) {}
       }
@@ -85,6 +86,7 @@ module.exports = async function handler(req, res) {
         role: assignedRole,
         bonusFiles: quotaMap[p.id]?.bonusFiles || 0,
         bonusQuestions: quotaMap[p.id]?.bonusQuestions || 0,
+        resetAt: quotaMap[p.id]?.resetAt || null,
         targetExams: p.target_exams || 'ยังไม่ระบุ',
         occupation: p.occupation || 'ยังไม่ระบุ',
         ageGroup: p.age_group || 'ยังไม่ระบุ',
@@ -116,8 +118,13 @@ module.exports = async function handler(req, res) {
 
     (Array.isArray(batches) ? batches : []).forEach(b => {
       if (b.user_id && userStatsMap[b.user_id]) {
-        userStatsMap[b.user_id].uploadBatches++;
-        userStatsMap[b.user_id].uploadQuestions += (b.total_questions || 0);
+        const uQuota = quotaMap[b.user_id];
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        const resetTime = uQuota?.resetAt ? new Date(uQuota.resetAt).getTime() : 0;
+        if (bTime >= resetTime) {
+          userStatsMap[b.user_id].uploadBatches++;
+          userStatsMap[b.user_id].uploadQuestions += (b.total_questions || 0);
+        }
       }
     });
 
