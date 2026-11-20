@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.17.48</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 20.11.18.24</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -188,24 +188,24 @@
   <!-- Container for Hero or Announcement -->
   <div id="hero-banner-container">
     <!-- 1. Global Announcement Banner (แสดงเมื่อ Admin เปิดใช้งาน) -->
-    <div id="hero-announcement-banner" class="hidden bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
-      <div class="flex items-start sm:items-center gap-3.5 min-w-0">
+    <div id="hero-announcement-banner" class="hidden bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all overflow-hidden w-full">
+      <div class="flex items-start gap-3 sm:gap-3.5 min-w-0 w-full flex-1 overflow-hidden">
         <!-- Visual Box: Square Image or Preset Icon -->
-        <div id="announcement-visual-box" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden cursor-pointer" onclick="openAnnouncementImageModal()">
+        <div id="announcement-visual-box" class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden cursor-pointer" onclick="openAnnouncementImageModal()">
           <span id="announcement-icon-el" class="text-2xl sm:text-3xl">📢</span>
           <img id="announcement-img-el" src="" alt="announcement" class="hidden w-full h-full object-cover">
         </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
+        <div class="min-w-0 flex-1 overflow-hidden">
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <span id="announcement-tag-el" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
               <span>📢 ประกาศจากแอดมิน</span>
             </span>
             <span id="announcement-date-el" class="text-[10px] text-slate-400 font-mono"></span>
           </div>
-          <h2 id="announcement-title-el" class="text-sm sm:text-base font-black text-slate-800 mt-1 truncate max-w-xl">
+          <h2 id="announcement-title-el" class="text-xs sm:text-sm md:text-base font-black text-slate-800 mt-1 break-words leading-snug">
             หัวข้อประกาศ
           </h2>
-          <p id="announcement-desc-el" class="text-xs text-slate-600 mt-1 leading-relaxed line-clamp-2 max-w-2xl">
+          <p id="announcement-desc-el" class="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed break-words">
             รายละเอียดประกาศ
           </p>
         </div>
@@ -365,7 +365,103 @@
 
 </section>
 
-    <section id="page-upload" class="hidden space-y-6">
+    <section id="page-upload" class="hidden space-y-5">
+
+  <!-- Bento Guide: Extraction Capability & Sustainability Notice (Top Placement with Toggle) -->
+  <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+    <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-500/20">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-800 truncate">คำแนะนำรูปแบบไฟล์ที่ AI สกัดได้แม่นยำสูงสุด</h3>
+          <p class="text-[11px] text-slate-500 truncate sm:whitespace-normal">เกณฑ์แนะนำการนำเข้าไฟล์ เพื่อผลลัพธ์ที่แม่นยำและลดเวลาตรวจทานเฉลย</p>
+        </div>
+      </div>
+      <button id="upload-guide-toggle-btn" onclick="toggleUploadGuide()" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer">
+        <span id="upload-guide-toggle-text">ซ่อนคำแนะนำ</span>
+        <i id="upload-guide-chevron" data-lucide="chevron-up" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div id="upload-guide-content" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+        <!-- Col 1: แนะนำ (Emerald Box) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-200/80 space-y-3">
+          <div class="flex items-center gap-2 font-black text-emerald-800 text-xs sm:text-sm">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+            <span>รูปแบบที่ AI สกัดได้ดีเยี่ยม (แนะนำ ✅)</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-700 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ไฟล์ PDF (1 ไฟล์ต่อครั้ง):</b> ความยาวไม่เกิน 10 หน้า มีเฉลยอยู่ในไฟล์ (ท้ายเล่ม, ตาราง OMR หรือท้ายข้อ) <span class="text-rose-600 font-bold bg-white/70 px-1.5 py-0.5 rounded border border-rose-200">*กรุณากดอัปโหลดและประมวลผลทีละ 1 ไฟล์ PDF*</span>
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ไฟล์รูปภาพ (ใส่หลายรูปพร้อมกันได้):</b> ไม่เกิน 10–12 ภาพต่อชุด ถ่ายให้ตรง คมชัด แสงสว่างพอดี มีโจทย์และตัวเลือกครบถ้วน
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ไฟล์ข้อความ (.TXT / .MD):</b> ประมวลผลเร็วและแม่นยำสูงสุด เหมาะสำหรับข้อสอบแบบข้อความล้วนประมาณ 50–100 ข้อ
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Col 2: ไม่มั่นใจ / เสี่ยงผิดพลาด (Amber/Rose Box) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-rose-50/70 to-amber-50/40 border border-rose-200/80 space-y-3">
+          <div class="flex items-center gap-2 font-black text-rose-800 text-xs sm:text-sm">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+            <span>รูปแบบที่ AI ไม่มั่นใจ / เสี่ยงผิดพลาด (⚠️)</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-700 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-rose-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ไฟล์ PDF หนาเกิน 20–25 หน้าในไฟล์เดียว:</b> อาจทำให้ขนาดข้อมูลล้น หรือ AI สกัดคำตอบขาดตอนกลางคัน
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ข้อสอบที่ไม่มีเฉลยมาด้วย:</b> AI ต้องคาดเดาและคิดคำตอบเองทั้งหมด ซึ่งอาจมีความคลาดเคลื่อนสูง
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ภาพถ่ายลายมือเขียน / ภาพเบลอ / มืด:</b> ข้อความอาจตกหล่นหรืออ่านผิดเพี้ยนได้
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-600 font-bold shrink-0">•</span>
+              <div>
+                <b class="text-slate-800">ข้อสอบเขียนบรรยาย / จับคู่โยงเส้น:</b> ระบบถูกออกแบบมาสำหรับข้อสอบปรนัย (ชอยส์ ก ข ค ง) เป็นหลัก
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Sustainability & Review Notice Banner -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-brand-50 to-indigo-50 border border-brand-200/80 text-xs flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center shrink-0">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+        </div>
+        <p class="text-slate-700 leading-relaxed">
+          <b class="text-brand-900">ข้อสังเกตเรื่องความยั่งยืน:</b> ข้อสอบที่สกัดผ่าน AI อาจมีข้อผิดพลาดได้เสมอ เพื่อความถูกต้องและยั่งยืนของคลังข้อสอบ ขอความร่วมมือผู้ใช้งานทุกท่านช่วยกันตรวจสอบและตรวจทานเฉลยในหน้า <b>Review & Edit</b> ก่อนนำไปใช้งานครับ 🙏
+        </p>
+      </div>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
     
     <!-- Upload Card (Left) -->
@@ -461,7 +557,8 @@
         <div>
           <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
             <i data-lucide="cpu" class="w-5 h-5 text-brand-600"></i>
-            สถานะคิวงานประมวลผล
+            <span>สถานะคิวงานประมวลผล</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-mono">5 งานล่าสุด</span>
           </h2>
           <p class="text-xs text-slate-400 mt-0.5">ระบบจะทำงานเบื้องหลังอัตโนมัติ คุณสามารถไปทำข้อสอบอื่นรอได้เลย</p>
         </div>
@@ -506,93 +603,6 @@
       </div>
     </div>
 
-  </div>
-
-  <!-- Full-Width Bento Guide: Extraction Capability & Sustainability Notice -->
-  <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
-    <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-500/20">
-        <i data-lucide="sparkles" class="w-5 h-5"></i>
-      </div>
-      <div>
-        <h3 class="text-sm sm:text-base font-extrabold text-slate-800">คำแนะนำรูปแบบไฟล์ที่ AI สกัดได้แม่นยำสูงสุด</h3>
-        <p class="text-[11px] text-slate-500">เพื่อผลลัพธ์การสกัดข้อสอบที่ดีที่สุดและลดเวลาตรวจทานเฉลย โปรดตรวจสอบเกณฑ์การนำเข้าไฟล์ด้านล่าง</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-      <!-- Col 1: แนะนำ (Emerald Box) -->
-      <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-200/80 space-y-3">
-        <div class="flex items-center gap-2 font-black text-emerald-800 text-xs sm:text-sm">
-          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
-          <span>รูปแบบที่ AI สกัดได้ดีเยี่ยม (แนะนำ ✅)</span>
-        </div>
-        <ul class="space-y-2 text-xs text-slate-700 leading-relaxed">
-          <li class="flex items-start gap-2">
-            <span class="text-emerald-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ไฟล์ PDF (1 ไฟล์ต่อครั้ง):</b> ความยาวไม่เกิน 10 หน้า มีเฉลยอยู่ในไฟล์ (ท้ายเล่ม, ตาราง OMR หรือท้ายข้อ) <span class="text-rose-600 font-bold bg-white/70 px-1.5 py-0.5 rounded border border-rose-200">*กรุณากดอัปโหลดและประมวลผลทีละ 1 ไฟล์ PDF*</span>
-            </div>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-emerald-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ไฟล์รูปภาพ (ใส่หลายรูปพร้อมกันได้):</b> ไม่เกิน 10–12 ภาพต่อชุด ถ่ายให้ตรง คมชัด แสงสว่างพอดี มีโจทย์และตัวเลือกครบถ้วน
-            </div>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-emerald-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ไฟล์ข้อความ (.TXT / .MD):</b> ประมวลผลเร็วและแม่นยำสูงสุด เหมาะสำหรับข้อสอบแบบข้อความล้วนประมาณ 50–100 ข้อ
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Col 2: ไม่มั่นใจ / เสี่ยงผิดพลาด (Amber/Rose Box) -->
-      <div class="p-4 rounded-2xl bg-gradient-to-br from-rose-50/70 to-amber-50/40 border border-rose-200/80 space-y-3">
-        <div class="flex items-center gap-2 font-black text-rose-800 text-xs sm:text-sm">
-          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0"></i>
-          <span>รูปแบบที่ AI ไม่มั่นใจ / เสี่ยงผิดพลาด (⚠️)</span>
-        </div>
-        <ul class="space-y-2 text-xs text-slate-700 leading-relaxed">
-          <li class="flex items-start gap-2">
-            <span class="text-rose-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ไฟล์ PDF หนาเกิน 20–25 หน้าในไฟล์เดียว:</b> อาจทำให้ขนาดข้อมูลล้น หรือ AI สกัดคำตอบขาดตอนกลางคัน
-            </div>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-rose-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ข้อสอบที่ไม่มีเฉลยมาด้วย:</b> AI ต้องคาดเดาและคิดคำตอบเองทั้งหมด ซึ่งอาจมีความคลาดเคลื่อนสูง
-            </div>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-rose-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ภาพถ่ายลายมือเขียน / ภาพเบลอ / มืด:</b> ข้อความอาจตกหล่นหรืออ่านผิดเพี้ยนได้
-            </div>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-rose-600 font-bold shrink-0">•</span>
-            <div>
-              <b class="text-slate-800">ข้อสอบเขียนบรรยาย / จับคู่โยงเส้น:</b> ระบบถูกออกแบบมาสำหรับข้อสอบปรนัย (ชอยส์ ก ข ค ง) เป็นหลัก
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Sustainability & Review Notice Banner -->
-    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-brand-50 to-indigo-50 border border-brand-200/80 text-xs flex items-center gap-3">
-      <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center shrink-0">
-        <i data-lucide="shield-check" class="w-4 h-4"></i>
-      </div>
-      <p class="text-slate-700 leading-relaxed">
-        <b class="text-brand-900">ข้อสังเกตเรื่องความยั่งยืน:</b> ข้อสอบที่สกัดผ่าน AI อาจมีข้อผิดพลาดได้เสมอ เพื่อความถูกต้องและยั่งยืนของคลังข้อสอบ ขอความร่วมมือผู้ใช้งานทุกท่านช่วยกันตรวจสอบและตรวจทานเฉลยในหน้า <b>Review & Edit</b> ก่อนนำไปใช้งานครับ 🙏
-      </p>
-    </div>
   </div>
 </section>
 
@@ -1558,29 +1568,29 @@
             <span>ตัวอย่างการแสดงผลจริงบนหน้าคลังข้อสอบ (Live Preview)</span>
             <span id="admin-ann-status-pill" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500">⚪ ปิดการแสดงผล</span>
           </label>
-          <div id="admin-ann-preview-box" class="bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
-            <div class="flex items-start sm:items-center gap-3.5 min-w-0">
-              <div id="prev-ann-visual-box" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden">
+          <div id="admin-ann-preview-box" class="bg-gradient-to-r from-amber-50 via-orange-50/60 to-brand-50/50 p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all overflow-hidden w-full">
+            <div class="flex items-start gap-3 sm:gap-3.5 min-w-0 w-full flex-1 overflow-hidden">
+              <div id="prev-ann-visual-box" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 overflow-hidden">
                 <span id="prev-ann-icon-el" class="text-2xl">📢</span>
                 <img id="prev-ann-img-el" src="" alt="preview" class="hidden w-full h-full object-cover">
               </div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
                     📢 ประกาศจากแอดมิน
                   </span>
                   <span id="prev-ann-date-el" class="text-[10px] text-slate-400 font-mono">วันนี้</span>
                 </div>
-                <h4 id="prev-ann-title-el" class="text-sm sm:text-base font-black text-slate-800 mt-1 truncate max-w-xl">
+                <h4 id="prev-ann-title-el" class="text-xs sm:text-sm md:text-base font-black text-slate-800 mt-1 break-words leading-snug">
                   หัวข้อประกาศ...
                 </h4>
-                <p id="prev-ann-desc-el" class="text-xs text-slate-600 mt-0.5 leading-relaxed line-clamp-2 max-w-2xl">
+                <p id="prev-ann-desc-el" class="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed break-words">
                   รายละเอียดของประกาศจะปรากฏที่นี่...
                 </p>
               </div>
             </div>
-            <div id="prev-ann-cta-box" class="shrink-0">
-              <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold rounded-xl shadow-xs">
+            <div id="prev-ann-cta-box" class="shrink-0 w-full md:w-auto">
+              <span class="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs">
                 <span id="prev-ann-btn-text">คลิกดูรายละเอียด</span>
                 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
               </span>
@@ -4625,6 +4635,9 @@ if (typeof window !== 'undefined') {
     loadBatches();
     loadQueueStatus();
     queuePollTimer = setInterval(() => loadQueueStatus(false), 15000);
+    if (localStorage.getItem('quizsilo_upload_guide_collapsed') === 'true') {
+      toggleUploadGuide(true);
+    }
     switchPage('dashboard');
   });
 
@@ -6200,6 +6213,30 @@ if (typeof window !== 'undefined') {
     }).join('');
   }
 
+  // ยุบ/ขยายกล่องคำแนะนำรูปแบบการอัปโหลดไฟล์
+  function toggleUploadGuide(forceState) {
+    const content = document.getElementById('upload-guide-content');
+    const textEl = document.getElementById('upload-guide-toggle-text');
+    const chevron = document.getElementById('upload-guide-chevron');
+    if (!content) return;
+
+    const isCurrentlyHidden = content.classList.contains('hidden');
+    const shouldHide = forceState !== undefined ? forceState : !isCurrentlyHidden;
+
+    if (shouldHide) {
+      content.classList.add('hidden');
+      if (textEl) textEl.textContent = 'ดูคำแนะนำ';
+      if (chevron) chevron.setAttribute('data-lucide', 'chevron-down');
+      localStorage.setItem('quizsilo_upload_guide_collapsed', 'true');
+    } else {
+      content.classList.remove('hidden');
+      if (textEl) textEl.textContent = 'ซ่อนคำแนะนำ';
+      if (chevron) chevron.setAttribute('data-lucide', 'chevron-up');
+      localStorage.removeItem('quizsilo_upload_guide_collapsed');
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
   // [แก้ปัญหาข้อ 3] รวมไฟล์ทั้งหมดแปลงเป็น Base64 แล้วส่งรอบเดียว เพื่อให้รันใน 1 คิว
   async function submitUploadQueue() {
     if (selectedFiles.length === 0) {
@@ -6366,7 +6403,7 @@ if (typeof window !== 'undefined') {
       .getQueueStatus();
   }
 
-  // อัปเดตตารางคิวประมวลผล (6 คอลัมน์)
+  // อัปเดตตารางคิวประมวลผล (แสดง 5 งานล่าสุด)
   function renderQueueTable(items) {
     const tbody = document.getElementById('queue-table-body');
     if (!tbody) return;
@@ -6375,7 +6412,8 @@ if (typeof window !== 'undefined') {
       return;
     }
 
-    tbody.innerHTML = items.map(item => {
+    const recentItems = (items || []).slice(0, 5);
+    tbody.innerHTML = recentItems.map(item => {
       let badge = item.status === 'COMPLETED' ? `<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-full font-semibold text-xs">สำเร็จ</span>` :
                   item.status === 'PROCESSING' ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-300 rounded-full animate-pulse font-semibold text-xs">กำลังประมวลผล</span>` :
                   item.status === 'ERROR' ? `<span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-300 rounded-full font-semibold text-xs">ล้มเหลว</span>` :
@@ -9700,6 +9738,7 @@ if (typeof window !== 'undefined') {
   window.loadAdminAnnouncementForm = loadAdminAnnouncementForm;
   window.updateAdminAnnouncementLivePreview = updateAdminAnnouncementLivePreview;
   window.saveAdminAnnouncement = saveAdminAnnouncement;
+  window.toggleUploadGuide = toggleUploadGuide;
 </script>
 
 
