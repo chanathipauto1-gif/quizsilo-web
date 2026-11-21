@@ -37,6 +37,11 @@ module.exports = async function handler(req, res) {
     // 4. Delete batch
     await fetch(`${SUPABASE_URL}/rest/v1/batches?id=eq.${encodeURIComponent(batchId)}`, { method: 'DELETE', headers });
 
+    // 4.1 Delete any question flags and resolutions in scan_ledger associated with this deleted batch
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?or=(status.like.FLAG_QUESTION*%22${encodeURIComponent(batchId)}%22*,status.like.RESOLVE_FLAG*%22${encodeURIComponent(batchId)}%22*)`, { method: 'DELETE', headers });
+    } catch (fe) {}
+
     // 5. Record deletion in scan_ledger as Audit Log
     try {
       const uName = userProfile?.nickname || userProfile?.name || 'ผู้ใช้';

@@ -68,12 +68,13 @@ module.exports = async function handler(req, res) {
           try {
             const raw = row.status.replace('FLAG_QUESTION:', '');
             const p = JSON.parse(raw);
-            const b = batchMap[p.batch_id] || {};
+            const b = batchMap[p.batch_id];
+            if (!b) return; // Skip orphaned flags if batch was deleted!
             const isResolved = Boolean(resolvedMap[row.id]);
             flags.push({
               ledgerId: row.id,
               batchId: p.batch_id,
-              batchName: p.batch_name || b.batch_name || 'ชุดข้อสอบ',
+              batchName: b.batch_name || p.batch_name || 'ชุดข้อสอบ',
               questionIndex: p.question_index,
               questionId: p.question_id,
               questionText: p.question_text || '',
