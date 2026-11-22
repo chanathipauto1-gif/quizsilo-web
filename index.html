@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.23.19</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.23.42</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -3843,8 +3843,8 @@
             <div class="flex items-center justify-between">
               <label class="block text-xs font-bold text-slate-700">ตัวเลือก & เฉลยที่ถูกต้อง:</label>
               <div class="flex items-center gap-1.5 text-xs font-bold">
-                <button type="button" id="btn-admin-studio-mode-2" onclick="setAdminStudioChoiceMode(2)" class="px-2.5 py-1 rounded-lg border border-brand-600 bg-brand-50 text-brand-700 transition-all">2 ชอยส์ (ก/ข)</button>
-                <button type="button" id="btn-admin-studio-mode-4" onclick="setAdminStudioChoiceMode(4)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 transition-all">4 ชอยส์ (ก/ข/ค/ง)</button>
+                <button type="button" id="btn-admin-studio-mode-2" onclick="setAdminStudioChoiceMode(2)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 transition-all">2 ชอยส์ (ก/ข)</button>
+                <button type="button" id="btn-admin-studio-mode-4" onclick="setAdminStudioChoiceMode(4)" class="px-2.5 py-1 rounded-lg border border-brand-600 bg-brand-50 text-brand-700 transition-all">4 ชอยส์ (ก/ข/ค/ง)</button>
               </div>
             </div>
 
@@ -3863,14 +3863,14 @@
             </div>
 
             <!-- Choice C -->
-            <div id="admin-studio-row-c" class="hidden flex items-center gap-2">
+            <div id="admin-studio-row-c" class="flex items-center gap-2">
               <button type="button" id="admin-studio-ans-C" onclick="setAdminStudioAnswer('C')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ค</button>
               <input type="text" id="admin-studio-choice-c" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();" placeholder="ตัวเลือก ค..."
                      class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
             </div>
 
             <!-- Choice D -->
-            <div id="admin-studio-row-d" class="hidden flex items-center gap-2">
+            <div id="admin-studio-row-d" class="flex items-center gap-2">
               <button type="button" id="admin-studio-ans-D" onclick="setAdminStudioAnswer('D')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ง</button>
               <input type="text" id="admin-studio-choice-d" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();" placeholder="ตัวเลือก ง..."
                      class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
@@ -3884,10 +3884,17 @@
                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-brand-600"></i>
                 <span>ข้อความที่จะโพสต์หลัก (Post Caption)</span>
               </label>
-              <button type="button" onclick="copyAdminStudioCaption()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>ก๊อปปี้แคปชั่น</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="regenerateAdminStudioCaptions()" class="text-[11px] font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 cursor-pointer" title="รีเซ็ตข้อความโพสต์และคอมเมนต์ตามโจทย์ปัจจุบัน">
+                  <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                  <span>รีเซ็ตตามโจทย์</span>
+                </button>
+                <button type="button" onclick="copyAdminStudioCaption()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>ก๊อปปี้แคปชั่น</span>
+                </button>
+              </div>
+            </div>
             </div>
             <textarea id="admin-studio-caption-input" rows="4" placeholder="พิมพ์หรือปรับแต่งแคปชั่นสำหรับโพสต์หลัก..."
                       class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all custom-scrollbar leading-relaxed"></textarea>
@@ -13731,6 +13738,54 @@ if (typeof window !== 'undefined') {
     };
   }
 
+  function getThaiChoiceLetter(ans) {
+    const clean = String(ans || '').trim().toUpperCase();
+    if (['A', '1', 'ก'].includes(clean)) return 'ก';
+    if (['B', '2', 'ข'].includes(clean)) return 'ข';
+    if (['C', '3', 'ค'].includes(clean)) return 'ค';
+    if (['D', '4', 'ง'].includes(clean)) return 'ง';
+    return clean || 'ก';
+  }
+
+  function normalizeAnswerLetter(ans) {
+    const clean = String(ans || '').trim().toUpperCase();
+    if (['A', '1', 'ก'].includes(clean)) return 'A';
+    if (['B', '2', 'ข'].includes(clean)) return 'B';
+    if (['C', '3', 'ค'].includes(clean)) return 'C';
+    if (['D', '4', 'ง'].includes(clean)) return 'D';
+    return 'A';
+  }
+
+  function getChoiceTextByAnswer(item) {
+    if (!item) return '';
+    const letter = getThaiChoiceLetter(item.answer);
+    if (letter === 'ก') return item.a || '';
+    if (letter === 'ข') return item.b || '';
+    if (letter === 'ค') return item.c || '';
+    if (letter === 'ง') return item.d || '';
+    return '';
+  }
+
+  function generatePromoCaption(item) {
+    const tag = item.tag || 'ข้อใดถูกต้อง';
+    const mode = item.mode || 4;
+    const choicePrompt = mode === 2 ? 'ก หรือ ข' : 'ก ข ค หรือ ง';
+    const qText = item.questionText || '';
+
+    return `[${tag}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${qText}\n\n👉 ${choicePrompt} คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`;
+  }
+
+  function generatePromoComment(item) {
+    const ansThai = getThaiChoiceLetter(item.answer);
+    const choiceText = getChoiceTextByAnswer(item);
+    const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(item.batchId || '')}`;
+    const ansHeading = choiceText ? `เฉลยคือข้อ ${ansThai}. ${choiceText} ครับ! 💡` : `เฉลยคือข้อ ${ansThai} ครับ! 💡`;
+    const explText = item.explanation ? `\n📌 คำอธิบายเฉลย: ${item.explanation}\n` : '';
+    const batchTitle = item.batchName || 'ชุดข้อสอบ';
+
+    return `${ansHeading}\n${explText}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${batchTitle}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`;
+  }
+
   function togglePromoQueueFromExam() {
     const q = currentQuestions[currentQuestionIndex];
     if (!q) {
@@ -13752,14 +13807,7 @@ if (typeof window !== 'undefined') {
       else if (bName.includes('กฎหมาย')) defaultTag = 'กฎหมาย ก.พ.';
       else if (q.category) defaultTag = q.category.split('|')[0].trim();
 
-      let ansL = 'A';
-      const rawAns = String(q.answer || '').trim();
-      if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
-      else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
-      else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
-      else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
-
-      const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(bId)}`;
+      const ansL = normalizeAnswerLetter(q.answer);
 
       const newItem = {
         id: `${bId}::${qId}`,
@@ -13776,14 +13824,17 @@ if (typeof window !== 'undefined') {
         answer: ansL,
         explanation: q.explanation || '',
         tag: defaultTag,
-        mode: 2,
+        mode: 4,
         theme: 'watercolor-sky',
-        customCaption: `[${defaultTag}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${q.text || ''}\n\n👉 ก หรือ ข คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`,
-        customComment: `เฉลยคือข้อ ${ansL === 'A' ? 'ก' : 'ข'} ครับ! 💡\n${q.explanation ? `\n📌 คำอธิบาย/ทริคช่วยจำ: ${q.explanation}\n` : ''}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${bName}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`,
+        customCaption: '',
+        customComment: '',
         queuedAt: new Date().toISOString(),
         isPromoted: false,
         promotedAt: null
       };
+
+      newItem.customCaption = generatePromoCaption(newItem);
+      newItem.customComment = generatePromoComment(newItem);
 
       const queue = getPromoQueue();
       queue.unshift(newItem);
@@ -13859,14 +13910,7 @@ if (typeof window !== 'undefined') {
       else if (bName.includes('ครู') || bName.includes('การศึกษา')) defaultTag = 'วิชาการศึกษา';
       else if (bName.includes('กฎหมาย')) defaultTag = 'กฎหมาย ก.พ.';
 
-      let ansL = 'A';
-      const rawAns = String(q.answer || '').trim();
-      if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
-      else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
-      else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
-      else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
-
-      const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(bId)}`;
+      const ansL = normalizeAnswerLetter(q.answer);
 
       const newItem = {
         id: `${bId}::${qId}`,
@@ -13883,14 +13927,17 @@ if (typeof window !== 'undefined') {
         answer: ansL,
         explanation: q.explanation || '',
         tag: defaultTag,
-        mode: 2,
+        mode: 4,
         theme: 'watercolor-sky',
-        customCaption: `[${defaultTag}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${q.text || ''}\n\n👉 ก หรือ ข คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`,
-        customComment: `เฉลยคือข้อ ${ansL === 'A' ? 'ก' : 'ข'} ครับ! 💡\n${q.explanation ? `\n📌 คำอธิบาย/ทริคช่วยจำ: ${q.explanation}\n` : ''}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${bName}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`,
+        customCaption: '',
+        customComment: '',
         queuedAt: new Date().toISOString(),
         isPromoted: false,
         promotedAt: null
       };
+
+      newItem.customCaption = generatePromoCaption(newItem);
+      newItem.customComment = generatePromoComment(newItem);
 
       const queue = getPromoQueue();
       queue.unshift(newItem);
@@ -14037,6 +14084,29 @@ if (typeof window !== 'undefined') {
         ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">✅ โปรโมทแล้ว</span>`
         : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">⏳ รอทำโปรโมท</span>`;
 
+      const ansThai = getThaiChoiceLetter(item.answer);
+      const isAnsA = ansThai === 'ก';
+      const isAnsB = ansThai === 'ข';
+      const isAnsC = ansThai === 'ค';
+      const isAnsD = ansThai === 'ง';
+
+      const choicesPreviewHtml = `
+        <div class="grid grid-cols-2 gap-x-2.5 gap-y-1 text-[11px] pt-1">
+          <div class="truncate ${isAnsA ? 'font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-slate-600 px-1 py-0.5'}">
+            <span class="${isAnsA ? 'text-emerald-800 font-black' : 'text-slate-400 font-bold'}">ก.</span> ${escapeHtml(item.a || '-')}
+          </div>
+          <div class="truncate ${isAnsB ? 'font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-slate-600 px-1 py-0.5'}">
+            <span class="${isAnsB ? 'text-emerald-800 font-black' : 'text-slate-400 font-bold'}">ข.</span> ${escapeHtml(item.b || '-')}
+          </div>
+          <div class="truncate ${isAnsC ? 'font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-slate-600 px-1 py-0.5'}">
+            <span class="${isAnsC ? 'text-emerald-800 font-black' : 'text-slate-400 font-bold'}">ค.</span> ${escapeHtml(item.c || '-')}
+          </div>
+          <div class="truncate ${isAnsD ? 'font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-slate-600 px-1 py-0.5'}">
+            <span class="${isAnsD ? 'text-emerald-800 font-black' : 'text-slate-400 font-bold'}">ง.</span> ${escapeHtml(item.d || '-')}
+          </div>
+        </div>
+      `;
+
       return `
         <tr class="hover:bg-slate-50/80 transition-colors">
           <td class="py-3.5 px-4 text-center font-bold text-slate-400">${idx + 1}</td>
@@ -14044,13 +14114,9 @@ if (typeof window !== 'undefined') {
             <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.batchName || 'ชุดข้อสอบ')}</div>
             <div class="text-[10px] text-indigo-600 font-semibold">${escapeHtml(item.batchCategory || 'ทั่วไป')} • ข้อที่ ${item.dispNo || 1}</div>
           </td>
-          <td class="py-3.5 px-4 space-y-1">
+          <td class="py-3.5 px-4 space-y-1.5">
             <div class="text-xs font-semibold text-slate-800 leading-snug">${escapeHtml(qSnippet)}</div>
-            <div class="flex items-center gap-2 text-[10px] text-slate-500">
-              <span>ก. ${escapeHtml((item.a || '').substring(0, 25))}</span>
-              <span>•</span>
-              <span>ข. ${escapeHtml((item.b || '').substring(0, 25))}</span>
-            </div>
+            ${choicesPreviewHtml}
           </td>
           <td class="py-3.5 px-4 text-xs text-slate-500">${dateStr}</td>
           <td class="py-3.5 px-4 text-center">${statusBadge}</td>
@@ -14082,6 +14148,11 @@ if (typeof window !== 'undefined') {
     }
     activeStudioItem = item;
 
+    // Normalize mode default to 4
+    if (activeStudioItem.mode === undefined || activeStudioItem.mode === null) {
+      activeStudioItem.mode = 4;
+    }
+
     // Toggle view
     document.getElementById('admin-promo-view-table')?.classList.add('hidden');
     document.getElementById('admin-promo-view-studio')?.classList.remove('hidden');
@@ -14101,15 +14172,28 @@ if (typeof window !== 'undefined') {
     document.getElementById('admin-studio-choice-c').value = item.c || '';
     document.getElementById('admin-studio-choice-d').value = item.d || '';
 
-    // Caption & Comment
-    const defaultCaption = `[${item.tag || 'ข้อใดเขียนผิด'}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${item.questionText || ''}\n\n👉 ก หรือ ข คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`;
-    const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(item.batchId || '')}`;
-    const defaultComment = `เฉลยคือข้อ ${item.answer === 'A' ? 'ก' : 'ข'} ครับ! 💡\n${item.explanation ? `\n📌 คำอธิบาย/ทริคช่วยจำ: ${item.explanation}\n` : ''}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${item.batchName}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`;
+    // Caption & Comment auto-fix / sanitize
+    let captionVal = item.customCaption;
+    let commentVal = item.customComment;
 
-    document.getElementById('admin-studio-caption-input').value = item.customCaption || defaultCaption;
-    document.getElementById('admin-studio-comment-input').value = item.customComment || defaultComment;
+    if (!captionVal || captionVal.includes('วิธีจำแม่นๆ')) {
+      captionVal = generatePromoCaption(item);
+    }
+    if (!commentVal || commentVal.includes('📌 คำอธิบาย/ทริคช่วยจำ:')) {
+      commentVal = generatePromoComment(item);
+    } else {
+      const ansThai = getThaiChoiceLetter(item.answer);
+      if (commentVal.startsWith('เฉลยคือข้อ ') && !commentVal.startsWith(`เฉลยคือข้อ ${ansThai}`)) {
+        commentVal = generatePromoComment(item);
+      }
+    }
 
-    setAdminStudioChoiceMode(item.mode || 2);
+    document.getElementById('admin-studio-caption-input').value = captionVal;
+    document.getElementById('admin-studio-comment-input').value = commentVal;
+    item.customCaption = captionVal;
+    item.customComment = commentVal;
+
+    setAdminStudioChoiceMode(item.mode || 4);
     setAdminStudioAnswer(item.answer || 'A');
 
     renderAdminStudioCanvas();
@@ -14185,25 +14269,90 @@ if (typeof window !== 'undefined') {
       if (rowC) rowC.classList.remove('hidden');
       if (rowD) rowD.classList.remove('hidden');
     }
+
+    // Update caption prompt if standard
+    const capInput = document.getElementById('admin-studio-caption-input');
+    if (capInput) {
+      if (mode === 2) {
+        capInput.value = capInput.value.replace('👉 ก ข ค หรือ ง', '👉 ก หรือ ข');
+      } else {
+        capInput.value = capInput.value.replace('👉 ก หรือ ข', '👉 ก ข ค หรือ ง');
+      }
+      activeStudioItem.customCaption = capInput.value;
+    }
+
     renderAdminStudioCanvas();
   }
 
   function setAdminStudioAnswer(letter) {
     if (!activeStudioItem) return;
-    activeStudioItem.answer = letter;
+    activeStudioItem.answer = normalizeAnswerLetter(letter);
     ['A', 'B', 'C', 'D'].forEach(l => {
       const btn = document.getElementById(`admin-studio-ans-${l}`);
       if (!btn) return;
-      if (l === letter) {
+      if (l === activeStudioItem.answer) {
         btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-emerald-600 text-white border-emerald-700 shadow-xs';
       } else {
         btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300';
       }
     });
+
+    // Update comment textarea first line
+    const commentInput = document.getElementById('admin-studio-comment-input');
+    if (commentInput) {
+      const lines = commentInput.value.split('\n');
+      if (lines[0] && lines[0].startsWith('เฉลยคือข้อ')) {
+        const ansThai = getThaiChoiceLetter(activeStudioItem.answer);
+        const choiceText = getChoiceTextByAnswer(activeStudioItem);
+        lines[0] = choiceText ? `เฉลยคือข้อ ${ansThai}. ${choiceText} ครับ! 💡` : `เฉลยคือข้อ ${ansThai} ครับ! 💡`;
+        commentInput.value = lines.join('\n');
+        activeStudioItem.customComment = commentInput.value;
+      }
+    }
   }
 
   function updateAdminStudioAutoCaptions() {
-    // Optional helper to keep state in sync
+    if (!activeStudioItem) return;
+    activeStudioItem.a = document.getElementById('admin-studio-choice-a')?.value || '';
+    activeStudioItem.b = document.getElementById('admin-studio-choice-b')?.value || '';
+    activeStudioItem.c = document.getElementById('admin-studio-choice-c')?.value || '';
+    activeStudioItem.d = document.getElementById('admin-studio-choice-d')?.value || '';
+    activeStudioItem.questionText = document.getElementById('admin-studio-q-input')?.value || '';
+    activeStudioItem.tag = document.getElementById('admin-studio-tag-input')?.value || '';
+
+    const commentInput = document.getElementById('admin-studio-comment-input');
+    if (commentInput) {
+      const lines = commentInput.value.split('\n');
+      if (lines[0] && lines[0].startsWith('เฉลยคือข้อ')) {
+        const ansThai = getThaiChoiceLetter(activeStudioItem.answer);
+        const choiceText = getChoiceTextByAnswer(activeStudioItem);
+        lines[0] = choiceText ? `เฉลยคือข้อ ${ansThai}. ${choiceText} ครับ! 💡` : `เฉลยคือข้อ ${ansThai} ครับ! 💡`;
+        commentInput.value = lines.join('\n');
+        activeStudioItem.customComment = commentInput.value;
+      }
+    }
+  }
+
+  function regenerateAdminStudioCaptions() {
+    if (!activeStudioItem) return;
+    activeStudioItem.tag = document.getElementById('admin-studio-tag-input')?.value || activeStudioItem.tag;
+    activeStudioItem.questionText = document.getElementById('admin-studio-q-input')?.value || activeStudioItem.questionText;
+    activeStudioItem.a = document.getElementById('admin-studio-choice-a')?.value || activeStudioItem.a;
+    activeStudioItem.b = document.getElementById('admin-studio-choice-b')?.value || activeStudioItem.b;
+    activeStudioItem.c = document.getElementById('admin-studio-choice-c')?.value || activeStudioItem.c;
+    activeStudioItem.d = document.getElementById('admin-studio-choice-d')?.value || activeStudioItem.d;
+
+    const newCap = generatePromoCaption(activeStudioItem);
+    const newCom = generatePromoComment(activeStudioItem);
+
+    const capInput = document.getElementById('admin-studio-caption-input');
+    const comInput = document.getElementById('admin-studio-comment-input');
+    if (capInput) capInput.value = newCap;
+    if (comInput) comInput.value = newCom;
+    activeStudioItem.customCaption = newCap;
+    activeStudioItem.customComment = newCom;
+
+    showToast('info', 'สร้างข้อความโพสต์และคอมเมนต์ใหม่เรียบร้อยแล้ว');
   }
 
   function renderAdminStudioCanvas() {
@@ -14225,7 +14374,7 @@ if (typeof window !== 'undefined') {
       choiceB: cB,
       choiceC: cC,
       choiceD: cD,
-      mode: activeStudioItem?.mode || 2,
+      mode: activeStudioItem?.mode || 4,
       theme: themeKey
     };
 
@@ -14776,6 +14925,8 @@ if (typeof window !== 'undefined') {
   window.setAdminStudioAnswer = setAdminStudioAnswer;
   window.renderAdminStudioCanvas = renderAdminStudioCanvas;
   window.updateAdminStudioAutoCaptions = updateAdminStudioAutoCaptions;
+  window.regenerateAdminStudioCaptions = regenerateAdminStudioCaptions;
+  window.getThaiChoiceLetter = getThaiChoiceLetter;
   window.downloadAdminStudioPng = downloadAdminStudioPng;
   window.copyAdminStudioCaption = copyAdminStudioCaption;
   window.copyAdminStudioComment = copyAdminStudioComment;
