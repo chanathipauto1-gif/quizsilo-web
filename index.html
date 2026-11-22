@@ -101,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 21.11.19.43</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.14.31</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -7383,12 +7383,21 @@ if (typeof window !== 'undefined') {
     }
     loadFooterConfig();
 
+    // Check for direct deep link (?quiz=... or ?exam=... or ?batch=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const directQuizParam = urlParams.get('quiz') || urlParams.get('exam') || urlParams.get('batch');
+    if (directQuizParam) {
+      window.pendingDirectQuizParam = directQuizParam;
+    }
+
     // Routing decision: สมาชิกเก่าเข้า Dashboard / ผู้ใช้ใหม่หรือยังไม่ล็อกอินไป Landing Page
     const hash = window.location.hash;
     const isAuthRedirect = hash.includes('access_token=') || hash.includes('refresh_token=');
     const isRegisteredMember = currentUserProfile && !currentUserProfile.isGuest && currentUserProfile.uuid;
 
-    if (isAuthRedirect || isRegisteredMember) {
+    if (directQuizParam) {
+      switchPage('library');
+    } else if (isAuthRedirect || isRegisteredMember) {
       switchPage('dashboard');
     } else if (hash === '#library') {
       switchPage('library');
@@ -8114,6 +8123,9 @@ if (typeof window !== 'undefined') {
           <button onclick="startExam('${b.batchId}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
             <i data-lucide="play" class="w-3.5 h-3.5"></i> <span>ทำข้อสอบ</span>
           </button>
+          <button onclick="copyBatchDeepLink('${b.batchId}', '${escapeHtml(b.batchName)}', event)" class="p-1.5 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all cursor-pointer" title="คัดลอกลิงก์ตรงสำหรับแชร์ (Direct Link)">
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+          </button>
           <button onclick="openReviewMode('${b.batchId}')" class="p-1.5 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all cursor-pointer" title="ตรวจสอบและแก้ไข (Review)">
             <i data-lucide="pen-line" class="w-4 h-4"></i>
           </button>
@@ -8245,6 +8257,41 @@ if (typeof window !== 'undefined') {
         renderLibraryAnalyticsChart();
         filterBatches();
         renderMyBatches();
+
+        // Handle Direct Deep Link auto-launch (?quiz=...)
+        if (window.pendingDirectQuizParam) {
+          const p = String(window.pendingDirectQuizParam).trim();
+          window.pendingDirectQuizParam = null;
+
+          let target = allBatches.find(b => String(b.batchId).trim() === p || String(b.id).trim() === p);
+          // Match by 1-based index (e.g. ?quiz=1 means the first batch in list)
+          if (!target && !isNaN(parseInt(p, 10))) {
+            const idx = parseInt(p, 10) - 1;
+            if (idx >= 0 && idx < allBatches.length) {
+              target = allBatches[idx];
+            }
+          }
+          // Match by partial name
+          if (!target) {
+            target = allBatches.find(b => (b.batchName || '').toLowerCase().includes(p.toLowerCase()));
+          }
+
+          if (target) {
+            // Auto-setup guest profile if guest so they don't get stopped by guest modal
+            if (!currentUserProfile || currentUserProfile.isGuest) {
+              if (!localStorage.getItem('quizsilo_guest_name')) {
+                localStorage.setItem('quizsilo_guest_name', 'ผู้เข้าสอบ');
+              }
+              if (!localStorage.getItem('quizsilo_guest_uuid')) {
+                localStorage.setItem('quizsilo_guest_uuid', 'guest_' + Math.random().toString(36).substring(2, 10));
+              }
+              currentUserProfile.name = localStorage.getItem('quizsilo_guest_name') || 'ผู้เข้าสอบ';
+              currentUserProfile.guestNickname = currentUserProfile.name;
+            }
+            showToast('info', `🎯 กำลังเปิดห้องสอบ: ${target.batchName}`, 2500);
+            startExam(target.batchId || target.id);
+          }
+        }
       })
       .withFailureHandler(err => {
         const rIcon = document.getElementById('refresh-lib-icon');
@@ -8554,6 +8601,7 @@ if (typeof window !== 'undefined') {
 
           <div class="flex items-center gap-1.5 pt-1">
             <button onclick="${btnAction}" class="flex-1 py-2 ${btnClass} text-xs font-bold rounded-xl shadow-xs transition-all text-center">${btnText}</button>
+            <button onclick="copyBatchDeepLink('${b.batchId}', '${escapeHtml(b.batchName)}', event)" class="p-2 text-slate-500 hover:text-brand-600 bg-white border border-slate-200 rounded-xl transition-all cursor-pointer" title="คัดลอกลิงก์ตรงสำหรับแชร์ (Direct Link)"><i data-lucide="share-2" class="w-4 h-4"></i></button>
             ${canReviewOrEdit ? `
               <button onclick="openReviewMode('${b.batchId}')" class="p-2 text-slate-500 hover:text-brand-600 bg-white border border-slate-200 rounded-xl transition-all" title="ตรวจสอบและแก้ไข (Review)"><i data-lucide="pen-line" class="w-4 h-4"></i></button>
             ` : ''}
@@ -8605,7 +8653,8 @@ if (typeof window !== 'undefined') {
           </td>
           <td class="py-3 px-3 text-center">
             <div class="flex justify-center items-center gap-1.5">
-              <button onclick="${btnAction}" class="px-3 py-2 ${btnClass} text-xs font-bold rounded-xl shadow-xs transition-all">${btnText}</button>
+              <button onclick="${btnAction}" class="px-3 py-2 ${btnClass} text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer">${btnText}</button>
+              <button onclick="copyBatchDeepLink('${b.batchId}', '${escapeHtml(b.batchName)}', event)" class="p-2 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all cursor-pointer" title="คัดลอกลิงก์ตรงสำหรับแชร์ชุดนี้ (Direct Link)"><i data-lucide="share-2" class="w-4 h-4"></i></button>
               ${canReviewOrEdit ? `
                 <button onclick="openReviewMode('${b.batchId}')" class="p-2 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all" title="ตรวจสอบและแก้ไข (Review)"><i data-lucide="pen-line" class="w-4 h-4"></i></button>
               ` : ''}
@@ -8729,6 +8778,41 @@ if (typeof window !== 'undefined') {
           .deleteMyBatch(batchId, currentUserProfile);
       }
     });
+  }
+
+  function copyBatchDeepLink(batchId, batchName, evt) {
+    if (evt && evt.stopPropagation) evt.stopPropagation();
+    const cleanOrigin = window.location.origin;
+    const cleanPath = window.location.pathname;
+    const directUrl = `${cleanOrigin}${cleanPath}?quiz=${encodeURIComponent(batchId)}`;
+
+    const fallbackCopy = (text, name) => {
+      try {
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast('success', `📋 คัดลอกลิงก์ตรงสำหรับ "${name}" เรียบร้อยแล้ว!`);
+      } catch (err) {
+        Swal.fire({
+          title: 'ลิงก์ตรงสำหรับแชร์',
+          html: `<p class="text-xs text-slate-500 mb-2">ก๊อปปี้ลิงก์นี้ไปโพสต์แชร์ได้ทันที:</p><input type="text" readonly value="${text}" class="w-full text-xs p-2.5 bg-slate-100 rounded-xl border border-slate-300 select-all font-mono" onclick="this.select()">`,
+          confirmButtonText: 'ปิดหน้าต่าง'
+        });
+      }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(directUrl).then(() => {
+        showToast('success', `📋 คัดลอกลิงก์ตรงสำหรับ "${batchName}" เรียบร้อยแล้ว! นำไปแชร์ได้ทันที`);
+      }).catch(() => fallbackCopy(directUrl, batchName));
+    } else {
+      fallbackCopy(directUrl, batchName);
+    }
   }
 
   function confirmResetStats(batchId, batchName) {
@@ -13006,6 +13090,7 @@ if (typeof window !== 'undefined') {
   window.updateAdminFooterLivePreview = updateAdminFooterLivePreview;
   window.saveAdminFooterConfig = saveAdminFooterConfig;
   window.openAboutUsModal = openAboutUsModal;
+  window.copyBatchDeepLink = copyBatchDeepLink;
 </script>
 
 
