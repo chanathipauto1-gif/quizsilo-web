@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QuizSilo - เพื่อนคู่คิดคนเตรียมสอบและคลังข้อสอบ AI</title>
+  <!-- Social Media & Open Graph Meta Tags -->
+  <meta name="description" content="QuizSilo - ระบบจำลองห้องสอบและคลังข้อสอบอัจฉริยะ ก.พ. ครูผู้ช่วย ท้องถิ่น ฝึกทำข้อสอบออนไลน์พร้อมจับเวลาเสมือนจริงและเฉลยละเอียดรายข้อฟรี">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://quizsilo-web.vercel.app/">
+  <meta property="og:title" content="QuizSilo - เพื่อนคู่คิดคนเตรียมสอบและคลังข้อสอบ AI">
+  <meta property="og:description" content="ทำข้อสอบออนไลน์ จับเวลาจริง รู้ผลทันทีพร้อมเฉลยละเอียด ไม่ต้องโหลดแอป ลองทำฟรีได้ทันที!">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&h=630&fit=crop&q=80">
+  <meta name="twitter:card" content="summary_large_image">
   <!-- Google Fonts: Prompt & Mali (Warm Handwriting) -->
   <link href="https://fonts.googleapis.com/css2?family=Mali:ital,wght@0,500;0,600;0,700;1,500&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Tailwind CSS -->
@@ -101,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.16.13</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.22.45</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2510,6 +2518,12 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Admin/Assistant Exclusive: ปุ่มทำภาพโปรโมท -->
+          <button id="btn-exam-promo" onclick="openPromoModalFromExam()" class="hidden px-3 py-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="สร้างภาพกราฟิกโปรโมทข้อนี้">
+            <i data-lucide="megaphone" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span id="btn-exam-promo-label">📢 ทำโปรโมท</span>
+          </button>
+
           <button id="btn-flag-question" onclick="openFlagQuestionModal()" class="px-3 py-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="รายงานข้อสอบหรือเฉลยผิด">
             <i data-lucide="flag" class="w-3.5 h-3.5 text-rose-500"></i>
             <span>รายงานข้อนี้</span>
@@ -4457,6 +4471,189 @@
             <span>สร้างชุดสุ่มฝึกซ้อม</span>
           </button>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= Modal: Social Promo Card Generator (Admin Only) ================= -->
+  <div id="modal-promo-generator" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="relative bg-white rounded-3xl max-w-5xl w-full border border-slate-200 shadow-2xl overflow-hidden transition-all flex flex-col max-h-[92vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 bg-gradient-to-r from-indigo-900 via-brand-900 to-purple-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-bold shadow-xs">
+            📢
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-extrabold tracking-tight">สร้างภาพโปรโมทข้อสอบ (Social Promo Card)</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">ADMIN ONLY 👑</span>
+            </div>
+            <p class="text-[11px] text-indigo-200">สร้างภาพการ์ดคำถามสไตล์ Micro-Poll 4:5 พร้อมแคปชั่นและลิงก์ตรงสำหรับนำไปโพสต์หาผู้ใช้</p>
+          </div>
+        </div>
+        <button onclick="closePromoModal()" class="p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="ปิดหน้าต่าง">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Two columns) -->
+      <div class="flex-grow overflow-y-auto custom-scrollbar p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Form Controls (7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- History Badge / Anti-Duplicate Alert -->
+          <div id="promo-history-alert" class="p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 bg-emerald-50 text-emerald-800 border-emerald-200">
+            <span id="promo-history-text" class="flex items-center gap-1.5">
+              <span>✨ ข้อนี้ยังไม่เคยถูกนำไปทำโปรโมท</span>
+            </span>
+            <span id="promo-batch-badge" class="px-2 py-0.5 rounded-md bg-white text-slate-700 border border-slate-200 text-[10px] font-semibold">ชุดข้อสอบ</span>
+          </div>
+
+          <!-- Section 1: Template Selection (10 Themes) -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700 flex items-center justify-between">
+              <span>🎨 เลือกธีมตกแต่ง (10 สไตล์):</span>
+              <span id="promo-theme-name-display" class="text-[11px] text-brand-600 font-extrabold">1. Watercolor Sky</span>
+            </label>
+            <select id="promo-theme-select" onchange="handlePromoThemeChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all cursor-pointer">
+              <option value="watercolor-sky">1. ☁️ Watercolor Sky (สีน้ำฟ้าพาสเทล - แนะนำ)</option>
+              <option value="chalkboard">2. 🏫 Vintage Chalkboard (กระดานดำวินเทจ / ชอล์ก)</option>
+              <option value="kraft-paper">3. 📜 Warm Kraft Paper (กระดาษคราฟต์ถนอมสายตา)</option>
+              <option value="minimal-clean">4. 🕊️ Minimal Clean (ขาว-เทา มินิมอลเรียบหรู)</option>
+              <option value="navy-grid">5. 📐 Navy Grid (สีกรมท่าลายตารางสถาปัตย์)</option>
+              <option value="pastel-sunset">6. 🌅 Pastel Sunset (ส้มพีช-ชมพูพาสเทล สดใส)</option>
+              <option value="yellow-postit">7. 📌 Yellow Post-it (กระดาษโน้ตโพสต์อิทสีเหลือง)</option>
+              <option value="royal-law">8. ⚖️ Royal Law & Justice (กรมท่าเข้มตัดทอง ข้อสอบกฎหมาย)</option>
+              <option value="mint-study">9. 🌿 Mint Study (เขียวมิ้นต์พาสเทล สบายตา)</option>
+              <option value="red-alert">10. 🚨 Red Alert Trap (แดง-ขาว ดุดัน จุดลวงยอดฮิต)</option>
+            </select>
+          </div>
+
+          <!-- Section 2: Header Tag & Question -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-600">ป้ายหัวข้อบนภาพ (Category Hook)</label>
+              <input type="text" id="promo-input-tag" placeholder="เช่น ข้อใดเขียนผิด, จุดลวง ก.พ., วิชาการศึกษา" oninput="renderPromoCanvas()"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+            </div>
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-600">รูปแบบตัวเลือก (Choice Mode)</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="btn-promo-mode-2" onclick="setPromoChoiceMode(2)" class="py-2 px-2.5 rounded-xl text-xs font-bold border border-brand-600 bg-brand-50 text-brand-700 transition-all text-center">
+                  2 ชอยส์ (ก/ข) ⭐
+                </button>
+                <button type="button" id="btn-promo-mode-4" onclick="setPromoChoiceMode(4)" class="py-2 px-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all text-center">
+                  4 ชอยส์ (ก/ข/ค/ง)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-600">ข้อความคำถาม / โจทย์ (ปรับย่อให้กระชับได้)</label>
+            <textarea id="promo-input-question" rows="3" oninput="renderPromoCanvas()" placeholder="ระบุโจทย์ปัญหา..."
+                      class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all custom-scrollbar"></textarea>
+          </div>
+
+          <!-- Section 3: Choices Input -->
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-600">ตัวเลือกคำตอบ & เลือกเฉลยที่ถูกต้อง:</label>
+              <span class="text-[10px] text-slate-400">คลิกที่ปุ่มตัวอักษรเพื่อเปลี่ยนเฉลย</span>
+            </div>
+
+            <!-- Choice A -->
+            <div class="flex items-center gap-2">
+              <button type="button" id="promo-ans-btn-A" onclick="setPromoCorrectAnswer('A')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-emerald-600 text-white border-emerald-700 shadow-xs" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ก</button>
+              <input type="text" id="promo-input-choice-a" placeholder="ตัวเลือก ก..." oninput="renderPromoCanvas()"
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+            </div>
+
+            <!-- Choice B -->
+            <div class="flex items-center gap-2">
+              <button type="button" id="promo-ans-btn-B" onclick="setPromoCorrectAnswer('B')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ข</button>
+              <input type="text" id="promo-input-choice-b" placeholder="ตัวเลือก ข..." oninput="renderPromoCanvas()"
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+            </div>
+
+            <!-- Choice C (Mode 4 only) -->
+            <div id="promo-choice-c-row" class="hidden flex items-center gap-2">
+              <button type="button" id="promo-ans-btn-C" onclick="setPromoCorrectAnswer('C')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ค</button>
+              <input type="text" id="promo-input-choice-c" placeholder="ตัวเลือก ค..." oninput="renderPromoCanvas()"
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+            </div>
+
+            <!-- Choice D (Mode 4 only) -->
+            <div id="promo-choice-d-row" class="hidden flex items-center gap-2">
+              <button type="button" id="promo-ans-btn-D" onclick="setPromoCorrectAnswer('D')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ง</button>
+              <input type="text" id="promo-input-choice-d" placeholder="ตัวเลือก ง..." oninput="renderPromoCanvas()"
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+            </div>
+          </div>
+
+          <!-- Section 4: Explanation / Memory Trick -->
+          <div class="space-y-1 pt-1">
+            <label class="block text-[11px] font-bold text-slate-600">คำอธิบายเฉลย / ทริคจำแม่นๆ (จะใส่ในคอมเมนต์แรก):</label>
+            <textarea id="promo-input-explanation" rows="2" placeholder="เช่น ที่ถูกต้องคือ ภาพยนตร์ (มี ตร์ มาจาก ยนฺตร) ส่วน รถยนต์ ใช้ ต์"
+                      class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all custom-scrollbar"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Right: Canvas Live Preview & Quick Actions (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col items-center justify-between space-y-4">
+          
+          <div class="w-full space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="eye" class="w-4 h-4 text-brand-600"></i>
+                <span>ตัวอย่างภาพสด (Live Preview 4:5):</span>
+              </span>
+              <span class="text-[10px] text-slate-400">1080 x 1350 px</span>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-[4/5] bg-slate-900 rounded-2xl p-1 shadow-inner border border-slate-200 flex items-center justify-center overflow-hidden">
+              <canvas id="promo-card-canvas" width="1080" height="1350" class="w-full h-full object-contain rounded-xl shadow-lg"></canvas>
+            </div>
+          </div>
+
+          <!-- Action Buttons Stack -->
+          <div class="w-full space-y-2 pt-2">
+            <button type="button" onclick="downloadPromoCardPng()" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>📥 ดาวน์โหลดรูปภาพ PNG (1080x1350)</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="copyPromoPostCaption()" class="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>ก๊อปแคปชั่นโพสต์</span>
+              </button>
+              <button type="button" onclick="copyPromoFirstComment()" class="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                <span>ก๊อปคอมเมนต์เฉลย</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <span class="flex items-center gap-1.5">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>เมื่อดาวน์โหลดหรือก๊อปปี้ ระบบจะบันทึกว่าข้อนี้เคยโปรโมทแล้วอัตโนมัติ</span>
+        </span>
+        <button type="button" onclick="closePromoModal()" class="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl font-bold transition-colors cursor-pointer">
+          ปิด
+        </button>
       </div>
 
     </div>
@@ -9934,6 +10131,31 @@ if (typeof window !== 'undefined') {
       }
     }
 
+    // Admin / Assistant Exclusive: ปุ่มทำภาพโปรโมทในห้องสอบ
+    const isAdminOrAssistant = currentUserProfile && 
+      (currentUserProfile.role === 'admin' || currentUserProfile.role === 'assistant_admin');
+    const examPromoBtn = document.getElementById('btn-exam-promo');
+    const examPromoLabel = document.getElementById('btn-exam-promo-label');
+    if (examPromoBtn) {
+      if (isAdminOrAssistant) {
+        examPromoBtn.classList.remove('hidden');
+        const bId = currentExamBatch?.batchId || '';
+        const qId = q.row || currentQuestionIndex;
+        const pStatus = getQuestionPromoStatus(bId, qId);
+        if (pStatus.isPromoted) {
+          examPromoBtn.className = 'px-3 py-1.5 text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
+          if (examPromoLabel) examPromoLabel.textContent = '✅ เคยโปรโมทแล้ว';
+          examPromoBtn.title = `เคยโปรโมทแล้วเมื่อ ${pStatus.dateStr} (คลิกเพื่อแก้ไข/ทำซ้ำ)`;
+        } else {
+          examPromoBtn.className = 'px-3 py-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
+          if (examPromoLabel) examPromoLabel.textContent = '📢 ทำโปรโมท';
+          examPromoBtn.title = 'สร้างภาพกราฟิกโปรโมทข้อนี้';
+        }
+      } else {
+        examPromoBtn.classList.add('hidden');
+      }
+    }
+
     // แหล่งที่มาของข้อสอบ (Batch Provenance Traceability)
     const originBadge = document.getElementById('current-q-origin-badge');
     const originText = document.getElementById('current-q-origin-batch');
@@ -10759,6 +10981,30 @@ if (typeof window !== 'undefined') {
       const isAnsExtra = ['จ', 'ฉ', 'ช', 'ซ'].includes(ansUpper);
       const hasExtra = !!(valE || valF || valG || valH || isAnsExtra);
 
+      // Admin / Assistant Exclusive: ปุ่มทำภาพโปรโมท
+      const isAdminOrAssistant = currentUserProfile && 
+        (currentUserProfile.role === 'admin' || currentUserProfile.role === 'assistant_admin');
+      let promoBtnReviewHtml = '';
+      if (isAdminOrAssistant) {
+        const batchId = currentExamBatch?.batchId || '';
+        const qId = q.row || idx;
+        const pStatus = getQuestionPromoStatus(batchId, qId);
+        if (pStatus.isPromoted) {
+          promoBtnReviewHtml = `
+            <button type="button" onclick="openPromoModalFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 flex items-center gap-1 transition-all cursor-pointer" title="เคยโปรโมทแล้วเมื่อ ${pStatus.dateStr} (คลิกเพื่อแก้ไข/ทำซ้ำ)">
+              <span>✅ เคยโปรโมทแล้ว</span>
+            </button>
+          `;
+        } else {
+          promoBtnReviewHtml = `
+            <button type="button" onclick="openPromoModalFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 flex items-center gap-1 transition-all cursor-pointer" title="สร้างภาพกราฟิกโปรโมทข้อนี้">
+              <i data-lucide="megaphone" class="w-3 h-3 text-indigo-600"></i>
+              <span>📢 ทำโปรโมท</span>
+            </button>
+          `;
+        }
+      }
+
       return `
         <div id="review-q-item-${idx}" class="p-4 rounded-2xl border transition-all ${borderStyle} space-y-3 review-question-item" data-row="${q.row}" data-is-free="${isFree ? 'true' : 'false'}">
           <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -10776,6 +11022,8 @@ if (typeof window !== 'undefined') {
                 <i data-lucide="trash-2" class="w-3 h-3"></i>
                 <span>ลบ</span>
               </button>
+
+              ${promoBtnReviewHtml}
             </div>
             
             <div class="flex items-center gap-2 ml-auto">
@@ -13162,6 +13410,748 @@ if (typeof window !== 'undefined') {
     switchPage('about');
   }
 
+  // ==========================================
+  // Social Promo Card Generator (Admin Only 👑)
+  // ==========================================
+  const PROMO_STORAGE_KEY = 'quizsilo_promoted_questions';
+
+  function getPromotedQuestionsMap() {
+    try {
+      return JSON.parse(localStorage.getItem(PROMO_STORAGE_KEY) || '{}');
+    } catch(e) {
+      return {};
+    }
+  }
+
+  function getQuestionPromoStatus(batchId, qId) {
+    if (!batchId || qId === undefined || qId === null) return { isPromoted: false, dateStr: '' };
+    const map = getPromotedQuestionsMap();
+    const key = `${batchId}::${qId}`;
+    const data = map[key];
+    if (data && data.promotedAt) {
+      const d = new Date(data.promotedAt);
+      const dateStr = d.toLocaleDateString('th-TH') + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      return { isPromoted: true, dateStr: dateStr };
+    }
+    return { isPromoted: false, dateStr: '' };
+  }
+
+  function markQuestionAsPromoted(batchId, qId, qText) {
+    if (!batchId || qId === undefined || qId === null) return;
+    try {
+      const map = getPromotedQuestionsMap();
+      const key = `${batchId}::${qId}`;
+      map[key] = {
+        promotedAt: new Date().toISOString(),
+        questionText: (qText || '').substring(0, 100)
+      };
+      localStorage.setItem(PROMO_STORAGE_KEY, JSON.stringify(map));
+    } catch(e) {}
+  }
+
+  const PROMO_THEMES = {
+    'watercolor-sky': {
+      name: '1. ☁️ Watercolor Sky (สีน้ำฟ้าพาสเทล)',
+      bgType: 'gradient',
+      bgColors: ['#e0f2fe', '#bae6fd', '#f0f9ff'],
+      cardBg: '#ffffff',
+      cardBorder: '#7dd3fc',
+      textColor: '#0f172a',
+      headerBadgeBg: '#0284c7',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#0369a1',
+      choiceBg: 'rgba(255, 255, 255, 0.95)',
+      choiceBorder: '#bae6fd',
+      fontFamily: "'Mali', 'Prompt', sans-serif"
+    },
+    'chalkboard': {
+      name: '2. 🏫 Vintage Chalkboard (กระดานดำวินเทจ / ชอล์ก)',
+      bgType: 'solid',
+      bgColor: '#1e293b',
+      cardBg: '#0f172a',
+      cardBorder: '#475569',
+      textColor: '#f8fafc',
+      headerBadgeBg: '#eab308',
+      headerBadgeText: '#0f172a',
+      choiceBadgeBg: '#facc15',
+      choiceBg: 'rgba(30, 41, 59, 0.9)',
+      choiceBorder: '#64748b',
+      fontFamily: "'Mali', 'Prompt', sans-serif"
+    },
+    'kraft-paper': {
+      name: '3. 📜 Warm Kraft Paper (กระดาษคราฟต์ถนอมสายตา)',
+      bgType: 'gradient',
+      bgColors: ['#fef3c7', '#fde68a'],
+      cardBg: '#fffbeb',
+      cardBorder: '#d97706',
+      textColor: '#451a03',
+      headerBadgeBg: '#b45309',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#92400e',
+      choiceBg: 'rgba(255, 255, 255, 0.9)',
+      choiceBorder: '#fcd34d',
+      fontFamily: "'Mali', 'Prompt', sans-serif"
+    },
+    'minimal-clean': {
+      name: '4. 🕊️ Minimal Clean (ขาว-เทา มินิมอลเรียบหรู)',
+      bgType: 'solid',
+      bgColor: '#f8fafc',
+      cardBg: '#ffffff',
+      cardBorder: '#e2e8f0',
+      textColor: '#0f172a',
+      headerBadgeBg: '#4f46e5',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#4338ca',
+      choiceBg: '#ffffff',
+      choiceBorder: '#cbd5e1',
+      fontFamily: "'Prompt', sans-serif"
+    },
+    'navy-grid': {
+      name: '5. 📐 Navy Grid (สีกรมท่าลายตารางสถาปัตย์)',
+      bgType: 'grid',
+      bgColor: '#0f172a',
+      gridColor: 'rgba(56, 189, 248, 0.15)',
+      cardBg: 'rgba(15, 23, 42, 0.9)',
+      cardBorder: '#38bdf8',
+      textColor: '#f8fafc',
+      headerBadgeBg: '#0284c7',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#38bdf8',
+      choiceBg: 'rgba(30, 41, 59, 0.9)',
+      choiceBorder: '#0ea5e9',
+      fontFamily: "'Prompt', sans-serif"
+    },
+    'pastel-sunset': {
+      name: '6. 🌅 Pastel Sunset (ส้มพีช-ชมพูพาสเทล สดใส)',
+      bgType: 'gradient',
+      bgColors: ['#ffedd5', '#fed7aa', '#fbcfe8'],
+      cardBg: 'rgba(255, 255, 255, 0.96)',
+      cardBorder: '#f472b6',
+      textColor: '#431407',
+      headerBadgeBg: '#e11d48',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#be185d',
+      choiceBg: '#ffffff',
+      choiceBorder: '#f9a8d4',
+      fontFamily: "'Mali', 'Prompt', sans-serif"
+    },
+    'yellow-postit': {
+      name: '7. 📌 Yellow Post-it (กระดาษโน้ตโพสต์อิทสีเหลือง)',
+      bgType: 'gradient',
+      bgColors: ['#f1f5f9', '#e2e8f0'],
+      cardBg: '#fef08a',
+      cardBorder: '#eab308',
+      textColor: '#1c1917',
+      headerBadgeBg: '#ca8a04',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#854d0e',
+      choiceBg: 'rgba(254, 240, 138, 0.95)',
+      choiceBorder: '#facc15',
+      fontFamily: "'Mali', 'Prompt', sans-serif"
+    },
+    'royal-law': {
+      name: '8. ⚖️ Royal Law & Justice (กรมท่าเข้มตัดทอง ข้อสอบกฎหมาย)',
+      bgType: 'gradient',
+      bgColors: ['#020617', '#0f172a', '#1e1b4b'],
+      cardBg: 'rgba(15, 23, 42, 0.96)',
+      cardBorder: '#eab308',
+      textColor: '#f8fafc',
+      headerBadgeBg: '#ca8a04',
+      headerBadgeText: '#020617',
+      choiceBadgeBg: '#eab308',
+      choiceBg: 'rgba(30, 41, 59, 0.95)',
+      choiceBorder: '#ca8a04',
+      fontFamily: "'Prompt', sans-serif"
+    },
+    'mint-study': {
+      name: '9. 🌿 Mint Study (เขียวมิ้นต์พาสเทล สบายตา)',
+      bgType: 'gradient',
+      bgColors: ['#ecfdf5', '#d1fae5', '#a7f3d0'],
+      cardBg: '#ffffff',
+      cardBorder: '#34d399',
+      textColor: '#064e3b',
+      headerBadgeBg: '#059669',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#047857',
+      choiceBg: 'rgba(255, 255, 255, 0.95)',
+      choiceBorder: '#6ee7b7',
+      fontFamily: "'Mali', 'Prompt', sans-serif"
+    },
+    'red-alert': {
+      name: '10. 🚨 Red Alert Trap (แดง-ขาว ดุดัน จุดลวงยอดฮิต)',
+      bgType: 'gradient',
+      bgColors: ['#fef2f2', '#fee2e2'],
+      cardBg: '#ffffff',
+      cardBorder: '#ef4444',
+      textColor: '#0f172a',
+      headerBadgeBg: '#dc2626',
+      headerBadgeText: '#ffffff',
+      choiceBadgeBg: '#b91c1c',
+      choiceBg: '#ffffff',
+      choiceBorder: '#fca5a5',
+      fontFamily: "'Prompt', sans-serif"
+    }
+  };
+
+  let activePromoState = {
+    batchId: '',
+    batchName: 'ชุดข้อสอบ',
+    qId: '',
+    tag: 'ข้อใดเขียนผิด',
+    questionText: '',
+    mode: 2,
+    choiceA: '',
+    choiceB: '',
+    choiceC: '',
+    choiceD: '',
+    correctAnswer: 'A',
+    explanation: '',
+    theme: 'watercolor-sky'
+  };
+
+  function drawRoundRectFallback(ctx, x, y, width, height, radius) {
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, radius);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+  }
+
+  function wrapCanvasTextSmart(ctx, text, x, y, maxWidth, lineHeight, align = 'center') {
+    const lines = [];
+    const paras = (text || '').split('\n');
+
+    for (const para of paras) {
+      if (!para.trim()) {
+        lines.push('');
+        continue;
+      }
+      const words = para.split(' ');
+      let currentLine = '';
+
+      for (let w of words) {
+        if (ctx.measureText(w).width > maxWidth) {
+          for (let char of w) {
+            if (ctx.measureText(currentLine + char).width > maxWidth) {
+              lines.push(currentLine);
+              currentLine = char;
+            } else {
+              currentLine += char;
+            }
+          }
+        } else {
+          const testLine = currentLine ? (currentLine + ' ' + w) : w;
+          if (ctx.measureText(testLine).width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = w;
+          } else {
+            currentLine = testLine;
+          }
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+    }
+
+    let curY = y;
+    ctx.textAlign = align;
+    for (const l of lines) {
+      ctx.fillText(l, x, curY);
+      curY += lineHeight;
+    }
+    return curY;
+  }
+
+  function renderPromoCanvas() {
+    const canvas = document.getElementById('promo-card-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Read values from form inputs
+    const tag = document.getElementById('promo-input-tag')?.value || activePromoState.tag;
+    const questionText = document.getElementById('promo-input-question')?.value || activePromoState.questionText;
+    const choiceA = document.getElementById('promo-input-choice-a')?.value || activePromoState.choiceA;
+    const choiceB = document.getElementById('promo-input-choice-b')?.value || activePromoState.choiceB;
+    const choiceC = document.getElementById('promo-input-choice-c')?.value || activePromoState.choiceC;
+    const choiceD = document.getElementById('promo-input-choice-d')?.value || activePromoState.choiceD;
+    const themeKey = document.getElementById('promo-theme-select')?.value || activePromoState.theme;
+
+    activePromoState.tag = tag;
+    activePromoState.questionText = questionText;
+    activePromoState.choiceA = choiceA;
+    activePromoState.choiceB = choiceB;
+    activePromoState.choiceC = choiceC;
+    activePromoState.choiceD = choiceD;
+    activePromoState.theme = themeKey;
+
+    const W = 1080;
+    const H = 1350;
+    canvas.width = W;
+    canvas.height = H;
+
+    const theme = PROMO_THEMES[themeKey] || PROMO_THEMES['watercolor-sky'];
+    const fontMain = theme.fontFamily || "'Prompt', sans-serif";
+
+    // 1. Draw Background
+    if (theme.bgType === 'gradient') {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      if (theme.bgColors.length === 2) {
+        grad.addColorStop(0, theme.bgColors[0]);
+        grad.addColorStop(1, theme.bgColors[1]);
+      } else if (theme.bgColors.length >= 3) {
+        grad.addColorStop(0, theme.bgColors[0]);
+        grad.addColorStop(0.5, theme.bgColors[1]);
+        grad.addColorStop(1, theme.bgColors[2]);
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    } else if (theme.bgType === 'grid') {
+      ctx.fillStyle = theme.bgColor;
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = theme.gridColor || 'rgba(56, 189, 248, 0.15)';
+      ctx.lineWidth = 2;
+      const step = 45;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += step) {
+        ctx.moveTo(x, 0); ctx.lineTo(x, H);
+      }
+      for (let y = 0; y <= H; y += step) {
+        ctx.moveTo(0, y); ctx.lineTo(W, y);
+      }
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = theme.bgColor;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // 2. Center Card Frame
+    const cardX = 64;
+    const cardY = 64;
+    const cardW = W - 128;
+    const cardH = H - 128;
+    const cardRadius = 48;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+    ctx.shadowBlur = 32;
+    ctx.shadowOffsetY = 16;
+    ctx.fillStyle = theme.cardBg;
+    drawRoundRectFallback(ctx, cardX, cardY, cardW, cardH, cardRadius);
+    ctx.fill();
+    ctx.restore();
+
+    if (theme.cardBorder) {
+      ctx.strokeStyle = theme.cardBorder;
+      ctx.lineWidth = 4;
+      drawRoundRectFallback(ctx, cardX, cardY, cardW, cardH, cardRadius);
+      ctx.stroke();
+    }
+
+    // Yellow post-it tape decoration
+    if (themeKey === 'yellow-postit') {
+      ctx.fillStyle = 'rgba(254, 249, 195, 0.9)';
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.4)';
+      ctx.lineWidth = 2;
+      drawRoundRectFallback(ctx, W / 2 - 90, 44, 180, 48, 8);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // 3. Category Header Badge
+    const tagText = (tag || 'ข้อใดเขียนผิด').trim();
+    ctx.font = 'bold 36px ' + fontMain;
+    const tagMetrics = ctx.measureText(tagText);
+    const tagPadX = 36;
+    const tagW = Math.max(260, tagMetrics.width + tagPadX * 2);
+    const tagH = 68;
+    const tagX = (W - tagW) / 2;
+    const tagY = 120;
+
+    ctx.fillStyle = theme.headerBadgeBg;
+    drawRoundRectFallback(ctx, tagX, tagY, tagW, tagH, 34);
+    ctx.fill();
+
+    ctx.fillStyle = theme.headerBadgeText;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tagText, W / 2, tagY + tagH / 2);
+
+    // 4. Question Text
+    const cleanQ = (questionText || '').trim();
+    const maxQWidth = 840;
+    let qFontSize = 52;
+    let qLineHeight = 74;
+    if (cleanQ.length > 140) {
+      qFontSize = 38;
+      qLineHeight = 56;
+    } else if (cleanQ.length > 80) {
+      qFontSize = 46;
+      qLineHeight = 66;
+    }
+
+    ctx.font = `bold ${qFontSize}px ` + fontMain;
+    ctx.fillStyle = theme.textColor;
+    ctx.textBaseline = 'alphabetic';
+    const startQY = 280;
+    const afterQY = wrapCanvasTextSmart(ctx, cleanQ, W / 2, startQY, maxQWidth, qLineHeight, 'center');
+
+    // 5. Choices
+    const mode = activePromoState.mode || 2;
+    const choices = mode === 2 ? [
+      { label: 'ก', text: choiceA || '' },
+      { label: 'ข', text: choiceB || '' }
+    ] : [
+      { label: 'ก', text: choiceA || '' },
+      { label: 'ข', text: choiceB || '' },
+      { label: 'ค', text: choiceC || '' },
+      { label: 'ง', text: choiceD || '' }
+    ];
+
+    const choiceW = 840;
+    const choiceX = (W - choiceW) / 2;
+    const choiceH = mode === 2 ? 144 : 108;
+    const choiceGap = mode === 2 ? 28 : 20;
+
+    let startChoiceY = Math.max(afterQY + 44, mode === 2 ? 660 : 560);
+    if (startChoiceY + (choiceH + choiceGap) * choices.length > 1180) {
+      startChoiceY = 1180 - (choiceH + choiceGap) * choices.length;
+    }
+
+    choices.forEach((c, i) => {
+      const curY = startChoiceY + i * (choiceH + choiceGap);
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = theme.choiceBg || '#ffffff';
+      drawRoundRectFallback(ctx, choiceX, curY, choiceW, choiceH, 24);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = theme.choiceBorder || '#e2e8f0';
+      ctx.lineWidth = 3;
+      drawRoundRectFallback(ctx, choiceX, curY, choiceW, choiceH, 24);
+      ctx.stroke();
+
+      const badgeW = mode === 2 ? 64 : 52;
+      const badgeX = choiceX + 24;
+      const badgeY = curY + (choiceH - badgeW) / 2;
+      ctx.fillStyle = theme.choiceBadgeBg;
+      drawRoundRectFallback(ctx, badgeX, badgeY, badgeW, badgeW, mode === 2 ? 20 : 16);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${mode === 2 ? 36 : 28}px ` + fontMain;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(c.label, badgeX + badgeW / 2, badgeY + badgeW / 2);
+
+      ctx.fillStyle = theme.textColor;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      let cFontSize = mode === 2 ? 46 : 36;
+      if (c.text.length > 40) cFontSize = mode === 2 ? 34 : 26;
+      else if (c.text.length > 25) cFontSize = mode === 2 ? 40 : 30;
+
+      ctx.font = `bold ${cFontSize}px ` + fontMain;
+      const textX = badgeX + badgeW + 28;
+      const textY = curY + choiceH / 2;
+
+      let dispChoice = c.text;
+      const maxTextW = choiceW - (textX - choiceX) - 30;
+      while (ctx.measureText(dispChoice).width > maxTextW && dispChoice.length > 0) {
+        dispChoice = dispChoice.slice(0, -1);
+      }
+      if (dispChoice.length < c.text.length) dispChoice += '...';
+      ctx.fillText(dispChoice, textX, textY);
+    });
+
+    // 6. Watermark Footer
+    const footerY = H - 110;
+    ctx.fillStyle = theme.textColor;
+    ctx.globalAlpha = 0.55;
+    ctx.font = 'bold 24px ' + fontMain;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('QuizSilo • คลังข้อสอบอัจฉริยะ (ฝึกทำข้อสอบฟรีที่ quizsilo-web.vercel.app)', W / 2, footerY);
+    ctx.globalAlpha = 1.0;
+  }
+
+  function handlePromoThemeChange() {
+    const sel = document.getElementById('promo-theme-select');
+    if (!sel) return;
+    const themeKey = sel.value;
+    activePromoState.theme = themeKey;
+    const nameDisplay = document.getElementById('promo-theme-name-display');
+    if (nameDisplay && PROMO_THEMES[themeKey]) {
+      nameDisplay.textContent = PROMO_THEMES[themeKey].name;
+    }
+    renderPromoCanvas();
+  }
+
+  function setPromoChoiceMode(mode) {
+    activePromoState.mode = mode;
+    const btn2 = document.getElementById('btn-promo-mode-2');
+    const btn4 = document.getElementById('btn-promo-mode-4');
+    const rowC = document.getElementById('promo-choice-c-row');
+    const rowD = document.getElementById('promo-choice-d-row');
+
+    if (mode === 2) {
+      if (btn2) btn2.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-brand-600 bg-brand-50 text-brand-700 transition-all text-center';
+      if (btn4) btn4.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all text-center';
+      if (rowC) rowC.classList.add('hidden');
+      if (rowD) rowD.classList.add('hidden');
+    } else {
+      if (btn2) btn2.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all text-center';
+      if (btn4) btn4.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-brand-600 bg-brand-50 text-brand-700 transition-all text-center';
+      if (rowC) rowC.classList.remove('hidden');
+      if (rowD) rowD.classList.remove('hidden');
+    }
+    renderPromoCanvas();
+  }
+
+  function setPromoCorrectAnswer(letter) {
+    activePromoState.correctAnswer = letter;
+    ['A', 'B', 'C', 'D'].forEach(l => {
+      const btn = document.getElementById(`promo-ans-btn-${l}`);
+      if (!btn) return;
+      if (l === letter) {
+        btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-emerald-600 text-white border-emerald-700 shadow-xs';
+      } else {
+        btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300';
+      }
+    });
+  }
+
+  function updatePromoModalUI() {
+    document.getElementById('promo-input-tag').value = activePromoState.tag;
+    document.getElementById('promo-input-question').value = activePromoState.questionText;
+    document.getElementById('promo-input-choice-a').value = activePromoState.choiceA;
+    document.getElementById('promo-input-choice-b').value = activePromoState.choiceB;
+    document.getElementById('promo-input-choice-c').value = activePromoState.choiceC;
+    document.getElementById('promo-input-choice-d').value = activePromoState.choiceD;
+    document.getElementById('promo-input-explanation').value = activePromoState.explanation;
+    document.getElementById('promo-theme-select').value = activePromoState.theme;
+
+    const bBadge = document.getElementById('promo-batch-badge');
+    if (bBadge) bBadge.textContent = activePromoState.batchName || 'ชุดข้อสอบ';
+
+    const pStatus = getQuestionPromoStatus(activePromoState.batchId, activePromoState.qId);
+    const alertBox = document.getElementById('promo-history-alert');
+    const alertText = document.getElementById('promo-history-text');
+    if (alertBox && alertText) {
+      if (pStatus.isPromoted) {
+        alertBox.className = 'p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 bg-amber-50 text-amber-900 border-amber-300';
+        alertText.innerHTML = `<span>⚠️ ข้อนี้เคยถูกโปรโมทแล้วเมื่อ <b>${pStatus.dateStr}</b> (สามารถปรับแต่งและดาวน์โหลดซ้ำได้)</span>`;
+      } else {
+        alertBox.className = 'p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 bg-emerald-50 text-emerald-800 border-emerald-200';
+        alertText.innerHTML = `<span>✨ ข้อนี้ยังไม่เคยถูกนำไปทำโปรโมท</span>`;
+      }
+    }
+
+    setPromoChoiceMode(activePromoState.mode || 2);
+    setPromoCorrectAnswer(activePromoState.correctAnswer || 'A');
+    handlePromoThemeChange();
+  }
+
+  function openPromoModalFromReview(idx) {
+    const questions = window.currentReviewedQuestions || window.currentQuestions || [];
+    const q = questions[idx];
+    if (!q) {
+      showToast('error', 'ไม่พบข้อมูลข้อสอบข้อนี้');
+      return;
+    }
+
+    const bId = currentExamBatch?.batchId || '';
+    const bName = currentExamBatch?.batchName || 'ชุดข้อสอบ';
+    const qId = q.row || idx;
+
+    // Smart default tag
+    let defaultTag = 'ข้อใดเขียนผิด';
+    if (q.category) {
+      defaultTag = q.category.split('|')[0].trim();
+    } else if (bName.includes('ครู') || bName.includes('การศึกษา')) {
+      defaultTag = 'วิชาการศึกษา';
+    } else if (bName.includes('กฎหมาย') || bName.includes('ภาค ก')) {
+      defaultTag = 'กฎหมาย ก.พ.';
+    }
+
+    // Smart default choice A and B
+    let cA = String(q.a || '').trim();
+    let cB = String(q.b || '').trim();
+    let cC = String(q.c || '').trim();
+    let cD = String(q.d || '').trim();
+
+    // Determine correct answer letter
+    let ansL = 'A';
+    const rawAns = String(q.answer || '').trim();
+    if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
+    else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
+    else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
+    else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
+
+    activePromoState = {
+      batchId: bId,
+      batchName: bName,
+      qId: qId,
+      tag: defaultTag,
+      questionText: q.text || '',
+      mode: (cC || cD) ? 2 : 2, // Default to 2 choices for micro-polls
+      choiceA: cA,
+      choiceB: cB,
+      choiceC: cC,
+      choiceD: cD,
+      correctAnswer: ansL,
+      explanation: q.explanation || '',
+      theme: 'watercolor-sky'
+    };
+
+    const modal = document.getElementById('modal-promo-generator');
+    if (modal) modal.classList.remove('hidden');
+    updatePromoModalUI();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function openPromoModalFromExam() {
+    const q = currentQuestions[currentQuestionIndex];
+    if (!q) {
+      showToast('error', 'ไม่พบข้อมูลข้อสอบข้อนี้');
+      return;
+    }
+    const bId = currentExamBatch?.batchId || '';
+    const bName = currentExamBatch?.batchName || 'ชุดข้อสอบ';
+    const qId = q.row || currentQuestionIndex;
+
+    let defaultTag = q.category || 'ข้อใดถูกต้อง';
+    if (bName.includes('ครู') || bName.includes('การศึกษา')) defaultTag = 'วิชาการศึกษา';
+    else if (bName.includes('กฎหมาย')) defaultTag = 'กฎหมาย ก.พ.';
+
+    let ansL = 'A';
+    const rawAns = String(q.answer || '').trim();
+    if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
+    else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
+    else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
+    else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
+
+    activePromoState = {
+      batchId: bId,
+      batchName: bName,
+      qId: qId,
+      tag: defaultTag,
+      questionText: q.text || '',
+      mode: 2,
+      choiceA: String(q.a || '').trim(),
+      choiceB: String(q.b || '').trim(),
+      choiceC: String(q.c || '').trim(),
+      choiceD: String(q.d || '').trim(),
+      correctAnswer: ansL,
+      explanation: q.explanation || '',
+      theme: 'watercolor-sky'
+    };
+
+    const modal = document.getElementById('modal-promo-generator');
+    if (modal) modal.classList.remove('hidden');
+    updatePromoModalUI();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closePromoModal() {
+    const modal = document.getElementById('modal-promo-generator');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function downloadPromoCardPng() {
+    const canvas = document.getElementById('promo-card-canvas');
+    if (!canvas) return;
+
+    markQuestionAsPromoted(activePromoState.batchId, activePromoState.qId, activePromoState.questionText);
+    updatePromoModalUI();
+
+    // Re-render exam & review badges
+    if (typeof renderCurrentQuestion === 'function' && document.getElementById('page-exam')?.classList.contains('hidden') === false) {
+      renderCurrentQuestion();
+    }
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `QuizSilo_Promo_${activePromoState.batchId || 'Batch'}_Q${activePromoState.qId || '1'}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'ดาวน์โหลดภาพสำเร็จ! 🎨',
+      html: 'บันทึกภาพขนาด 1080x1350 เรียบร้อยแล้ว พร้อมนำไปโพสต์ได้ทันที<br><br><span class="text-xs text-slate-500">ระบบได้บันทึกว่าข้อนี้เคยถูกโปรโมทแล้ว เพื่อป้องกันการเลือกซ้ำครับ</span>',
+      confirmButtonColor: '#4f46e5'
+    });
+  }
+
+  function copyPromoPostCaption() {
+    const tag = activePromoState.tag;
+    const qText = activePromoState.questionText;
+    const mode = activePromoState.mode;
+
+    const caption = `${tag ? `[${tag}] ` : ''}ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n` +
+      `${qText}\n\n` +
+      `👉 ${mode === 2 ? 'ก หรือ ข' : 'ก ข ค หรือ ง'} คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n` +
+      `(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n` +
+      `#QuizSilo #เตรียมสอบ #แนวข้อสอบ #ข้อสอบราชการ`;
+
+    navigator.clipboard.writeText(caption).then(() => {
+      showToast('success', '📋 คัดลอกแคปชั่นสำหรับโพสต์หลักเรียบร้อยแล้ว!');
+    }).catch(() => {
+      showToast('info', 'กรุณาก๊อปปี้ข้อความด้วยตนเอง');
+    });
+  }
+
+  function copyPromoFirstComment() {
+    const ansMap = { 'A': 'ก', 'B': 'ข', 'C': 'ค', 'D': 'ง' };
+    const ansThai = ansMap[activePromoState.correctAnswer] || 'ก';
+    const choiceTextMap = {
+      'A': activePromoState.choiceA,
+      'B': activePromoState.choiceB,
+      'C': activePromoState.choiceC,
+      'D': activePromoState.choiceD
+    };
+    const ansChoiceText = choiceTextMap[activePromoState.correctAnswer] || '';
+    const expl = (document.getElementById('promo-input-explanation')?.value || activePromoState.explanation || '').trim();
+    
+    // Direct link to the exact batch
+    const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(activePromoState.batchId || '')}`;
+
+    const comment = `เฉลยคือข้อ ${ansThai}. ${ansChoiceText} ครับ! 💡\n` +
+      (expl ? `📌 คำอธิบาย/ทริคช่วยจำ: ${expl}\n\n` : '\n') +
+      `👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${activePromoState.batchName}"\n` +
+      `คลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n` +
+      `${directLink}\n\n` +
+      `*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`;
+
+    navigator.clipboard.writeText(comment).then(() => {
+      markQuestionAsPromoted(activePromoState.batchId, activePromoState.qId, activePromoState.questionText);
+      updatePromoModalUI();
+      if (typeof renderCurrentQuestion === 'function' && document.getElementById('page-exam')?.classList.contains('hidden') === false) {
+        renderCurrentQuestion();
+      }
+      showToast('success', '📋 คัดลอกคอมเมนต์เฉลย + ลิงก์ตรงเรียบร้อยแล้ว!');
+    }).catch(() => {
+      showToast('info', 'กรุณาก๊อปปี้ข้อความด้วยตนเอง');
+    });
+  }
+
   // Global Window Expose
   window.changeUserRole = changeUserRole;
   window.switchAdminTab = switchAdminTab;
@@ -13200,6 +14190,18 @@ if (typeof window !== 'undefined') {
   window.copyBatchDeepLink = copyBatchDeepLink;
   window.handleGuestSaveAttemptAndRegister = handleGuestSaveAttemptAndRegister;
   window.exitExamWithoutSave = exitExamWithoutSave;
+  window.openPromoModalFromReview = openPromoModalFromReview;
+  window.openPromoModalFromExam = openPromoModalFromExam;
+  window.closePromoModal = closePromoModal;
+  window.handlePromoThemeChange = handlePromoThemeChange;
+  window.setPromoChoiceMode = setPromoChoiceMode;
+  window.setPromoCorrectAnswer = setPromoCorrectAnswer;
+  window.renderPromoCanvas = renderPromoCanvas;
+  window.downloadPromoCardPng = downloadPromoCardPng;
+  window.copyPromoPostCaption = copyPromoPostCaption;
+  window.copyPromoFirstComment = copyPromoFirstComment;
+  window.getQuestionPromoStatus = getQuestionPromoStatus;
+  window.markQuestionAsPromoted = markQuestionAsPromoted;
 </script>
 
 
