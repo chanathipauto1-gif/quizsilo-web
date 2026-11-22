@@ -101,7 +101,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.15.20</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.16.13</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -7299,6 +7299,28 @@ if (typeof window !== 'undefined') {
           console.error('Failed to sync pending attempt:', e);
         }
       }
+
+      // Migrate any guest in-progress draft sessions to the logged-in user profile
+      const guestUuid = localStorage.getItem('quizsilo_guest_uuid');
+      if (guestUuid && guestUuid !== currentUserProfile.uuid) {
+        try {
+          const guestPrefix = 'qs_session_' + guestUuid + '_';
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(guestPrefix)) {
+              const bId = k.replace(guestPrefix, '');
+              const val = localStorage.getItem(k);
+              const targetKey = 'qs_session_' + currentUserProfile.uuid + '_' + bId;
+              if (!localStorage.getItem(targetKey)) {
+                localStorage.setItem(targetKey, val);
+              }
+              localStorage.removeItem(k);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to migrate guest drafts:', e);
+        }
+      }
       return;
     }
 
@@ -7720,7 +7742,7 @@ if (typeof window !== 'undefined') {
   function renderInProgressExams() {
     const container = document.getElementById('dash-in-progress-container');
     if (!container) return;
-    if (!currentUserProfile || currentUserProfile.isGuest || !currentUserProfile.uuid) {
+    if (!currentUserProfile || !currentUserProfile.uuid) {
       container.innerHTML = '';
       container.classList.add('hidden');
       return;
@@ -7800,6 +7822,14 @@ if (typeof window !== 'undefined') {
       '</div>';
     }).join('');
 
+    const isGuest = !currentUserProfile || currentUserProfile.isGuest;
+    const guestTipHtml = isGuest ? (
+      '<div class="mt-3.5 pt-3 border-t border-amber-200/60 flex items-center justify-between flex-wrap gap-2 text-xs text-amber-800">' +
+        '<span class="flex items-center gap-1.5 font-medium"><i data-lucide="info" class="w-3.5 h-3.5 text-amber-600"></i> บันทึกไว้ในเครื่องนี้ชั่วคราว (ยังไม่ได้ผูกบัญชี)</span>' +
+        '<button onclick="handleGoogleLogin()" class="font-bold text-brand-700 hover:text-brand-800 hover:underline inline-flex items-center gap-1 cursor-pointer">เข้าสู่ระบบด้วย Google เพื่อซิงค์ไปทำต่อบนอุปกรณ์อื่น →</button>' +
+      '</div>'
+    ) : '';
+
     container.classList.remove('hidden');
     container.innerHTML = 
       '<div class="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-300/80 rounded-3xl p-5 sm:p-6 shadow-xs">' +
@@ -7813,6 +7843,7 @@ if (typeof window !== 'undefined') {
         '<div class="space-y-3">' +
           cardsHtml +
         '</div>' +
+        guestTipHtml +
       '</div>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
