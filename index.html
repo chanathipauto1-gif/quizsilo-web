@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.22.45</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 22.11.23.18</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2518,10 +2518,10 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Admin/Assistant Exclusive: ปุ่มทำภาพโปรโมท -->
-          <button id="btn-exam-promo" onclick="openPromoModalFromExam()" class="hidden px-3 py-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="สร้างภาพกราฟิกโปรโมทข้อนี้">
-            <i data-lucide="megaphone" class="w-3.5 h-3.5 text-indigo-600"></i>
-            <span id="btn-exam-promo-label">📢 ทำโปรโมท</span>
+          <!-- Admin/Assistant Exclusive: ปุ่มเตรียมโปรโมท -->
+          <button id="btn-exam-promo" onclick="togglePromoQueueFromExam()" class="hidden px-3 py-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="เพิ่มข้อนี้เข้าคิวเตรียมโปรโมท">
+            <i data-lucide="pin" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span id="btn-exam-promo-label">📌 เตรียมโปรโมท</span>
           </button>
 
           <button id="btn-flag-question" onclick="openFlagQuestionModal()" class="px-3 py-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="รายงานข้อสอบหรือเฉลยผิด">
@@ -3126,6 +3126,11 @@
       <i data-lucide="settings-2" class="w-4 h-4 text-brand-600"></i>
       <span>⚙️ ตั้งค่าเว็บไซต์ & Footer</span>
     </button>
+    <button id="admin-tab-btn-promo" onclick="switchAdminTab('promo')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
+      <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+      <span>🎯 โปรโมทข้อสอบ</span>
+      <span id="admin-promo-count-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-brand-600 text-white font-black">0</span>
+    </button>
   </div>
 
   <!-- TAB 1: สถิติสมาชิกและภาพรวม (Stats Content) -->
@@ -3715,6 +3720,247 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- ================= TAB 6: โปรโมทข้อสอบ (Promo Queue & Studio) ================= -->
+  <div id="admin-tab-content-promo" class="hidden space-y-6">
+
+    <!-- SUB-VIEW 1: ตารางข้อสอบที่เตรียมโปรโมท (Table View) -->
+    <div id="admin-promo-view-table" class="space-y-4">
+      <!-- Header Banner & Controls -->
+      <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span class="p-1.5 bg-amber-500 text-white rounded-xl text-sm font-bold shadow-xs">🎯</span>
+            <span>คลังข้อสอบที่เตรียมโปรโมท (Promo Queue)</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">
+            รายการข้อสอบที่คุณเคยกดปุ่ม <b>"📌 เตรียมโปรโมท"</b> ไว้ สามารถกดเพื่อสร้างภาพการ์ด 4:5 ปรับแต่งข้อความแคปชั่น และก๊อปปี้ไปโพสต์ได้ทันที
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
+            <button id="admin-promo-filter-all" onclick="filterAdminPromoQueue('all')" class="px-3 py-1.5 rounded-xl bg-white text-indigo-700 shadow-xs transition-all">ทั้งหมด (<span id="promo-cnt-all">0</span>)</button>
+            <button id="admin-promo-filter-pending" onclick="filterAdminPromoQueue('pending')" class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">⏳ รอทำ (<span id="promo-cnt-pending">0</span>)</button>
+            <button id="admin-promo-filter-done" onclick="filterAdminPromoQueue('done')" class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">✅ โปรโมทแล้ว (<span id="promo-cnt-done">0</span>)</button>
+          </div>
+          <button onclick="renderAdminPromoTab()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer" title="รีเฟรชตาราง">
+            <i data-lucide="refresh-cw" id="admin-promo-refresh-icon" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Card -->
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                <th class="py-3.5 px-4 w-12 text-center">#</th>
+                <th class="py-3.5 px-4 w-48 sm:w-60">ชุดข้อสอบ & หมวดหมู่</th>
+                <th class="py-3.5 px-4 min-w-[280px]">คำถาม (Question)</th>
+                <th class="py-3.5 px-4 w-36">วันที่เตรียม</th>
+                <th class="py-3.5 px-4 w-32 text-center">สถานะ</th>
+                <th class="py-3.5 px-4 w-40 text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="admin-promo-table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-VIEW 2: สตูดิโอสร้างโปรโมทข้อสอบแบบเต็มจอ (Studio View) -->
+    <div id="admin-promo-view-studio" class="hidden space-y-4">
+      
+      <!-- Studio Header Bar -->
+      <div class="bg-gradient-to-r from-brand-900 via-indigo-900 to-purple-900 text-white p-4 sm:p-5 rounded-3xl border border-indigo-800 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button onclick="closeAdminPromoStudio()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>กลับไปตารางคิว</span>
+          </button>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base sm:text-lg font-black tracking-tight">🎨 สตูดิโอสร้างโปรโมทข้อสอบ (Promo Studio)</h2>
+              <span id="admin-studio-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950">⏳ รอทำโปรโมท</span>
+            </div>
+            <p id="admin-studio-batch-info" class="text-xs text-indigo-200 mt-0.5">ชุดข้อสอบ: ...</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleCurrentStudioPromotedStatus()" id="btn-admin-studio-toggle-status" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-white/15 hover:bg-white/25 border border-white/30 text-white flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span id="btn-admin-studio-status-label">มาร์กเป็นโปรโมทแล้ว</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Studio Full-Width Grid (Left: Form Editor, Right: Canvas Preview) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Editor Controls & Textareas (7 cols) -->
+        <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+          
+          <!-- Theme & Tag Row -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700">🎨 เลือกธีมตกแต่ง (10 สไตล์)</label>
+              <select id="admin-studio-theme-select" onchange="handleAdminStudioThemeChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all cursor-pointer">
+                <option value="watercolor-sky">1. ☁️ Watercolor Sky (สีน้ำฟ้าพาสเทล)</option>
+                <option value="chalkboard">2. 🏫 Vintage Chalkboard (กระดานดำวินเทจ / ชอล์ก)</option>
+                <option value="kraft-paper">3. 📜 Warm Kraft Paper (กระดาษคราฟต์ถนอมสายตา)</option>
+                <option value="minimal-clean">4. 🕊️ Minimal Clean (ขาว-เทา มินิมอลเรียบหรู)</option>
+                <option value="navy-grid">5. 📐 Navy Grid (สีกรมท่าลายตารางสถาปัตย์)</option>
+                <option value="pastel-sunset">6. 🌅 Pastel Sunset (ส้มพีช-ชมพูพาสเทล สดใส)</option>
+                <option value="yellow-postit">7. 📌 Yellow Post-it (กระดาษโน้ตโพสต์อิทสีเหลือง)</option>
+                <option value="royal-law">8. ⚖️ Royal Law & Justice (กรมท่าเข้มตัดทอง ข้อสอบกฎหมาย)</option>
+                <option value="mint-study">9. 🌿 Mint Study (เขียวมิ้นต์พาสเทล สบายตา)</option>
+                <option value="red-alert">10. 🚨 Red Alert Trap (แดง-ขาว ดุดัน จุดลวงยอดฮิต)</option>
+              </select>
+            </div>
+
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700">ป้ายหัวข้อบนภาพ (Category Hook)</label>
+              <input type="text" id="admin-studio-tag-input" oninput="renderAdminStudioCanvas()" placeholder="เช่น ข้อใดเขียนผิด, จุดลวง ก.พ."
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+            </div>
+          </div>
+
+          <!-- Question Input -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700">ข้อความคำถาม / โจทย์ (ปรับแต่งย่อให้กระชับได้)</label>
+            <textarea id="admin-studio-q-input" rows="3" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();"
+                      class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all custom-scrollbar"></textarea>
+          </div>
+
+          <!-- Choices & Mode Row -->
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-700">ตัวเลือก & เฉลยที่ถูกต้อง:</label>
+              <div class="flex items-center gap-1.5 text-xs font-bold">
+                <button type="button" id="btn-admin-studio-mode-2" onclick="setAdminStudioChoiceMode(2)" class="px-2.5 py-1 rounded-lg border border-brand-600 bg-brand-50 text-brand-700 transition-all">2 ชอยส์ (ก/ข)</button>
+                <button type="button" id="btn-admin-studio-mode-4" onclick="setAdminStudioChoiceMode(4)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 transition-all">4 ชอยส์ (ก/ข/ค/ง)</button>
+              </div>
+            </div>
+
+            <!-- Choice A -->
+            <div class="flex items-center gap-2">
+              <button type="button" id="admin-studio-ans-A" onclick="setAdminStudioAnswer('A')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-emerald-600 text-white border-emerald-700 shadow-xs" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ก</button>
+              <input type="text" id="admin-studio-choice-a" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();" placeholder="ตัวเลือก ก..."
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+            </div>
+
+            <!-- Choice B -->
+            <div class="flex items-center gap-2">
+              <button type="button" id="admin-studio-ans-B" onclick="setAdminStudioAnswer('B')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ข</button>
+              <input type="text" id="admin-studio-choice-b" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();" placeholder="ตัวเลือก ข..."
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+            </div>
+
+            <!-- Choice C -->
+            <div id="admin-studio-row-c" class="hidden flex items-center gap-2">
+              <button type="button" id="admin-studio-ans-C" onclick="setAdminStudioAnswer('C')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ค</button>
+              <input type="text" id="admin-studio-choice-c" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();" placeholder="ตัวเลือก ค..."
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+            </div>
+
+            <!-- Choice D -->
+            <div id="admin-studio-row-d" class="hidden flex items-center gap-2">
+              <button type="button" id="admin-studio-ans-D" onclick="setAdminStudioAnswer('D')" class="w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300" title="คลิกเพื่อตั้งให้ข้อนี้เป็นเฉลย">ง</button>
+              <input type="text" id="admin-studio-choice-d" oninput="renderAdminStudioCanvas(); updateAdminStudioAutoCaptions();" placeholder="ตัวเลือก ง..."
+                     class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+            </div>
+          </div>
+
+          <!-- Section: Editable Post Caption Textarea -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-brand-600"></i>
+                <span>ข้อความที่จะโพสต์หลัก (Post Caption)</span>
+              </label>
+              <button type="button" onclick="copyAdminStudioCaption()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span>ก๊อปปี้แคปชั่น</span>
+              </button>
+            </div>
+            <textarea id="admin-studio-caption-input" rows="4" placeholder="พิมพ์หรือปรับแต่งแคปชั่นสำหรับโพสต์หลัก..."
+                      class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all custom-scrollbar leading-relaxed"></textarea>
+          </div>
+
+          <!-- Section: Editable 1st Comment Textarea -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>ข้อความคอมเมนต์เฉลย + Direct Link (1st Comment)</span>
+              </label>
+              <button type="button" onclick="copyAdminStudioComment()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1 cursor-pointer">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span>ก๊อปปี้คอมเมนต์</span>
+              </button>
+            </div>
+            <textarea id="admin-studio-comment-input" rows="5" placeholder="พิมพ์หรือปรับแต่งข้อความคอมเมนต์เฉลย..."
+                      class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all custom-scrollbar leading-relaxed"></textarea>
+          </div>
+
+          <!-- Save Edits Button -->
+          <div class="pt-2 flex items-center justify-between">
+            <span class="text-[11px] text-slate-400">แก้ไขข้อความข้างต้นแล้วกดบันทึกลงคิวได้ตลอดเวลา</span>
+            <button type="button" onclick="saveAdminStudioEditsToQueue()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span>บันทึกการแก้ไขลงคิว</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Right: Canvas Live Preview (5 cols) -->
+        <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs space-y-4 flex flex-col items-center">
+          
+          <div class="w-full flex items-center justify-between text-xs font-bold text-slate-700">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="eye" class="w-4 h-4 text-brand-600"></i>
+              <span>ตัวอย่างภาพสด (Live Preview 4:5):</span>
+            </span>
+            <span class="text-[10px] text-slate-400">1080 x 1350 px</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="relative w-full aspect-[4/5] bg-slate-900 rounded-2xl p-1 shadow-inner border border-slate-200 flex items-center justify-center overflow-hidden">
+            <canvas id="admin-promo-canvas" width="1080" height="1350" class="w-full h-full object-contain rounded-xl shadow-lg"></canvas>
+          </div>
+
+          <!-- Action Buttons Stack -->
+          <div class="w-full space-y-2 pt-2">
+            <button type="button" onclick="downloadAdminStudioPng()" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>📥 ดาวน์โหลดรูปภาพ PNG (1080x1350)</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="copyAdminStudioCaption()" class="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>ก๊อปแคปชั่นโพสต์</span>
+              </button>
+              <button type="button" onclick="copyAdminStudioComment()" class="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                <span>ก๊อปคอมเมนต์เฉลย</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 
 </section>
@@ -10131,7 +10377,7 @@ if (typeof window !== 'undefined') {
       }
     }
 
-    // Admin / Assistant Exclusive: ปุ่มทำภาพโปรโมทในห้องสอบ
+    // Admin / Assistant Exclusive: ปุ่มเตรียมโปรโมทในห้องสอบ
     const isAdminOrAssistant = currentUserProfile && 
       (currentUserProfile.role === 'admin' || currentUserProfile.role === 'assistant_admin');
     const examPromoBtn = document.getElementById('btn-exam-promo');
@@ -10143,13 +10389,17 @@ if (typeof window !== 'undefined') {
         const qId = q.row || currentQuestionIndex;
         const pStatus = getQuestionPromoStatus(bId, qId);
         if (pStatus.isPromoted) {
+          examPromoBtn.className = 'px-3 py-1.5 text-emerald-900 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
+          if (examPromoLabel) examPromoLabel.textContent = '✅ โปรโมทแล้ว';
+          examPromoBtn.title = `โปรโมทแล้วเมื่อ ${pStatus.dateStr} (คลิกเพื่อเปิดสตูดิโอ/จัดการ)`;
+        } else if (pStatus.isQueued) {
           examPromoBtn.className = 'px-3 py-1.5 text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
-          if (examPromoLabel) examPromoLabel.textContent = '✅ เคยโปรโมทแล้ว';
-          examPromoBtn.title = `เคยโปรโมทแล้วเมื่อ ${pStatus.dateStr} (คลิกเพื่อแก้ไข/ทำซ้ำ)`;
+          if (examPromoLabel) examPromoLabel.textContent = '⏳ ในคิวโปรโมท';
+          examPromoBtn.title = 'อยู่ในคิวเตรียมโปรโมทแล้ว (คลิกเพื่อเปิดสตูดิโอ/จัดการ)';
         } else {
           examPromoBtn.className = 'px-3 py-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
-          if (examPromoLabel) examPromoLabel.textContent = '📢 ทำโปรโมท';
-          examPromoBtn.title = 'สร้างภาพกราฟิกโปรโมทข้อนี้';
+          if (examPromoLabel) examPromoLabel.textContent = '📌 เตรียมโปรโมท';
+          examPromoBtn.title = 'เพิ่มข้อนี้เข้าคิวเตรียมโปรโมท';
         }
       } else {
         examPromoBtn.classList.add('hidden');
@@ -10981,7 +11231,7 @@ if (typeof window !== 'undefined') {
       const isAnsExtra = ['จ', 'ฉ', 'ช', 'ซ'].includes(ansUpper);
       const hasExtra = !!(valE || valF || valG || valH || isAnsExtra);
 
-      // Admin / Assistant Exclusive: ปุ่มทำภาพโปรโมท
+      // Admin / Assistant Exclusive: ปุ่มเตรียมโปรโมท
       const isAdminOrAssistant = currentUserProfile && 
         (currentUserProfile.role === 'admin' || currentUserProfile.role === 'assistant_admin');
       let promoBtnReviewHtml = '';
@@ -10991,15 +11241,21 @@ if (typeof window !== 'undefined') {
         const pStatus = getQuestionPromoStatus(batchId, qId);
         if (pStatus.isPromoted) {
           promoBtnReviewHtml = `
-            <button type="button" onclick="openPromoModalFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 flex items-center gap-1 transition-all cursor-pointer" title="เคยโปรโมทแล้วเมื่อ ${pStatus.dateStr} (คลิกเพื่อแก้ไข/ทำซ้ำ)">
-              <span>✅ เคยโปรโมทแล้ว</span>
+            <button type="button" onclick="togglePromoQueueFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 flex items-center gap-1 transition-all cursor-pointer" title="โปรโมทแล้วเมื่อ ${pStatus.dateStr} (คลิกเพื่อเปิดสตูดิโอ)">
+              <span>✅ โปรโมทแล้ว</span>
+            </button>
+          `;
+        } else if (pStatus.isQueued) {
+          promoBtnReviewHtml = `
+            <button type="button" onclick="togglePromoQueueFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 flex items-center gap-1 transition-all cursor-pointer" title="อยู่ในคิวเตรียมโปรโมท (คลิกเพื่อเปิดสตูดิโอ)">
+              <span>⏳ ในคิวโปรโมท</span>
             </button>
           `;
         } else {
           promoBtnReviewHtml = `
-            <button type="button" onclick="openPromoModalFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 flex items-center gap-1 transition-all cursor-pointer" title="สร้างภาพกราฟิกโปรโมทข้อนี้">
-              <i data-lucide="megaphone" class="w-3 h-3 text-indigo-600"></i>
-              <span>📢 ทำโปรโมท</span>
+            <button type="button" onclick="togglePromoQueueFromReview(${idx})" class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 flex items-center gap-1 transition-all cursor-pointer" title="เพิ่มข้อนี้เข้าคิวเตรียมโปรโมท">
+              <i data-lucide="pin" class="w-3 h-3 text-indigo-600"></i>
+              <span>📌 เตรียมโปรโมท</span>
             </button>
           `;
         }
@@ -11995,6 +12251,7 @@ if (typeof window !== 'undefined') {
 
     // Pre-fetch flagged questions so Tab 3 count badge is immediately updated
     loadAdminFlags(forceRefresh);
+    if (typeof updatePromoBadgesCount === 'function') updatePromoBadgesCount();
 
     google.script.run
       .withSuccessHandler(res => {
@@ -12377,11 +12634,13 @@ if (typeof window !== 'undefined') {
     const btnFlags = document.getElementById('admin-tab-btn-flags');
     const btnAnn = document.getElementById('admin-tab-btn-announcement');
     const btnFooter = document.getElementById('admin-tab-btn-footer');
+    const btnPromo = document.getElementById('admin-tab-btn-promo');
     const contentStats = document.getElementById('admin-tab-content-stats');
     const contentLogs = document.getElementById('admin-tab-content-logs');
     const contentFlags = document.getElementById('admin-tab-content-flags');
     const contentAnn = document.getElementById('admin-tab-content-announcement');
     const contentFooter = document.getElementById('admin-tab-content-footer');
+    const contentPromo = document.getElementById('admin-tab-content-promo');
 
     const activeCls = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0';
     const inactiveCls = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0';
@@ -12391,12 +12650,14 @@ if (typeof window !== 'undefined') {
     if (btnFlags) btnFlags.className = tab === 'flags' ? activeCls : (inactiveCls + ' relative');
     if (btnAnn) btnAnn.className = tab === 'announcement' ? activeCls : inactiveCls;
     if (btnFooter) btnFooter.className = tab === 'footer' ? activeCls : inactiveCls;
+    if (btnPromo) btnPromo.className = tab === 'promo' ? activeCls : inactiveCls;
 
     if (contentStats) contentStats.classList.toggle('hidden', tab !== 'stats');
     if (contentLogs) contentLogs.classList.toggle('hidden', tab !== 'logs');
     if (contentFlags) contentFlags.classList.toggle('hidden', tab !== 'flags');
     if (contentAnn) contentAnn.classList.toggle('hidden', tab !== 'announcement');
     if (contentFooter) contentFooter.classList.toggle('hidden', tab !== 'footer');
+    if (contentPromo) contentPromo.classList.toggle('hidden', tab !== 'promo');
 
     if (tab === 'logs') {
       loadAdminAuditLogs();
@@ -12406,6 +12667,8 @@ if (typeof window !== 'undefined') {
       loadAdminAnnouncementForm();
     } else if (tab === 'footer') {
       loadAdminFooterForm();
+    } else if (tab === 'promo') {
+      renderAdminPromoTab();
     }
   }
 
@@ -13411,44 +13674,652 @@ if (typeof window !== 'undefined') {
   }
 
   // ==========================================
-  // Social Promo Card Generator (Admin Only 👑)
+  // Social Promo Queue & Full-Screen Studio (Admin Only 👑)
   // ==========================================
-  const PROMO_STORAGE_KEY = 'quizsilo_promoted_questions';
+  const PROMO_QUEUE_KEY = 'quizsilo_promo_queue';
+  let currentPromoFilter = 'all';
+  let activeStudioItem = null;
 
-  function getPromotedQuestionsMap() {
+  function getPromoQueue() {
     try {
-      return JSON.parse(localStorage.getItem(PROMO_STORAGE_KEY) || '{}');
+      return JSON.parse(localStorage.getItem(PROMO_QUEUE_KEY) || '[]');
     } catch(e) {
-      return {};
+      return [];
+    }
+  }
+
+  function savePromoQueue(queue) {
+    try {
+      localStorage.setItem(PROMO_QUEUE_KEY, JSON.stringify(queue));
+      updatePromoBadgesCount();
+    } catch(e) {}
+  }
+
+  function findPromoQueueItem(batchId, qId) {
+    const queue = getPromoQueue();
+    return queue.find(item => item.batchId === batchId && String(item.qId) === String(qId)) || null;
+  }
+
+  function updatePromoBadgesCount() {
+    const queue = getPromoQueue();
+    const pendingCount = queue.filter(x => !x.isPromoted).length;
+    const badge = document.getElementById('admin-promo-count-badge');
+    if (badge) {
+      badge.textContent = queue.length;
+      badge.className = queue.length > 0
+        ? 'px-2 py-0.5 rounded-full text-[10px] bg-brand-600 text-white font-black'
+        : 'px-2 py-0.5 rounded-full text-[10px] bg-slate-300 text-slate-700 font-bold';
     }
   }
 
   function getQuestionPromoStatus(batchId, qId) {
-    if (!batchId || qId === undefined || qId === null) return { isPromoted: false, dateStr: '' };
-    const map = getPromotedQuestionsMap();
-    const key = `${batchId}::${qId}`;
-    const data = map[key];
-    if (data && data.promotedAt) {
-      const d = new Date(data.promotedAt);
-      const dateStr = d.toLocaleDateString('th-TH') + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-      return { isPromoted: true, dateStr: dateStr };
+    if (!batchId || qId === undefined || qId === null) {
+      return { isQueued: false, isPromoted: false, dateStr: '', item: null };
     }
-    return { isPromoted: false, dateStr: '' };
+    const item = findPromoQueueItem(batchId, qId);
+    if (!item) {
+      return { isQueued: false, isPromoted: false, dateStr: '', item: null };
+    }
+    const dStr = item.promotedAt 
+      ? new Date(item.promotedAt).toLocaleDateString('th-TH') + ' ' + new Date(item.promotedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+      : (item.queuedAt ? new Date(item.queuedAt).toLocaleDateString('th-TH') : '');
+    return {
+      isQueued: true,
+      isPromoted: !!item.isPromoted,
+      dateStr: dStr,
+      item: item
+    };
   }
 
-  function markQuestionAsPromoted(batchId, qId, qText) {
-    if (!batchId || qId === undefined || qId === null) return;
-    try {
-      const map = getPromotedQuestionsMap();
-      const key = `${batchId}::${qId}`;
-      map[key] = {
-        promotedAt: new Date().toISOString(),
-        questionText: (qText || '').substring(0, 100)
+  function togglePromoQueueFromExam() {
+    const q = currentQuestions[currentQuestionIndex];
+    if (!q) {
+      showToast('error', 'ไม่พบข้อมูลข้อสอบข้อนี้');
+      return;
+    }
+    const bId = currentExamBatch?.batchId || '';
+    const bName = currentExamBatch?.batchName || 'ชุดข้อสอบ';
+    const bCat = currentExamBatch?.batchCategory || q.category || 'ทั่วไป';
+    const qId = q.row || currentQuestionIndex;
+    const dispNo = q.qNo || q.no || (currentQuestionIndex + 1);
+
+    const pStatus = getQuestionPromoStatus(bId, qId);
+
+    if (!pStatus.isQueued) {
+      // Create new queue item
+      let defaultTag = 'ข้อใดถูกต้อง';
+      if (bName.includes('ครู') || bName.includes('การศึกษา')) defaultTag = 'วิชาการศึกษา';
+      else if (bName.includes('กฎหมาย')) defaultTag = 'กฎหมาย ก.พ.';
+      else if (q.category) defaultTag = q.category.split('|')[0].trim();
+
+      let ansL = 'A';
+      const rawAns = String(q.answer || '').trim();
+      if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
+      else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
+      else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
+      else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
+
+      const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(bId)}`;
+
+      const newItem = {
+        id: `${bId}::${qId}`,
+        batchId: bId,
+        batchName: bName,
+        batchCategory: bCat,
+        qId: qId,
+        dispNo: dispNo,
+        questionText: q.text || '',
+        a: String(q.a || '').trim(),
+        b: String(q.b || '').trim(),
+        c: String(q.c || '').trim(),
+        d: String(q.d || '').trim(),
+        answer: ansL,
+        explanation: q.explanation || '',
+        tag: defaultTag,
+        mode: 2,
+        theme: 'watercolor-sky',
+        customCaption: `[${defaultTag}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${q.text || ''}\n\n👉 ก หรือ ข คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`,
+        customComment: `เฉลยคือข้อ ${ansL === 'A' ? 'ก' : 'ข'} ครับ! 💡\n${q.explanation ? `\n📌 คำอธิบาย/ทริคช่วยจำ: ${q.explanation}\n` : ''}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${bName}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`,
+        queuedAt: new Date().toISOString(),
+        isPromoted: false,
+        promotedAt: null
       };
-      localStorage.setItem(PROMO_STORAGE_KEY, JSON.stringify(map));
-    } catch(e) {}
+
+      const queue = getPromoQueue();
+      queue.unshift(newItem);
+      savePromoQueue(queue);
+
+      if (typeof renderCurrentQuestion === 'function') renderCurrentQuestion();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'เพิ่มเข้าคิวเตรียมโปรโมทแล้ว! 📌',
+        html: `ข้อที่ <b>${dispNo}</b> ถูกบันทึกลงในหน้า "โปรโมทข้อสอบ" ของ Admin เรียบร้อยแล้ว`,
+        showCancelButton: true,
+        confirmButtonText: '🚀 เปิดสตูดิโอโปรโมท (Admin)',
+        cancelButtonText: 'ทำข้อสอบต่อ',
+        confirmButtonColor: '#4f46e5'
+      }).then(res => {
+        if (res.isConfirmed) {
+          switchPage('admin');
+          switchAdminTab('promo');
+          openAdminPromoStudio(bId, qId);
+        }
+      });
+    } else {
+      // Already in queue
+      const isDone = pStatus.isPromoted;
+      Swal.fire({
+        icon: 'info',
+        title: isDone ? 'ข้อนี้โปรโมทแล้ว ✅' : 'ข้อนี้อยู่ในคิวเตรียมโปรโมท ⏳',
+        html: isDone 
+          ? `เคยโปรโมทไปแล้วเมื่อ <b>${pStatus.dateStr}</b>`
+          : `ข้อนี้ถูกเตรียมไว้ในคิวโปรโมทแล้ว (เพิ่มเมื่อ <b>${pStatus.dateStr}</b>)`,
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '🎨 เปิดสตูดิโอโปรโมท',
+        denyButtonText: '🗑️ ลบออกจากคิว',
+        cancelButtonText: 'ปิด',
+        confirmButtonColor: '#4f46e5',
+        denyButtonColor: '#ef4444'
+      }).then(res => {
+        if (res.isConfirmed) {
+          switchPage('admin');
+          switchAdminTab('promo');
+          openAdminPromoStudio(bId, qId);
+        } else if (res.isDenied) {
+          let queue = getPromoQueue();
+          queue = queue.filter(x => !(x.batchId === bId && String(x.qId) === String(qId)));
+          savePromoQueue(queue);
+          showToast('info', 'นำข้อนี้ออกจากคิวโปรโมทเรียบร้อยแล้ว');
+          if (typeof renderCurrentQuestion === 'function') renderCurrentQuestion();
+        }
+      });
+    }
   }
 
+  function togglePromoQueueFromReview(idx) {
+    const questions = window.currentReviewedQuestions || window.currentQuestions || [];
+    const q = questions[idx];
+    if (!q) {
+      showToast('error', 'ไม่พบข้อมูลข้อสอบข้อนี้');
+      return;
+    }
+    const bId = currentExamBatch?.batchId || '';
+    const bName = currentExamBatch?.batchName || 'ชุดข้อสอบ';
+    const bCat = currentExamBatch?.batchCategory || q.category || 'ทั่วไป';
+    const qId = q.row || idx;
+    const dispNo = q.qNo || q.no || (idx + 1);
+
+    const pStatus = getQuestionPromoStatus(bId, qId);
+
+    if (!pStatus.isQueued) {
+      let defaultTag = 'ข้อใดเขียนผิด';
+      if (q.category) defaultTag = q.category.split('|')[0].trim();
+      else if (bName.includes('ครู') || bName.includes('การศึกษา')) defaultTag = 'วิชาการศึกษา';
+      else if (bName.includes('กฎหมาย')) defaultTag = 'กฎหมาย ก.พ.';
+
+      let ansL = 'A';
+      const rawAns = String(q.answer || '').trim();
+      if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
+      else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
+      else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
+      else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
+
+      const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(bId)}`;
+
+      const newItem = {
+        id: `${bId}::${qId}`,
+        batchId: bId,
+        batchName: bName,
+        batchCategory: bCat,
+        qId: qId,
+        dispNo: dispNo,
+        questionText: q.text || '',
+        a: String(q.a || '').trim(),
+        b: String(q.b || '').trim(),
+        c: String(q.c || '').trim(),
+        d: String(q.d || '').trim(),
+        answer: ansL,
+        explanation: q.explanation || '',
+        tag: defaultTag,
+        mode: 2,
+        theme: 'watercolor-sky',
+        customCaption: `[${defaultTag}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${q.text || ''}\n\n👉 ก หรือ ข คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`,
+        customComment: `เฉลยคือข้อ ${ansL === 'A' ? 'ก' : 'ข'} ครับ! 💡\n${q.explanation ? `\n📌 คำอธิบาย/ทริคช่วยจำ: ${q.explanation}\n` : ''}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${bName}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`,
+        queuedAt: new Date().toISOString(),
+        isPromoted: false,
+        promotedAt: null
+      };
+
+      const queue = getPromoQueue();
+      queue.unshift(newItem);
+      savePromoQueue(queue);
+
+      if (typeof renderReviewForm === 'function') renderReviewForm(questions);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'เพิ่มเข้าคิวเตรียมโปรโมทแล้ว! 📌',
+        html: `ข้อที่ <b>${dispNo}</b> ถูกบันทึกลงในหน้า "โปรโมทข้อสอบ" ของ Admin เรียบร้อยแล้ว`,
+        showCancelButton: true,
+        confirmButtonText: '🚀 เปิดสตูดิโอโปรโมท (Admin)',
+        cancelButtonText: 'ตรวจข้อสอบต่อ',
+        confirmButtonColor: '#4f46e5'
+      }).then(res => {
+        if (res.isConfirmed) {
+          switchPage('admin');
+          switchAdminTab('promo');
+          openAdminPromoStudio(bId, qId);
+        }
+      });
+    } else {
+      const isDone = pStatus.isPromoted;
+      Swal.fire({
+        icon: 'info',
+        title: isDone ? 'ข้อนี้โปรโมทแล้ว ✅' : 'ข้อนี้อยู่ในคิวเตรียมโปรโมท ⏳',
+        html: isDone 
+          ? `เคยโปรโมทไปแล้วเมื่อ <b>${pStatus.dateStr}</b>`
+          : `ข้อนี้ถูกเตรียมไว้ในคิวโปรโมทแล้ว (เพิ่มเมื่อ <b>${pStatus.dateStr}</b>)`,
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '🎨 เปิดสตูดิโอโปรโมท',
+        denyButtonText: '🗑️ ลบออกจากคิว',
+        cancelButtonText: 'ปิด',
+        confirmButtonColor: '#4f46e5',
+        denyButtonColor: '#ef4444'
+      }).then(res => {
+        if (res.isConfirmed) {
+          switchPage('admin');
+          switchAdminTab('promo');
+          openAdminPromoStudio(bId, qId);
+        } else if (res.isDenied) {
+          let queue = getPromoQueue();
+          queue = queue.filter(x => !(x.batchId === bId && String(x.qId) === String(qId)));
+          savePromoQueue(queue);
+          showToast('info', 'นำข้อนี้ออกจากคิวโปรโมทเรียบร้อยแล้ว');
+          if (typeof renderReviewForm === 'function') renderReviewForm(questions);
+        }
+      });
+    }
+  }
+
+  // ==========================================
+  // Admin Promo Queue Table & Filters
+  // ==========================================
+  function filterAdminPromoQueue(type) {
+    currentPromoFilter = type;
+    const btnAll = document.getElementById('admin-promo-filter-all');
+    const btnPending = document.getElementById('admin-promo-filter-pending');
+    const btnDone = document.getElementById('admin-promo-filter-done');
+
+    const activeCls = 'px-3 py-1.5 rounded-xl bg-white text-indigo-700 shadow-xs transition-all';
+    const inactiveCls = 'px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all';
+
+    if (btnAll) btnAll.className = type === 'all' ? activeCls : inactiveCls;
+    if (btnPending) btnPending.className = type === 'pending' ? activeCls : inactiveCls;
+    if (btnDone) btnDone.className = type === 'done' ? activeCls : inactiveCls;
+
+    renderAdminPromoTab();
+  }
+
+  function deleteFromPromoQueue(batchId, qId) {
+    Swal.fire({
+      title: 'ลบข้อสอบออกจากคิวโปรโมท?',
+      text: 'คุณต้องการนำข้อสอบข้อนี้ออกจากรายการโปรโมทหรือไม่?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบออก',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then(res => {
+      if (res.isConfirmed) {
+        let queue = getPromoQueue();
+        queue = queue.filter(x => !(x.batchId === batchId && String(x.qId) === String(qId)));
+        savePromoQueue(queue);
+        showToast('info', 'ลบข้อสอบออกจากคิวโปรโมทแล้ว');
+        renderAdminPromoTab();
+      }
+    });
+  }
+
+  function renderAdminPromoTab() {
+    updatePromoBadgesCount();
+    const queue = getPromoQueue();
+    const pendingCount = queue.filter(x => !x.isPromoted).length;
+    const doneCount = queue.filter(x => x.isPromoted).length;
+
+    const cntAll = document.getElementById('promo-cnt-all');
+    const cntPending = document.getElementById('promo-cnt-pending');
+    const cntDone = document.getElementById('promo-cnt-done');
+    if (cntAll) cntAll.textContent = queue.length;
+    if (cntPending) cntPending.textContent = pendingCount;
+    if (cntDone) cntDone.textContent = doneCount;
+
+    let filtered = queue;
+    if (currentPromoFilter === 'pending') {
+      filtered = queue.filter(x => !x.isPromoted);
+    } else if (currentPromoFilter === 'done') {
+      filtered = queue.filter(x => x.isPromoted);
+    }
+
+    const tbody = document.getElementById('admin-promo-table-body');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-16 text-center text-slate-400">
+            <div class="flex flex-col items-center justify-center space-y-2.5">
+              <span class="text-3xl">🎯</span>
+              <div class="text-sm font-bold text-slate-600">ไม่มีรายการข้อสอบในคิวนี้</div>
+              <p class="text-xs text-slate-400 max-w-sm">
+                กดปุ่ม <b>"📌 เตรียมโปรโมท"</b> จากหน้าห้องสอบ หรือหน้า Review & Edit เพื่อเก็บข้อสอบเด็ดๆ เข้ามาสร้างภาพในคิวนี้ครับ
+              </p>
+            </div>
+          </td>
+        </tr>
+      `;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
+
+    tbody.innerHTML = filtered.map((item, idx) => {
+      const qSnippet = (item.questionText || '').length > 90
+        ? (item.questionText.substring(0, 90) + '...')
+        : item.questionText;
+
+      const dateStr = item.queuedAt
+        ? new Date(item.queuedAt).toLocaleDateString('th-TH') + ' ' + new Date(item.queuedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+        : '-';
+
+      const statusBadge = item.isPromoted
+        ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">✅ โปรโมทแล้ว</span>`
+        : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">⏳ รอทำโปรโมท</span>`;
+
+      return `
+        <tr class="hover:bg-slate-50/80 transition-colors">
+          <td class="py-3.5 px-4 text-center font-bold text-slate-400">${idx + 1}</td>
+          <td class="py-3.5 px-4 space-y-0.5">
+            <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.batchName || 'ชุดข้อสอบ')}</div>
+            <div class="text-[10px] text-indigo-600 font-semibold">${escapeHtml(item.batchCategory || 'ทั่วไป')} • ข้อที่ ${item.dispNo || 1}</div>
+          </td>
+          <td class="py-3.5 px-4 space-y-1">
+            <div class="text-xs font-semibold text-slate-800 leading-snug">${escapeHtml(qSnippet)}</div>
+            <div class="flex items-center gap-2 text-[10px] text-slate-500">
+              <span>ก. ${escapeHtml((item.a || '').substring(0, 25))}</span>
+              <span>•</span>
+              <span>ข. ${escapeHtml((item.b || '').substring(0, 25))}</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-xs text-slate-500">${dateStr}</td>
+          <td class="py-3.5 px-4 text-center">${statusBadge}</td>
+          <td class="py-3.5 px-4 text-center space-x-1">
+            <button onclick="openAdminPromoStudio('${item.batchId}', '${item.qId}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer" title="เปิดสตูดิโอสร้างโปรโมทข้อนี้">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>สตูดิโอ</span>
+            </button>
+            <button onclick="deleteFromPromoQueue('${item.batchId}', '${item.qId}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all inline-flex items-center cursor-pointer" title="ลบออกจากคิว">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  // ==========================================
+  // Admin Promo Studio (Full-Screen Studio)
+  // ==========================================
+  function openAdminPromoStudio(batchId, qId) {
+    const queue = getPromoQueue();
+    let item = queue.find(x => x.batchId === batchId && String(x.qId) === String(qId));
+    if (!item) {
+      showToast('error', 'ไม่พบข้อมูลข้อสอบในคิว');
+      return;
+    }
+    activeStudioItem = item;
+
+    // Toggle view
+    document.getElementById('admin-promo-view-table')?.classList.add('hidden');
+    document.getElementById('admin-promo-view-studio')?.classList.remove('hidden');
+
+    // Populate Studio Header
+    const bInfo = document.getElementById('admin-studio-batch-info');
+    if (bInfo) bInfo.textContent = `ชุดข้อสอบ: ${item.batchName || 'ชุดข้อสอบ'} (${item.batchCategory || 'ทั่วไป'}) • ข้อที่ ${item.dispNo || 1}`;
+
+    updateAdminStudioStatusBadge();
+
+    // Populate Form Inputs
+    document.getElementById('admin-studio-theme-select').value = item.theme || 'watercolor-sky';
+    document.getElementById('admin-studio-tag-input').value = item.tag || 'ข้อใดเขียนผิด';
+    document.getElementById('admin-studio-q-input').value = item.questionText || '';
+    document.getElementById('admin-studio-choice-a').value = item.a || '';
+    document.getElementById('admin-studio-choice-b').value = item.b || '';
+    document.getElementById('admin-studio-choice-c').value = item.c || '';
+    document.getElementById('admin-studio-choice-d').value = item.d || '';
+
+    // Caption & Comment
+    const defaultCaption = `[${item.tag || 'ข้อใดเขียนผิด'}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${item.questionText || ''}\n\n👉 ก หรือ ข คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`;
+    const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(item.batchId || '')}`;
+    const defaultComment = `เฉลยคือข้อ ${item.answer === 'A' ? 'ก' : 'ข'} ครับ! 💡\n${item.explanation ? `\n📌 คำอธิบาย/ทริคช่วยจำ: ${item.explanation}\n` : ''}\n👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${item.batchName}"\nคลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n${directLink}\n\n*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`;
+
+    document.getElementById('admin-studio-caption-input').value = item.customCaption || defaultCaption;
+    document.getElementById('admin-studio-comment-input').value = item.customComment || defaultComment;
+
+    setAdminStudioChoiceMode(item.mode || 2);
+    setAdminStudioAnswer(item.answer || 'A');
+
+    renderAdminStudioCanvas();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Scroll to top of admin console
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  }
+
+  function closeAdminPromoStudio() {
+    saveAdminStudioEditsToQueue(true);
+    document.getElementById('admin-promo-view-studio')?.classList.add('hidden');
+    document.getElementById('admin-promo-view-table')?.classList.remove('hidden');
+    renderAdminPromoTab();
+  }
+
+  function updateAdminStudioStatusBadge() {
+    if (!activeStudioItem) return;
+    const badge = document.getElementById('admin-studio-status-badge');
+    const label = document.getElementById('btn-admin-studio-status-label');
+    if (activeStudioItem.isPromoted) {
+      if (badge) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-400 text-slate-950';
+        badge.textContent = `✅ โปรโมทแล้ว (${new Date(activeStudioItem.promotedAt).toLocaleDateString('th-TH')})`;
+      }
+      if (label) label.textContent = 'เปลี่ยนเป็น: รอทำโปรโมท';
+    } else {
+      if (badge) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950';
+        badge.textContent = '⏳ รอทำโปรโมท';
+      }
+      if (label) label.textContent = 'มาร์กเป็นโปรโมทแล้ว ✅';
+    }
+  }
+
+  function toggleCurrentStudioPromotedStatus() {
+    if (!activeStudioItem) return;
+    activeStudioItem.isPromoted = !activeStudioItem.isPromoted;
+    activeStudioItem.promotedAt = activeStudioItem.isPromoted ? new Date().toISOString() : null;
+
+    let queue = getPromoQueue();
+    const idx = queue.findIndex(x => x.batchId === activeStudioItem.batchId && String(x.qId) === String(activeStudioItem.qId));
+    if (idx >= 0) {
+      queue[idx] = activeStudioItem;
+      savePromoQueue(queue);
+    }
+    updateAdminStudioStatusBadge();
+    showToast('info', activeStudioItem.isPromoted ? 'มาร์กข้อนี้ว่าโปรโมทแล้ว ✅' : 'เปลี่ยนสถานะเป็น: รอทำโปรโมท ⏳');
+  }
+
+  function handleAdminStudioThemeChange() {
+    if (!activeStudioItem) return;
+    activeStudioItem.theme = document.getElementById('admin-studio-theme-select').value;
+    renderAdminStudioCanvas();
+  }
+
+  function setAdminStudioChoiceMode(mode) {
+    if (!activeStudioItem) return;
+    activeStudioItem.mode = mode;
+    const btn2 = document.getElementById('btn-admin-studio-mode-2');
+    const btn4 = document.getElementById('btn-admin-studio-mode-4');
+    const rowC = document.getElementById('admin-studio-row-c');
+    const rowD = document.getElementById('admin-studio-row-d');
+
+    if (mode === 2) {
+      if (btn2) btn2.className = 'px-2.5 py-1 rounded-lg border border-brand-600 bg-brand-50 text-brand-700 transition-all';
+      if (btn4) btn4.className = 'px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 transition-all';
+      if (rowC) rowC.classList.add('hidden');
+      if (rowD) rowD.classList.add('hidden');
+    } else {
+      if (btn2) btn2.className = 'px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 transition-all';
+      if (btn4) btn4.className = 'px-2.5 py-1 rounded-lg border border-brand-600 bg-brand-50 text-brand-700 transition-all';
+      if (rowC) rowC.classList.remove('hidden');
+      if (rowD) rowD.classList.remove('hidden');
+    }
+    renderAdminStudioCanvas();
+  }
+
+  function setAdminStudioAnswer(letter) {
+    if (!activeStudioItem) return;
+    activeStudioItem.answer = letter;
+    ['A', 'B', 'C', 'D'].forEach(l => {
+      const btn = document.getElementById(`admin-studio-ans-${l}`);
+      if (!btn) return;
+      if (l === letter) {
+        btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-emerald-600 text-white border-emerald-700 shadow-xs';
+      } else {
+        btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300';
+      }
+    });
+  }
+
+  function updateAdminStudioAutoCaptions() {
+    // Optional helper to keep state in sync
+  }
+
+  function renderAdminStudioCanvas() {
+    const canvas = document.getElementById('admin-promo-canvas');
+    if (!canvas) return;
+
+    const tag = document.getElementById('admin-studio-tag-input')?.value || activeStudioItem?.tag || 'ข้อใดเขียนผิด';
+    const qText = document.getElementById('admin-studio-q-input')?.value || activeStudioItem?.questionText || '';
+    const cA = document.getElementById('admin-studio-choice-a')?.value || activeStudioItem?.a || '';
+    const cB = document.getElementById('admin-studio-choice-b')?.value || activeStudioItem?.b || '';
+    const cC = document.getElementById('admin-studio-choice-c')?.value || activeStudioItem?.c || '';
+    const cD = document.getElementById('admin-studio-choice-d')?.value || activeStudioItem?.d || '';
+    const themeKey = document.getElementById('admin-studio-theme-select')?.value || activeStudioItem?.theme || 'watercolor-sky';
+
+    const data = {
+      tag: tag,
+      questionText: qText,
+      choiceA: cA,
+      choiceB: cB,
+      choiceC: cC,
+      choiceD: cD,
+      mode: activeStudioItem?.mode || 2,
+      theme: themeKey
+    };
+
+    drawPromoCanvas(canvas, data);
+  }
+
+  function saveAdminStudioEditsToQueue(silent = false) {
+    if (!activeStudioItem) return;
+    activeStudioItem.tag = document.getElementById('admin-studio-tag-input')?.value || activeStudioItem.tag;
+    activeStudioItem.questionText = document.getElementById('admin-studio-q-input')?.value || activeStudioItem.questionText;
+    activeStudioItem.a = document.getElementById('admin-studio-choice-a')?.value || activeStudioItem.a;
+    activeStudioItem.b = document.getElementById('admin-studio-choice-b')?.value || activeStudioItem.b;
+    activeStudioItem.c = document.getElementById('admin-studio-choice-c')?.value || activeStudioItem.c;
+    activeStudioItem.d = document.getElementById('admin-studio-choice-d')?.value || activeStudioItem.d;
+    activeStudioItem.theme = document.getElementById('admin-studio-theme-select')?.value || activeStudioItem.theme;
+    activeStudioItem.customCaption = document.getElementById('admin-studio-caption-input')?.value || activeStudioItem.customCaption;
+    activeStudioItem.customComment = document.getElementById('admin-studio-comment-input')?.value || activeStudioItem.customComment;
+
+    let queue = getPromoQueue();
+    const idx = queue.findIndex(x => x.batchId === activeStudioItem.batchId && String(x.qId) === String(activeStudioItem.qId));
+    if (idx >= 0) {
+      queue[idx] = activeStudioItem;
+      savePromoQueue(queue);
+    }
+    if (!silent) showToast('success', '💾 บันทึกการแก้ไขลงคิวโปรโมทเรียบร้อยแล้ว!');
+  }
+
+  function downloadAdminStudioPng() {
+    const canvas = document.getElementById('admin-promo-canvas');
+    if (!canvas || !activeStudioItem) return;
+
+    saveAdminStudioEditsToQueue(true);
+
+    activeStudioItem.isPromoted = true;
+    activeStudioItem.promotedAt = new Date().toISOString();
+
+    let queue = getPromoQueue();
+    const idx = queue.findIndex(x => x.batchId === activeStudioItem.batchId && String(x.qId) === String(activeStudioItem.qId));
+    if (idx >= 0) {
+      queue[idx] = activeStudioItem;
+      savePromoQueue(queue);
+    }
+    updateAdminStudioStatusBadge();
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `QuizSilo_Promo_${activeStudioItem.batchId || 'Batch'}_Q${activeStudioItem.qId || '1'}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'ดาวน์โหลดภาพสำเร็จ! 🎨',
+      html: 'บันทึกภาพขนาด 1080x1350 เรียบร้อยแล้ว พร้อมนำไปโพสต์ได้ทันที<br><br><span class="text-xs text-slate-500">ระบบได้บันทึกว่าข้อนี้ "โปรโมทแล้ว ✅" เรียบร้อยครับ</span>',
+      confirmButtonColor: '#4f46e5'
+    });
+  }
+
+  function copyAdminStudioCaption() {
+    saveAdminStudioEditsToQueue(true);
+    const text = document.getElementById('admin-studio-caption-input')?.value || '';
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('success', '📋 คัดลอกแคปชั่นสำหรับโพสต์หลักเรียบร้อยแล้ว!');
+    }).catch(() => {
+      showToast('info', 'กรุณาก๊อปปี้ข้อความด้วยตนเอง');
+    });
+  }
+
+  function copyAdminStudioComment() {
+    saveAdminStudioEditsToQueue(true);
+    const text = document.getElementById('admin-studio-comment-input')?.value || '';
+    if (activeStudioItem) {
+      activeStudioItem.isPromoted = true;
+      activeStudioItem.promotedAt = new Date().toISOString();
+      let queue = getPromoQueue();
+      const idx = queue.findIndex(x => x.batchId === activeStudioItem.batchId && String(x.qId) === String(activeStudioItem.qId));
+      if (idx >= 0) {
+        queue[idx] = activeStudioItem;
+        savePromoQueue(queue);
+      }
+      updateAdminStudioStatusBadge();
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('success', '📋 คัดลอกคอมเมนต์เฉลย + ลิงก์ตรงเรียบร้อยแล้ว!');
+    }).catch(() => {
+      showToast('info', 'กรุณาก๊อปปี้ข้อความด้วยตนเอง');
+    });
+  }
+
+  // ==========================================
+  // Core Themes & Canvas Renderer
+  // ==========================================
   const PROMO_THEMES = {
     'watercolor-sky': {
       name: '1. ☁️ Watercolor Sky (สีน้ำฟ้าพาสเทล)',
@@ -13593,22 +14464,6 @@ if (typeof window !== 'undefined') {
     }
   };
 
-  let activePromoState = {
-    batchId: '',
-    batchName: 'ชุดข้อสอบ',
-    qId: '',
-    tag: 'ข้อใดเขียนผิด',
-    questionText: '',
-    mode: 2,
-    choiceA: '',
-    choiceB: '',
-    choiceC: '',
-    choiceD: '',
-    correctAnswer: 'A',
-    explanation: '',
-    theme: 'watercolor-sky'
-  };
-
   function drawRoundRectFallback(ctx, x, y, width, height, radius) {
     if (typeof ctx.roundRect === 'function') {
       ctx.beginPath();
@@ -13672,35 +14527,17 @@ if (typeof window !== 'undefined') {
     return curY;
   }
 
-  function renderPromoCanvas() {
-    const canvas = document.getElementById('promo-card-canvas');
+  function drawPromoCanvas(canvas, data) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    // Read values from form inputs
-    const tag = document.getElementById('promo-input-tag')?.value || activePromoState.tag;
-    const questionText = document.getElementById('promo-input-question')?.value || activePromoState.questionText;
-    const choiceA = document.getElementById('promo-input-choice-a')?.value || activePromoState.choiceA;
-    const choiceB = document.getElementById('promo-input-choice-b')?.value || activePromoState.choiceB;
-    const choiceC = document.getElementById('promo-input-choice-c')?.value || activePromoState.choiceC;
-    const choiceD = document.getElementById('promo-input-choice-d')?.value || activePromoState.choiceD;
-    const themeKey = document.getElementById('promo-theme-select')?.value || activePromoState.theme;
-
-    activePromoState.tag = tag;
-    activePromoState.questionText = questionText;
-    activePromoState.choiceA = choiceA;
-    activePromoState.choiceB = choiceB;
-    activePromoState.choiceC = choiceC;
-    activePromoState.choiceD = choiceD;
-    activePromoState.theme = themeKey;
 
     const W = 1080;
     const H = 1350;
     canvas.width = W;
     canvas.height = H;
 
-    const theme = PROMO_THEMES[themeKey] || PROMO_THEMES['watercolor-sky'];
+    const theme = PROMO_THEMES[data.theme] || PROMO_THEMES['watercolor-sky'];
     const fontMain = theme.fontFamily || "'Prompt', sans-serif";
 
     // 1. Draw Background
@@ -13759,7 +14596,7 @@ if (typeof window !== 'undefined') {
     }
 
     // Yellow post-it tape decoration
-    if (themeKey === 'yellow-postit') {
+    if (data.theme === 'yellow-postit') {
       ctx.fillStyle = 'rgba(254, 249, 195, 0.9)';
       ctx.strokeStyle = 'rgba(234, 179, 8, 0.4)';
       ctx.lineWidth = 2;
@@ -13769,7 +14606,7 @@ if (typeof window !== 'undefined') {
     }
 
     // 3. Category Header Badge
-    const tagText = (tag || 'ข้อใดเขียนผิด').trim();
+    const tagText = (data.tag || 'ข้อใดเขียนผิด').trim();
     ctx.font = 'bold 36px ' + fontMain;
     const tagMetrics = ctx.measureText(tagText);
     const tagPadX = 36;
@@ -13788,7 +14625,7 @@ if (typeof window !== 'undefined') {
     ctx.fillText(tagText, W / 2, tagY + tagH / 2);
 
     // 4. Question Text
-    const cleanQ = (questionText || '').trim();
+    const cleanQ = (data.questionText || '').trim();
     const maxQWidth = 840;
     let qFontSize = 52;
     let qLineHeight = 74;
@@ -13807,15 +14644,15 @@ if (typeof window !== 'undefined') {
     const afterQY = wrapCanvasTextSmart(ctx, cleanQ, W / 2, startQY, maxQWidth, qLineHeight, 'center');
 
     // 5. Choices
-    const mode = activePromoState.mode || 2;
+    const mode = data.mode || 2;
     const choices = mode === 2 ? [
-      { label: 'ก', text: choiceA || '' },
-      { label: 'ข', text: choiceB || '' }
+      { label: 'ก', text: data.choiceA || '' },
+      { label: 'ข', text: data.choiceB || '' }
     ] : [
-      { label: 'ก', text: choiceA || '' },
-      { label: 'ข', text: choiceB || '' },
-      { label: 'ค', text: choiceC || '' },
-      { label: 'ง', text: choiceD || '' }
+      { label: 'ก', text: data.choiceA || '' },
+      { label: 'ข', text: data.choiceB || '' },
+      { label: 'ค', text: data.choiceC || '' },
+      { label: 'ง', text: data.choiceD || '' }
     ];
 
     const choiceW = 840;
@@ -13889,269 +14726,6 @@ if (typeof window !== 'undefined') {
     ctx.globalAlpha = 1.0;
   }
 
-  function handlePromoThemeChange() {
-    const sel = document.getElementById('promo-theme-select');
-    if (!sel) return;
-    const themeKey = sel.value;
-    activePromoState.theme = themeKey;
-    const nameDisplay = document.getElementById('promo-theme-name-display');
-    if (nameDisplay && PROMO_THEMES[themeKey]) {
-      nameDisplay.textContent = PROMO_THEMES[themeKey].name;
-    }
-    renderPromoCanvas();
-  }
-
-  function setPromoChoiceMode(mode) {
-    activePromoState.mode = mode;
-    const btn2 = document.getElementById('btn-promo-mode-2');
-    const btn4 = document.getElementById('btn-promo-mode-4');
-    const rowC = document.getElementById('promo-choice-c-row');
-    const rowD = document.getElementById('promo-choice-d-row');
-
-    if (mode === 2) {
-      if (btn2) btn2.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-brand-600 bg-brand-50 text-brand-700 transition-all text-center';
-      if (btn4) btn4.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all text-center';
-      if (rowC) rowC.classList.add('hidden');
-      if (rowD) rowD.classList.add('hidden');
-    } else {
-      if (btn2) btn2.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all text-center';
-      if (btn4) btn4.className = 'py-2 px-2.5 rounded-xl text-xs font-bold border border-brand-600 bg-brand-50 text-brand-700 transition-all text-center';
-      if (rowC) rowC.classList.remove('hidden');
-      if (rowD) rowD.classList.remove('hidden');
-    }
-    renderPromoCanvas();
-  }
-
-  function setPromoCorrectAnswer(letter) {
-    activePromoState.correctAnswer = letter;
-    ['A', 'B', 'C', 'D'].forEach(l => {
-      const btn = document.getElementById(`promo-ans-btn-${l}`);
-      if (!btn) return;
-      if (l === letter) {
-        btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-emerald-600 text-white border-emerald-700 shadow-xs';
-      } else {
-        btn.className = 'w-8 h-8 rounded-xl font-black text-xs shrink-0 border transition-all bg-slate-100 text-slate-700 border-slate-300';
-      }
-    });
-  }
-
-  function updatePromoModalUI() {
-    document.getElementById('promo-input-tag').value = activePromoState.tag;
-    document.getElementById('promo-input-question').value = activePromoState.questionText;
-    document.getElementById('promo-input-choice-a').value = activePromoState.choiceA;
-    document.getElementById('promo-input-choice-b').value = activePromoState.choiceB;
-    document.getElementById('promo-input-choice-c').value = activePromoState.choiceC;
-    document.getElementById('promo-input-choice-d').value = activePromoState.choiceD;
-    document.getElementById('promo-input-explanation').value = activePromoState.explanation;
-    document.getElementById('promo-theme-select').value = activePromoState.theme;
-
-    const bBadge = document.getElementById('promo-batch-badge');
-    if (bBadge) bBadge.textContent = activePromoState.batchName || 'ชุดข้อสอบ';
-
-    const pStatus = getQuestionPromoStatus(activePromoState.batchId, activePromoState.qId);
-    const alertBox = document.getElementById('promo-history-alert');
-    const alertText = document.getElementById('promo-history-text');
-    if (alertBox && alertText) {
-      if (pStatus.isPromoted) {
-        alertBox.className = 'p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 bg-amber-50 text-amber-900 border-amber-300';
-        alertText.innerHTML = `<span>⚠️ ข้อนี้เคยถูกโปรโมทแล้วเมื่อ <b>${pStatus.dateStr}</b> (สามารถปรับแต่งและดาวน์โหลดซ้ำได้)</span>`;
-      } else {
-        alertBox.className = 'p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 bg-emerald-50 text-emerald-800 border-emerald-200';
-        alertText.innerHTML = `<span>✨ ข้อนี้ยังไม่เคยถูกนำไปทำโปรโมท</span>`;
-      }
-    }
-
-    setPromoChoiceMode(activePromoState.mode || 2);
-    setPromoCorrectAnswer(activePromoState.correctAnswer || 'A');
-    handlePromoThemeChange();
-  }
-
-  function openPromoModalFromReview(idx) {
-    const questions = window.currentReviewedQuestions || window.currentQuestions || [];
-    const q = questions[idx];
-    if (!q) {
-      showToast('error', 'ไม่พบข้อมูลข้อสอบข้อนี้');
-      return;
-    }
-
-    const bId = currentExamBatch?.batchId || '';
-    const bName = currentExamBatch?.batchName || 'ชุดข้อสอบ';
-    const qId = q.row || idx;
-
-    // Smart default tag
-    let defaultTag = 'ข้อใดเขียนผิด';
-    if (q.category) {
-      defaultTag = q.category.split('|')[0].trim();
-    } else if (bName.includes('ครู') || bName.includes('การศึกษา')) {
-      defaultTag = 'วิชาการศึกษา';
-    } else if (bName.includes('กฎหมาย') || bName.includes('ภาค ก')) {
-      defaultTag = 'กฎหมาย ก.พ.';
-    }
-
-    // Smart default choice A and B
-    let cA = String(q.a || '').trim();
-    let cB = String(q.b || '').trim();
-    let cC = String(q.c || '').trim();
-    let cD = String(q.d || '').trim();
-
-    // Determine correct answer letter
-    let ansL = 'A';
-    const rawAns = String(q.answer || '').trim();
-    if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
-    else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
-    else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
-    else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
-
-    activePromoState = {
-      batchId: bId,
-      batchName: bName,
-      qId: qId,
-      tag: defaultTag,
-      questionText: q.text || '',
-      mode: (cC || cD) ? 2 : 2, // Default to 2 choices for micro-polls
-      choiceA: cA,
-      choiceB: cB,
-      choiceC: cC,
-      choiceD: cD,
-      correctAnswer: ansL,
-      explanation: q.explanation || '',
-      theme: 'watercolor-sky'
-    };
-
-    const modal = document.getElementById('modal-promo-generator');
-    if (modal) modal.classList.remove('hidden');
-    updatePromoModalUI();
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }
-
-  function openPromoModalFromExam() {
-    const q = currentQuestions[currentQuestionIndex];
-    if (!q) {
-      showToast('error', 'ไม่พบข้อมูลข้อสอบข้อนี้');
-      return;
-    }
-    const bId = currentExamBatch?.batchId || '';
-    const bName = currentExamBatch?.batchName || 'ชุดข้อสอบ';
-    const qId = q.row || currentQuestionIndex;
-
-    let defaultTag = q.category || 'ข้อใดถูกต้อง';
-    if (bName.includes('ครู') || bName.includes('การศึกษา')) defaultTag = 'วิชาการศึกษา';
-    else if (bName.includes('กฎหมาย')) defaultTag = 'กฎหมาย ก.พ.';
-
-    let ansL = 'A';
-    const rawAns = String(q.answer || '').trim();
-    if (['A', 'ก', '1'].includes(rawAns)) ansL = 'A';
-    else if (['B', 'ข', '2'].includes(rawAns)) ansL = 'B';
-    else if (['C', 'ค', '3'].includes(rawAns)) ansL = 'C';
-    else if (['D', 'ง', '4'].includes(rawAns)) ansL = 'D';
-
-    activePromoState = {
-      batchId: bId,
-      batchName: bName,
-      qId: qId,
-      tag: defaultTag,
-      questionText: q.text || '',
-      mode: 2,
-      choiceA: String(q.a || '').trim(),
-      choiceB: String(q.b || '').trim(),
-      choiceC: String(q.c || '').trim(),
-      choiceD: String(q.d || '').trim(),
-      correctAnswer: ansL,
-      explanation: q.explanation || '',
-      theme: 'watercolor-sky'
-    };
-
-    const modal = document.getElementById('modal-promo-generator');
-    if (modal) modal.classList.remove('hidden');
-    updatePromoModalUI();
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }
-
-  function closePromoModal() {
-    const modal = document.getElementById('modal-promo-generator');
-    if (modal) modal.classList.add('hidden');
-  }
-
-  function downloadPromoCardPng() {
-    const canvas = document.getElementById('promo-card-canvas');
-    if (!canvas) return;
-
-    markQuestionAsPromoted(activePromoState.batchId, activePromoState.qId, activePromoState.questionText);
-    updatePromoModalUI();
-
-    // Re-render exam & review badges
-    if (typeof renderCurrentQuestion === 'function' && document.getElementById('page-exam')?.classList.contains('hidden') === false) {
-      renderCurrentQuestion();
-    }
-
-    const dataUrl = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `QuizSilo_Promo_${activePromoState.batchId || 'Batch'}_Q${activePromoState.qId || '1'}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    Swal.fire({
-      icon: 'success',
-      title: 'ดาวน์โหลดภาพสำเร็จ! 🎨',
-      html: 'บันทึกภาพขนาด 1080x1350 เรียบร้อยแล้ว พร้อมนำไปโพสต์ได้ทันที<br><br><span class="text-xs text-slate-500">ระบบได้บันทึกว่าข้อนี้เคยถูกโปรโมทแล้ว เพื่อป้องกันการเลือกซ้ำครับ</span>',
-      confirmButtonColor: '#4f46e5'
-    });
-  }
-
-  function copyPromoPostCaption() {
-    const tag = activePromoState.tag;
-    const qText = activePromoState.questionText;
-    const mode = activePromoState.mode;
-
-    const caption = `${tag ? `[${tag}] ` : ''}ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n` +
-      `${qText}\n\n` +
-      `👉 ${mode === 2 ? 'ก หรือ ข' : 'ก ข ค หรือ ง'} คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n` +
-      `(เดี๋ยวมาเฉลยวิธีจำแม่นๆ ในคอมเมนต์แรกนะครับ)\n\n` +
-      `#QuizSilo #เตรียมสอบ #แนวข้อสอบ #ข้อสอบราชการ`;
-
-    navigator.clipboard.writeText(caption).then(() => {
-      showToast('success', '📋 คัดลอกแคปชั่นสำหรับโพสต์หลักเรียบร้อยแล้ว!');
-    }).catch(() => {
-      showToast('info', 'กรุณาก๊อปปี้ข้อความด้วยตนเอง');
-    });
-  }
-
-  function copyPromoFirstComment() {
-    const ansMap = { 'A': 'ก', 'B': 'ข', 'C': 'ค', 'D': 'ง' };
-    const ansThai = ansMap[activePromoState.correctAnswer] || 'ก';
-    const choiceTextMap = {
-      'A': activePromoState.choiceA,
-      'B': activePromoState.choiceB,
-      'C': activePromoState.choiceC,
-      'D': activePromoState.choiceD
-    };
-    const ansChoiceText = choiceTextMap[activePromoState.correctAnswer] || '';
-    const expl = (document.getElementById('promo-input-explanation')?.value || activePromoState.explanation || '').trim();
-    
-    // Direct link to the exact batch
-    const directLink = `https://quizsilo-web.vercel.app/?quiz=${encodeURIComponent(activePromoState.batchId || '')}`;
-
-    const comment = `เฉลยคือข้อ ${ansThai}. ${ansChoiceText} ครับ! 💡\n` +
-      (expl ? `📌 คำอธิบาย/ทริคช่วยจำ: ${expl}\n\n` : '\n') +
-      `👉 ใครอยากลองฝึกจับเวลาเสมือนจริงกับข้อสอบชุดเต็ม "${activePromoState.batchName}"\n` +
-      `คลิกเข้าไปทำฟรีบนมือถือได้ที่นี่เลยครับ:\n` +
-      `${directLink}\n\n` +
-      `*หมายเหตุ: แนะนำกด 3 จุดมุมขวาบนเลือก "เปิดใน Chrome / Safari" เพื่อความเสถียรครับ`;
-
-    navigator.clipboard.writeText(comment).then(() => {
-      markQuestionAsPromoted(activePromoState.batchId, activePromoState.qId, activePromoState.questionText);
-      updatePromoModalUI();
-      if (typeof renderCurrentQuestion === 'function' && document.getElementById('page-exam')?.classList.contains('hidden') === false) {
-        renderCurrentQuestion();
-      }
-      showToast('success', '📋 คัดลอกคอมเมนต์เฉลย + ลิงก์ตรงเรียบร้อยแล้ว!');
-    }).catch(() => {
-      showToast('info', 'กรุณาก๊อปปี้ข้อความด้วยตนเอง');
-    });
-  }
-
   // Global Window Expose
   window.changeUserRole = changeUserRole;
   window.switchAdminTab = switchAdminTab;
@@ -14190,18 +14764,27 @@ if (typeof window !== 'undefined') {
   window.copyBatchDeepLink = copyBatchDeepLink;
   window.handleGuestSaveAttemptAndRegister = handleGuestSaveAttemptAndRegister;
   window.exitExamWithoutSave = exitExamWithoutSave;
+  window.togglePromoQueueFromExam = togglePromoQueueFromExam;
+  window.togglePromoQueueFromReview = togglePromoQueueFromReview;
+  window.renderAdminPromoTab = renderAdminPromoTab;
+  window.filterAdminPromoQueue = filterAdminPromoQueue;
+  window.deleteFromPromoQueue = deleteFromPromoQueue;
+  window.openAdminPromoStudio = openAdminPromoStudio;
+  window.closeAdminPromoStudio = closeAdminPromoStudio;
+  window.handleAdminStudioThemeChange = handleAdminStudioThemeChange;
+  window.setAdminStudioChoiceMode = setAdminStudioChoiceMode;
+  window.setAdminStudioAnswer = setAdminStudioAnswer;
+  window.renderAdminStudioCanvas = renderAdminStudioCanvas;
+  window.updateAdminStudioAutoCaptions = updateAdminStudioAutoCaptions;
+  window.downloadAdminStudioPng = downloadAdminStudioPng;
+  window.copyAdminStudioCaption = copyAdminStudioCaption;
+  window.copyAdminStudioComment = copyAdminStudioComment;
+  window.toggleCurrentStudioPromotedStatus = toggleCurrentStudioPromotedStatus;
+  window.saveAdminStudioEditsToQueue = saveAdminStudioEditsToQueue;
+  window.getQuestionPromoStatus = getQuestionPromoStatus;
   window.openPromoModalFromReview = openPromoModalFromReview;
   window.openPromoModalFromExam = openPromoModalFromExam;
   window.closePromoModal = closePromoModal;
-  window.handlePromoThemeChange = handlePromoThemeChange;
-  window.setPromoChoiceMode = setPromoChoiceMode;
-  window.setPromoCorrectAnswer = setPromoCorrectAnswer;
-  window.renderPromoCanvas = renderPromoCanvas;
-  window.downloadPromoCardPng = downloadPromoCardPng;
-  window.copyPromoPostCaption = copyPromoPostCaption;
-  window.copyPromoFirstComment = copyPromoFirstComment;
-  window.getQuestionPromoStatus = getQuestionPromoStatus;
-  window.markQuestionAsPromoted = markQuestionAsPromoted;
 </script>
 
 
