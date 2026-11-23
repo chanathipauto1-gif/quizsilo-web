@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 23.11.19.53</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.01.21</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2830,18 +2830,6 @@
           <span class="hidden sm:inline">รีเฟรช</span>
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- Admin Scope Toggle (แสดงเฉพาะเมื่อ Role = admin) -->
-  <div id="dash-admin-toggle-box" class="hidden bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-    <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
-      <i data-lucide="shield-check" class="w-4 h-4 text-purple-600"></i>
-      <span>มุมมองสถิติ (Admin Mode):</span>
-    </div>
-    <div class="flex items-center bg-slate-100 p-1 rounded-xl">
-      <button id="btn-dash-scope-personal" onclick="setDashboardScope('personal')" class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-brand-700 shadow-xs transition-all">เฉพาะของฉัน</button>
-      <button id="btn-dash-scope-all" onclick="setDashboardScope('all')" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">ทุกคนทั้งหมด</button>
     </div>
   </div>
 
@@ -5698,6 +5686,30 @@ const BatchesQuestionsService = {
         }
       }
 
+      const activeProf = getActiveProfile();
+      const currentUserId = activeProf?.uuid || null;
+      const myAttemptsMap = {};
+
+      if (currentUserId && sbClient) {
+        try {
+          const { data: myAttempts } = await sbClient
+            .from('exam_attempts')
+            .select('batch_id, score, total_questions, percent, time_spent_str, created_at')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false });
+
+          if (myAttempts && myAttempts.length > 0) {
+            myAttempts.forEach((att) => {
+              if (att.batch_id && !myAttemptsMap[att.batch_id]) {
+                myAttemptsMap[att.batch_id] = att;
+              }
+            });
+          }
+        } catch (myAttErr) {
+          console.warn('Could not load user attempts for batches:', myAttErr);
+        }
+      }
+
       const mapped = batches.map((b, idx) => {
         const uploader = profileMap[b.user_id];
         const sourceFileIds = Array.isArray(b.source_files) ? b.source_files.filter(f => f && f.id).map((f) => f.id) : [];
@@ -5711,6 +5723,14 @@ const BatchesQuestionsService = {
         const totalQ = b.total_questions || 0;
         const isAllVerified = Boolean(b.is_verified);
 
+        const myAttempt = b.id ? myAttemptsMap[b.id] : null;
+        const myAttemptDate = myAttempt
+          ? `${formatThaiDateTimeShort(myAttempt.created_at)}|${myAttempt.time_spent_str || ''}`
+          : '-';
+        const myCorrect = myAttempt ? myAttempt.score : '-';
+        const myWrong = myAttempt ? Math.max(0, (myAttempt.total_questions || totalQ) - (myAttempt.score || 0)) : '-';
+        const myScorePercent = myAttempt ? `${Number(myAttempt.percent || 0).toFixed(1)}%` : '-';
+
         return {
           rowIndex: idx + 1,
           batchId: b.id,
@@ -5719,10 +5739,10 @@ const BatchesQuestionsService = {
           createdAt: new Date(b.created_at).toLocaleDateString('th-TH'),
           rawCreatedAt: b.created_at,
           totalQuestions: totalQ,
-          lastAttemptDate: '-',
-          correctCount: '-',
-          wrongCount: '-',
-          scorePercent: '-',
+          lastAttemptDate: myAttemptDate,
+          correctCount: myCorrect,
+          wrongCount: myWrong,
+          scorePercent: myScorePercent,
           batchCategory: b.batch_category,
           sourceSummary: 'Supabase Cloud',
           fileType: b.file_type || 'DOCUMENT',
@@ -6116,9 +6136,10 @@ const ExamStatsService = {
       let timeSpent = timeStr || '-';
       let answersJson = {};
 
+      const fallbackUid = resolveUserId(getActiveProfile()) || currentSupabaseUser?.id || null;
       if (typeof batchIdOrResultData === 'object' && batchIdOrResultData !== null) {
         const rd = batchIdOrResultData;
-        userId = resolveUserId(resultsOrProfile);
+        userId = resolveUserId(resultsOrProfile) || fallbackUid;
         batchId = rd.batchId;
         resolvedBatchName = rd.batchName || 'ชุดข้อสอบ';
         correct = rd.score || 0;
@@ -6127,13 +6148,17 @@ const ExamStatsService = {
         timeSpent = rd.timeSpentStr || '-';
         answersJson = rd.userAnswers || {};
       } else {
-        userId = resolveUserId(userProfile);
+        userId = resolveUserId(userProfile) || fallbackUid;
         const results = Array.isArray(resultsOrProfile) ? resultsOrProfile : [];
         total = results.length;
         correct = results.filter((r) => r.isCorrect).length;
         percent = total > 0 ? parseFloat(((correct / total) * 100).toFixed(1)) : 0;
         answersJson = results;
       }
+
+      // Check if batchId is a valid UUID (Virtual/Random exam batches use batch_id = null to avoid Postgres 22P02/23503)
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const validBatchId = (typeof batchId === 'string' && UUID_REGEX.test(batchId)) ? batchId : null;
 
       // Always record activity log so Super Admin has 100% full visibility of all exam attempts (including Guests)
       const uProfile = typeof resultsOrProfile === 'object' && !Array.isArray(resultsOrProfile) ? resultsOrProfile : (userProfile || getActiveProfile());
@@ -6159,7 +6184,7 @@ const ExamStatsService = {
         .from('exam_attempts')
         .insert({
           user_id: userId,
-          batch_id: batchId,
+          batch_id: validBatchId,
           batch_name: resolvedBatchName,
           score: correct,
           total_questions: total,
@@ -6185,7 +6210,7 @@ const ExamStatsService = {
   async getUserDashboardStats(userProfile, scope = 'personal') {
     try {
       const client = requireSupabaseClient();
-      const isAllScope = userProfile?.role === 'admin' && scope === 'all';
+      const isAllScope = false; // Always personal scope for dashboard
       const userId = resolveUserId(userProfile);
 
       if (!isAllScope && !userId) {
@@ -6910,10 +6935,14 @@ const UploadQueueService = {
   async getJobQueueStatus() {
     try {
       let remoteItems = [];
-      if (sbClient) {
+      const activeProf = getActiveProfile();
+      const currentUid = resolveUserId(activeProf);
+
+      if (sbClient && currentUid) {
         const { data: batches } = await sbClient
           .from('batches')
           .select('id, batch_name, batch_category, file_type, created_at, total_questions, user_id, profiles(display_name, nickname, avatar)')
+          .eq('user_id', currentUid)
           .order('created_at', { ascending: false })
           .limit(10);
 
@@ -7462,6 +7491,22 @@ if (typeof window !== 'undefined') {
   let isReviewMode = false;
   let previousCompletedBatchIds = new Set();
   let isInitialQueueLoad = true;
+  function getSubmittedBatchIds() {
+    try {
+      const raw = sessionStorage.getItem('quizsilo_submitted_batches');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  }
+  let mySubmittedBatchIds = getSubmittedBatchIds();
+  function markBatchSubmitted(batchId) {
+    if (!batchId) return;
+    mySubmittedBatchIds.add(batchId);
+    try {
+      sessionStorage.setItem('quizsilo_submitted_batches', JSON.stringify(Array.from(mySubmittedBatchIds)));
+    } catch (e) {}
+  }
   let previewZoomLevel = 1.0;
 
   // ==========================================
@@ -7802,7 +7847,6 @@ if (typeof window !== 'undefined') {
     const textEl = document.getElementById('auth-sync-loading-text');
     const skeleton = document.getElementById('dash-auth-loading-skeleton');
     const welcomeCard = document.getElementById('dash-welcome-card');
-    const adminToggleBox = document.getElementById('dash-admin-toggle-box');
     const tabAdmin = document.getElementById('tab-admin');
 
     if (show) {
@@ -7812,7 +7856,6 @@ if (typeof window !== 'undefined') {
       }
       if (skeleton) skeleton.classList.remove('hidden');
       if (welcomeCard) welcomeCard.classList.add('hidden');
-      if (adminToggleBox) adminToggleBox.classList.add('hidden');
       if (tabAdmin) tabAdmin.classList.add('hidden');
     } else {
       if (overlay) overlay.classList.add('hidden');
@@ -8482,7 +8525,6 @@ if (typeof window !== 'undefined') {
       const heroAvatarFallback = document.getElementById('dash-hero-avatar-fallback');
       const heroName = document.getElementById('dash-hero-name');
       const heroBadge = document.getElementById('dash-hero-badge');
-      const adminToggleBox = document.getElementById('dash-admin-toggle-box');
 
       if (currentUserProfile.avatarUrl && heroAvatarImg) {
         heroAvatarImg.src = currentUserProfile.avatarUrl;
@@ -8514,14 +8556,7 @@ if (typeof window !== 'undefined') {
 
       updateUserTierAndQuotaUI();
 
-      if (adminToggleBox) {
-        if (currentUserProfile.role === 'admin') {
-          adminToggleBox.classList.remove('hidden');
-        } else {
-          adminToggleBox.classList.add('hidden');
-          currentDashScope = 'personal';
-        }
-      }
+      currentDashScope = 'personal';
 
       // Check progressive profiling prompt
       const profilingCard = document.getElementById('dash-profiling-card');
@@ -8557,24 +8592,7 @@ if (typeof window !== 'undefined') {
   }
 
   function setDashboardScope(scope) {
-    currentDashScope = scope;
-    const btnPersonal = document.getElementById('btn-dash-scope-personal');
-    const btnAll = document.getElementById('btn-dash-scope-all');
-    if (scope === 'personal') {
-      if (btnPersonal) {
-        btnPersonal.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-white text-brand-700 shadow-xs transition-all';
-      }
-      if (btnAll) {
-        btnAll.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
-      }
-    } else {
-      if (btnPersonal) {
-        btnPersonal.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
-      }
-      if (btnAll) {
-        btnAll.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-white text-brand-700 shadow-xs transition-all';
-      }
-    }
+    currentDashScope = 'personal';
     loadUserDashboard(true);
   }
 
@@ -8722,7 +8740,6 @@ if (typeof window !== 'undefined') {
 
     const isAdmin = currentUserProfile && currentUserProfile.role === 'admin';
     const myBatches = (allBatches || []).filter(b => {
-      if (isAdmin && currentDashScope === 'all') return true;
       return isOwner(b);
     });
 
@@ -9900,6 +9917,67 @@ if (typeof window !== 'undefined') {
   }
 
   // [แก้ปัญหาข้อ 3] รวมไฟล์ทั้งหมดแปลงเป็น Base64 แล้วส่งรอบเดียว เพื่อให้รันใน 1 คิว
+  async function compressImageFile(file, maxWidth = 1600, quality = 0.8) {
+    const isImage = file.type?.startsWith('image/') || /\.(jpe?g|png|webp|bmp)$/i.test(file.name);
+    if (!isImage || file.type === 'image/svg+xml') {
+      return new Promise((resolve, reject) => {
+        let mimeType = file.type;
+        if (!mimeType) {
+          if (file.name.endsWith('.txt')) mimeType = 'text/plain';
+          else if (file.name.endsWith('.md')) mimeType = 'text/markdown';
+          else if (file.name.endsWith('.pdf')) mimeType = 'application/pdf';
+          else mimeType = 'application/octet-stream';
+        }
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, mimeType: mimeType, base64: reader.result.split(',')[1] });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('ไม่สามารถอ่านไฟล์ภาพได้'));
+        img.onload = () => {
+          try {
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth || height > maxWidth) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64 = dataUrl.split(',')[1];
+            resolve({
+              name: file.name.replace(/\.[^/.]+$/, '') + '.jpg',
+              mimeType: 'image/jpeg',
+              base64: base64
+            });
+          } catch (canvasErr) {
+            reject(canvasErr);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function submitUploadQueue() {
     if (!currentUserProfile || currentUserProfile.isGuest) {
       Swal.fire({
@@ -9923,6 +10001,15 @@ if (typeof window !== 'undefined') {
       return;
     }
 
+    // Check individual file size (4.2 MB limit for non-image files like PDF)
+    for (const file of selectedFiles) {
+      const isImg = file.type?.startsWith('image/') || /\.(jpe?g|png|webp|bmp)$/i.test(file.name);
+      if (!isImg && file.size > 4.2 * 1024 * 1024) {
+        Swal.fire('ขนาดไฟล์เกินกำหนด', `ไฟล์ "${file.name}" มีขนาด ${(file.size / (1024 * 1024)).toFixed(1)} MB ซึ่งเกินขีดจำกัด 4.2 MB กรุณาลดขนาดไฟล์หรือแบ่งหน้าก่อนอัปโหลด`, 'warning');
+        return;
+      }
+    }
+
     // Quota Gate Check
     const tier = getUserTierInfo(currentUserProfile);
     if (!tier.isUnlimited) {
@@ -9941,10 +10028,10 @@ if (typeof window !== 'undefined') {
 
     const btn = document.getElementById('btn-submit-upload');
     btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>กำลังเตรียมส่งไฟล์เข้าคิว...</span>`;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>กำลังเตรียมบีบอัดและส่งไฟล์...</span>`;
     lucide.createIcons();
 
-        const customName = document.getElementById('custom-batch-name').value;
+    const customName = document.getElementById('custom-batch-name').value;
     const catSelect = document.getElementById('upload-category');
     let category = catSelect ? catSelect.value : 'AUTO_AI';
     if (category === 'OTHER') {
@@ -9956,30 +10043,23 @@ if (typeof window !== 'undefined') {
     try {
       const base64FilesArray = [];
       for (const file of selectedFiles) {
-        let mimeType = file.type;
-        if (!mimeType) {
-          if (file.name.endsWith('.txt')) mimeType = 'text/plain';
-          else if (file.name.endsWith('.md')) mimeType = 'text/markdown';
-          else if (file.name.endsWith('.pdf')) mimeType = 'application/pdf';
-          else mimeType = 'image/jpeg';
-        }
-        const base64Data = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve({ name: file.name, mimeType: mimeType, base64: reader.result.split(',')[1] });
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        base64FilesArray.push(base64Data);
+        const compressed = await compressImageFile(file);
+        base64FilesArray.push(compressed);
       }
 
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>กำลังประมวลผลการส่ง...</span>`;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>กำลังส่งเข้าคิวประมวลผล...</span>`;
+      lucide.createIcons();
       
-      await new Promise((resolve, reject) => {
+      const uploadRes = await new Promise((resolve, reject) => {
         google.script.run
-          .withSuccessHandler(() => resolve())
+          .withSuccessHandler((res) => resolve(res))
           .withFailureHandler(err => reject(err))
           .enqueueUploadJob(base64FilesArray, customName, category, currentUserProfile);
       });
+
+      if (uploadRes && uploadRes.batchId) {
+        markBatchSubmitted(uploadRes.batchId);
+      }
 
       btn.disabled = false;
       btn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i><span>ส่งไฟล์เข้าคิวประมวลผล</span>`;
@@ -10025,8 +10105,8 @@ if (typeof window !== 'undefined') {
         completedItems.forEach(item => {
           if (!previousCompletedBatchIds.has(item.batchId)) {
             previousCompletedBatchIds.add(item.batchId);
-            // แสดงเฉพาะงานที่สกัดเสร็จระหว่างที่เปิดเว็บอยู่เท่านั้น
-            if (!isInitialQueueLoad) {
+            // แสดงเฉพาะงานที่ผู้ใช้ส่งในเซสชันนี้ และสกัดเสร็จระหว่างที่เปิดเว็บอยู่เท่านั้น
+            if (!isInitialQueueLoad && mySubmittedBatchIds.has(item.batchId)) {
               const dName = item.batchName === '[รอ AI ตั้งชื่อ]' ? `ชุดรหัส #${item.shortBatchId}` : escapeHtml(item.batchName);
               const Toast = Swal.mixin({
                 toast: true,
@@ -10628,6 +10708,11 @@ if (typeof window !== 'undefined') {
       } else { 
         expBox.classList.add('hidden'); 
       }
+      const tutorBtn = document.getElementById('current-q-tutor-btn');
+      if (tutorBtn) {
+        tutorBtn.disabled = false;
+        tutorBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>ดูคำอธิบายเฉลย (AI Tutor)</span>`;
+      }
     } else { 
       feedback.classList.add('hidden'); 
     }
@@ -10800,13 +10885,20 @@ if (typeof window !== 'undefined') {
     renderCurrentQuestion();
     
     if (currentExamBatch) {
-      google.script.run.recordExamAttempt(
-        currentExamBatch.batchId,
-        results,
-        timeStr,
-        currentUserProfile,
-        currentExamBatch.batchName
-      );
+      google.script.run
+        .withSuccessHandler(() => {
+          showToast('success', 'บันทึกผลการทำข้อสอบเรียบร้อยแล้ว');
+        })
+        .withFailureHandler(err => {
+          console.error('Save exam attempt error:', err);
+        })
+        .recordExamAttempt(
+          currentExamBatch.batchId,
+          results,
+          timeStr,
+          currentUserProfile,
+          currentExamBatch.batchName
+        );
       if (!currentExamBatch.isVirtual) {
         clearProfileDraft(currentExamBatch.batchId);
         currentExamBatch.savedState = '';
@@ -10816,19 +10908,42 @@ if (typeof window !== 'undefined') {
 
   function askAiTutorCurrent() {
     const q = currentQuestions[currentQuestionIndex];
+    if (!q) return;
     const expBox = document.getElementById('current-q-explanation');
-    if (q.explanation) { expBox.classList.toggle('hidden'); return; }
-
     const btn = document.getElementById('current-q-tutor-btn');
+    if (!btn || !expBox) return;
+
+    if (q.explanation) {
+      expBox.textContent = q.explanation;
+      expBox.classList.remove('hidden');
+      return;
+    }
+
+    const targetIdx = currentQuestionIndex;
     btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>AI กำลังวิเคราะห์เฉลย...</span>`;
+    if (window.lucide) lucide.createIcons();
+
     google.script.run
       .withSuccessHandler(txt => {
-        q.explanation = txt;
-        expBox.textContent = txt;
-        expBox.classList.remove('hidden');
         btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>ดูคำอธิบายเฉลย (AI Tutor)</span>`;
+        if (window.lucide) lucide.createIcons();
+        if (txt) {
+          q.explanation = txt;
+          if (currentQuestionIndex === targetIdx) {
+            expBox.textContent = txt;
+            expBox.classList.remove('hidden');
+          }
+        }
       })
-      .generateExplanation(q.row, q);
+      .withFailureHandler(err => {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>ดูคำอธิบายเฉลย (AI Tutor)</span>`;
+        if (window.lucide) lucide.createIcons();
+        Swal.fire('ไม่สามารถขอคำอธิบายได้', err?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ AI', 'error');
+      })
+      .generateExplanation(q.row || 0, q);
   }
 
   // ==========================================

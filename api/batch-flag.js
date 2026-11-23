@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
     if (flag === 'get_flags') {
       const [ledgerRes, batchesRes] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?or=(status.like.FLAG_QUESTION*,status.like.RESOLVE_FLAG*)&select=*&order=created_at.desc&limit=150`, { headers }),
-        fetch(`${SUPABASE_URL}/rest/v1/batches?select=id,batch_name,batch_category,source_files,total_questions,is_hidden&order=created_at.desc&limit=100`, { headers })
+        fetch(`${SUPABASE_URL}/rest/v1/batches?select=id,batch_name,batch_category,source_files,total_questions&order=created_at.desc&limit=100`, { headers })
       ]);
 
       const ledgerRows = await ledgerRes.json();
@@ -68,8 +68,7 @@ module.exports = async function handler(req, res) {
           try {
             const raw = row.status.replace('FLAG_QUESTION:', '');
             const p = JSON.parse(raw);
-            const b = batchMap[p.batch_id];
-            if (!b) return; // Skip orphaned flags if batch was deleted!
+            const b = batchMap[p.batch_id] || { batch_name: p.batch_name || 'ชุดข้อสอบ', batch_category: 'ทั่วไป' };
             const isResolved = Boolean(resolvedMap[row.id]);
             flags.push({
               ledgerId: row.id,
@@ -431,11 +430,14 @@ module.exports = async function handler(req, res) {
         created_at: new Date().toISOString()
       };
 
+      const isUuid = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const validUserId = isUuid(reporterProfile?.uuid) ? reporterProfile.uuid : null;
+
       await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          user_id: reporterProfile?.uuid || null,
+          user_id: validUserId,
           batch_id: batchId,
           questions_scanned: (Number(questionIndex) || 0) + 1,
           status: 'FLAG_QUESTION:' + JSON.stringify(flagData)
