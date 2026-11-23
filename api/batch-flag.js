@@ -97,6 +97,61 @@ module.exports = async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
+    // Branch 1.4: Delete user exam attempt & reset history for that batch
+    // -------------------------------------------------------------
+    if (flag === 'delete_user_attempt') {
+      const targetUserId = body.userId || body.userProfile?.uuid || userIdentifier;
+      if (!targetUserId) return res.status(400).json({ error: 'Missing userId' });
+
+      let queryUrl = `${SUPABASE_URL}/rest/v1/exam_attempts?user_id=eq.${encodeURIComponent(targetUserId)}`;
+      if (batchId) {
+        queryUrl += `&batch_id=eq.${encodeURIComponent(batchId)}`;
+      } else if (body.attemptId) {
+        queryUrl += `&id=eq.${encodeURIComponent(body.attemptId)}`;
+      }
+
+      const delRes = await fetch(queryUrl, {
+        method: 'DELETE',
+        headers
+      });
+
+      if (!delRes.ok) {
+        const errText = await delRes.text();
+        throw new Error('Failed to delete attempt: ' + errText);
+      }
+
+      // Audit Log for learner/admin deleting attempt
+      try {
+        const uName = body.userProfile?.nickname || body.userProfile?.name || 'ผู้ใช้';
+        const uAvatar = body.userProfile?.avatar || '👤';
+        const uRole = body.userProfile?.role || 'user';
+
+        await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: targetUserId,
+            batch_id: batchId || null,
+            questions_scanned: 0,
+            status: 'LOG: ' + JSON.stringify({
+              action: 'DELETE_EXAM_ATTEMPT',
+              user_name: uName,
+              user_avatar: uAvatar,
+              user_role: uRole,
+              batch_name: body.batchName || 'ชุดข้อสอบ',
+              batch_category: 'ประวัติการทำ',
+              question_count: 0,
+              details: `ลบสถิติและรีเซ็ตประวัติการฝึกซ้อมข้อสอบ (batch_id: ${batchId || '-'})`,
+              timestamp: new Date().toISOString()
+            })
+          })
+        });
+      } catch (le) {}
+
+      return res.status(200).json({ success: true, message: 'ลบประวัติการฝึกซ้อมเรียบร้อยแล้ว' });
+    }
+
+    // -------------------------------------------------------------
     // Branch 1.5: Get flagged questions for a specific batch (Review & Edit mode)
     // -------------------------------------------------------------
     if (flag === 'get_batch_flags') {
