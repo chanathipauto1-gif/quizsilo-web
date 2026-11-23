@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.01.21</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.02.17</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -5351,22 +5351,7 @@ const AuthService = {
       };
     }
 
-    try {
-      const apiData = await fetchJsonApi('/api/batches-list');
-      if (apiData?.quotaMap) {
-        window._cachedQuotaMap = apiData.quotaMap;
-        if (apiData.roleMap) window._cachedRoleMap = apiData.roleMap;
-        if (apiData.quotaMap[profile.id]) {
-          const p = apiData.quotaMap[profile.id];
-          return {
-            bonusFiles: Number(p.bonusFiles || 0),
-            bonusQuestions: Number(p.bonusQuestions || 0),
-            resetAt: p.resetAt || null
-          };
-        }
-      }
-    } catch (e) {}
-
+    // Direct fast query to scan_ledger for this specific user (<50ms)
     try {
       if (sbClient) {
         const { data: quotaRecords } = await sbClient
@@ -5383,11 +5368,13 @@ const AuthService = {
           bonusFiles = Number(p.bonusFiles || 0);
           bonusQuestions = Number(p.bonusQuestions || 0);
           resetAt = p.resetAt || null;
+          return { bonusFiles, bonusQuestions, resetAt };
         }
       }
     } catch {
       // Ignore fallback lookup failure
     }
+
     return { bonusFiles, bonusQuestions, resetAt };
   },
 
@@ -5405,15 +5392,28 @@ const AuthService = {
       return;
     }
 
-    safeCallGlobal('showAuthSyncLoading', true);
-    if (typeof window !== 'undefined') window._isAuthSyncing = true;
+    const isExplicitSwitch = (typeof localStorage !== 'undefined' && localStorage.getItem('quizsilo_auth_switching') === 'true') || 
+                             (typeof window !== 'undefined' && window.location.hash.includes('access_token='));
+    const currentProf = getActiveProfile();
+    const isSameUser = currentProf && !currentProf.isGuest && currentProf.uuid === authUser.id;
+
+    // Only show the blocking sync overlay if this is a fresh/explicit login or switching accounts!
+    if (!isSameUser || isExplicitSwitch) {
+      safeCallGlobal('showAuthSyncLoading', true);
+      if (typeof window !== 'undefined') window._isAuthSyncing = true;
+    }
+
+    // Throttle silent background sync for the same user (maximum once every 3 minutes)
+    const now = Date.now();
+    if (isSameUser && !isExplicitSwitch) {
+      if (now - (window._lastAuthSyncTime || 0) < 180000) {
+        return; // Already synced recently, skip!
+      }
+    }
+    if (typeof window !== 'undefined') window._lastAuthSyncTime = now;
 
     const googlePhotoUrl = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null;
     const isAdminEmail = authUser.email === CONFIG.ADMIN_EMAIL;
-
-    // Fast-path: Set optimistic profile immediately so user NEVER sees a guest flash screen
-    const currentProf = getActiveProfile();
-    const isSameUser = currentProf && !currentProf.isGuest && currentProf.uuid === authUser.id;
 
     if (!isSameUser) {
       const optimisticProfile = {
@@ -5525,7 +5525,7 @@ const AuthService = {
     }
 
     const pageDash = typeof document !== 'undefined' ? document.getElementById('page-dashboard') : null;
-    if (pageDash && !pageDash.classList.contains('hidden')) {
+    if (pageDash && !pageDash.classList.contains('hidden') && (!isSameUser || isExplicitSwitch)) {
       safeCallGlobal('loadUserDashboard', true);
     }
   }
@@ -5554,7 +5554,11 @@ if (typeof window !== 'undefined') {
       const { data: { session } } = await sbClient.auth.getSession();
       await AuthService.syncAuthWithProfile(session?.user || null);
 
-      sbClient.auth.onAuthStateChange(async (_event, nextSession) => {
+      sbClient.auth.onAuthStateChange(async (event, nextSession) => {
+        if (event === 'TOKEN_REFRESHED') {
+          currentSupabaseUser = nextSession?.user || null;
+          return;
+        }
         await AuthService.syncAuthWithProfile(nextSession?.user || null);
       });
     } catch (err) {
