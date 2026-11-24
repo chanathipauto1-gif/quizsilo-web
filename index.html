@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.23.59</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 25.11.00.19</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2502,7 +2502,33 @@
           </span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- สวิตช์เฉลยทันที (Practice Mode) -->
+          <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl cursor-pointer text-xs font-bold text-slate-700 transition-colors select-none" title="เปิด/ปิด โหมดเฉลยทันทีเมื่อเลือกคำตอบ">
+            <span class="relative inline-flex items-center">
+              <input type="checkbox" id="toggle-instant-reveal" onchange="handleInstantRevealToggle(this.checked)" class="sr-only peer">
+              <span class="w-7 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-500 block"></span>
+            </span>
+            <span class="flex items-center gap-1">
+              <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span class="hidden sm:inline">เฉลยทันที</span>
+              <span class="sm:hidden">เฉลย</span>
+            </span>
+          </label>
+
+          <!-- สวิตช์เลื่อนข้ออัตโนมัติ (Auto-Next Mode) -->
+          <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl cursor-pointer text-xs font-bold text-slate-700 transition-colors select-none" title="เปิด/ปิด โหมดเลื่อนไปข้อถัดไปอัตโนมัติเมื่อเลือกคำตอบ">
+            <span class="relative inline-flex items-center">
+              <input type="checkbox" id="toggle-auto-next" onchange="handleAutoNextToggle(this.checked)" class="sr-only peer">
+              <span class="w-7 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-600 block"></span>
+            </span>
+            <span class="flex items-center gap-1">
+              <i data-lucide="fast-forward" class="w-3.5 h-3.5 text-brand-600"></i>
+              <span class="hidden sm:inline">เลื่อนข้ออัตโนมัติ</span>
+              <span class="sm:hidden">ออโต้</span>
+            </span>
+          </label>
+
           <!-- Admin/Assistant Exclusive: ปุ่มเตรียมโปรโมท -->
           <button id="btn-exam-promo" onclick="togglePromoQueueFromExam()" class="hidden px-3 py-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="เพิ่มข้อนี้เข้าคิวเตรียมโปรโมท">
             <i data-lucide="pin" class="w-3.5 h-3.5 text-indigo-600"></i>
@@ -7693,6 +7719,9 @@ if (typeof window !== 'undefined') {
   let markedQuestions = new Set();
   let isExamSubmitted = false;
   let isLargeFont = false;
+  let isInstantRevealMode = localStorage.getItem('quizsilo_instant_reveal') === 'true';
+  let isAutoNextMode = localStorage.getItem('quizsilo_auto_next') === 'true';
+  let autoNextTimer = null;
   let queuePollTimer = null;
   let examTimerInterval = null;
   let examSecondsElapsed = 0;
@@ -10874,13 +10903,45 @@ if (typeof window !== 'undefined') {
     }).join('');
   }
 
-  function jumpToQuestion(idx) { currentQuestionIndex = idx; updateExamSidebar(); renderCurrentQuestion(); }
+  function handleInstantRevealToggle(checked) {
+    isInstantRevealMode = checked;
+    localStorage.setItem('quizsilo_instant_reveal', checked ? 'true' : 'false');
+    if (checked && userAnswers[currentQuestionIndex] && !revealedQuestions[currentQuestionIndex]) {
+      revealedQuestions[currentQuestionIndex] = true;
+      updateExamSidebar();
+    }
+    renderCurrentQuestion();
+  }
+
+  function handleAutoNextToggle(checked) {
+    isAutoNextMode = checked;
+    localStorage.setItem('quizsilo_auto_next', checked ? 'true' : 'false');
+    if (!checked && autoNextTimer) {
+      clearTimeout(autoNextTimer);
+      autoNextTimer = null;
+    }
+  }
+
+  function syncExamTogglesUI() {
+    const tReveal = document.getElementById('toggle-instant-reveal');
+    const tNext = document.getElementById('toggle-auto-next');
+    if (tReveal && tReveal.checked !== isInstantRevealMode) tReveal.checked = isInstantRevealMode;
+    if (tNext && tNext.checked !== isAutoNextMode) tNext.checked = isAutoNextMode;
+  }
+
+  function jumpToQuestion(idx) {
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+    currentQuestionIndex = idx;
+    updateExamSidebar();
+    renderCurrentQuestion();
+  }
   function prevQuestion() { if (currentQuestionIndex > 0) jumpToQuestion(currentQuestionIndex - 1); }
   function nextQuestion() { if (currentQuestionIndex < currentQuestions.length - 1) jumpToQuestion(currentQuestionIndex + 1); }
   function toggleMarkCurrentQuestion() { markedQuestions.has(currentQuestionIndex) ? markedQuestions.delete(currentQuestionIndex) : markedQuestions.add(currentQuestionIndex); updateExamSidebar(); }
   function toggleExamFontSize() { isLargeFont = !isLargeFont; renderCurrentQuestion(); }
 
   function renderCurrentQuestion() {
+    syncExamTogglesUI();
     const q = currentQuestions[currentQuestionIndex];
     if (!q) return;
 
@@ -11018,10 +11079,10 @@ if (typeof window !== 'undefined') {
     document.getElementById('btn-prev-q').disabled = (currentQuestionIndex === 0);
     document.getElementById('btn-next-q').disabled = (currentQuestionIndex === currentQuestions.length - 1);
 
-    // ปุ่มตรวจเฉลยข้อนี้ (Instant Reveal Button)
+    // ปุ่มตรวจเฉลยข้อนี้ (Instant Reveal Button - แสดงเฉพาะเมื่อปิดโหมดเฉลยทันที)
     const btnReveal = document.getElementById('btn-instant-reveal');
     if (btnReveal) {
-      if (!isRevealed && !isExamSubmitted && !isReviewMode && userAns) {
+      if (!isInstantRevealMode && !isRevealed && !isExamSubmitted && !isReviewMode && userAns) {
         btnReveal.classList.remove('hidden');
       } else {
         btnReveal.classList.add('hidden');
@@ -11058,8 +11119,15 @@ if (typeof window !== 'undefined') {
 
   function selectChoice(idx, key) {
     if (isExamSubmitted || isReviewMode || revealedQuestions[idx]) return;
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+
     userAnswers[idx] = key;
     
+    // โหมดเฉลยทันที: เมื่อตอบปุ๊บ เปิดเฉลยและล็อกคำตอบทันที
+    if (isInstantRevealMode) {
+      revealedQuestions[idx] = true;
+    }
+
     if (currentExamBatch && !currentExamBatch.isVirtual) {
       saveProfileDraft(currentExamBatch.batchId, {
         batchName: currentExamBatch.batchName,
@@ -11073,6 +11141,16 @@ if (typeof window !== 'undefined') {
     
     updateExamSidebar();
     renderCurrentQuestion();
+
+    // โหมดเลื่อนข้ออัตโนมัติ: หน่วงเวลาเล็กน้อยแล้วเลื่อนไปข้อถัดไป
+    if (isAutoNextMode && idx < currentQuestions.length - 1) {
+      const delay = isInstantRevealMode ? 1200 : 350;
+      autoNextTimer = setTimeout(() => {
+        if (currentQuestionIndex === idx) {
+          nextQuestion();
+        }
+      }, delay);
+    }
   }
 
   function revealCurrentQuestion() {
@@ -11097,13 +11175,7 @@ if (typeof window !== 'undefined') {
 
     updateExamSidebar();
     renderCurrentQuestion();
-
-    const q = currentQuestions[currentQuestionIndex];
-    if (userAns === q.answer) {
-      showToast('success', '✅ ตอบถูกต้อง!');
-    } else {
-      showToast('error', '❌ ตอบผิด ลองดูเฉลยและคำอธิบายด้านล่าง');
-    }
+    // นำ Toast แจ้งตอบถูก/ผิด ออกตามที่ตกลงไว้
   }
 
   function editCurrentQuestionOnTheFly() {
@@ -11125,10 +11197,28 @@ if (typeof window !== 'undefined') {
 
   function setupKeyboardShortcuts() {
     window.addEventListener('keydown', e => {
-      if (document.getElementById('page-exam').classList.contains('hidden')) return;
-      if (e.key === 'ArrowLeft') prevQuestion();
-      else if (e.key === 'ArrowRight') nextQuestion();
-      else if (['1', '2', '3', '4'].includes(e.key)) selectChoice(currentQuestionIndex, { '1': 'ก', '2': 'ข', '3': 'ค', '4': 'ง' }[e.key]);
+      const examPage = document.getElementById('page-exam');
+      if (!examPage || examPage.classList.contains('hidden')) return;
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) return;
+      if (document.querySelector('.swal2-container')) return;
+
+      const key = e.key;
+      if (key === 'ArrowLeft') {
+        prevQuestion();
+      } else if (key === 'ArrowRight' || key === 'Enter' || key === ' ') {
+        if (key === ' ') e.preventDefault(); // ป้องกันหน้าเลื่อน scroll
+        nextQuestion();
+      } else {
+        const choiceMap = {
+          '1': 'ก', '2': 'ข', '3': 'ค', '4': 'ง', '5': 'จ', '6': 'ฉ',
+          'a': 'ก', 'b': 'ข', 'c': 'ค', 'd': 'ง', 'e': 'จ', 'f': 'ฉ',
+          'A': 'ก', 'B': 'ข', 'C': 'ค', 'D': 'ง', 'E': 'จ', 'F': 'ฉ',
+          'ก': 'ก', 'ข': 'ข', 'ค': 'ค', 'ง': 'ง', 'จ': 'จ', 'ฉ': 'ฉ'
+        };
+        if (choiceMap[key]) {
+          selectChoice(currentQuestionIndex, choiceMap[key]);
+        }
+      }
     });
   }
 
