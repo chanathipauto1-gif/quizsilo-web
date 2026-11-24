@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.23.44</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.23.59</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -6198,9 +6198,9 @@ const ExamStatsService = {
         answersJson = results;
       }
 
-      // Check if batchId is a valid UUID (Virtual/Random exam batches use batch_id = null to avoid Postgres 22P02/23503)
-      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      const validBatchId = (typeof batchId === 'string' && UUID_REGEX.test(batchId)) ? batchId : null;
+      // Virtual/Random exam batches use batch_id = null because they do not exist in the 'batches' table (avoids Postgres FK 23503)
+      const isVirtualBatch = typeof batchId === 'string' && (batchId.startsWith('VIRTUAL-') || batchId.startsWith('VIRTUAL'));
+      const candidateBatchId = (!isVirtualBatch && typeof batchId === 'string' && batchId.trim().length > 0) ? batchId.trim() : null;
 
       // Always record activity log so Super Admin has 100% full visibility of all exam attempts (including Guests)
       const uProfile = typeof resultsOrProfile === 'object' && !Array.isArray(resultsOrProfile) ? resultsOrProfile : (userProfile || getActiveProfile());
@@ -6222,20 +6222,30 @@ const ExamStatsService = {
         return notifySuccess(this, { success: true, message: 'Guest attempt recorded to audit logs' });
       }
 
-      const { data, error } = await client
+      let insertPayload = {
+        user_id: userId,
+        batch_id: candidateBatchId,
+        batch_name: resolvedBatchName,
+        score: correct,
+        total_questions: total,
+        percent,
+        time_spent_str: timeSpent,
+        answers_json: answersJson
+      };
+
+      let { data, error } = await client
         .from('exam_attempts')
-        .insert({
-          user_id: userId,
-          batch_id: validBatchId,
-          batch_name: resolvedBatchName,
-          score: correct,
-          total_questions: total,
-          percent,
-          time_spent_str: timeSpent,
-          answers_json: answersJson
-        })
+        .insert(insertPayload)
         .select()
         .single();
+
+      if (error && error.code === '23503' && candidateBatchId) {
+        // Fallback: If batch_id foreign key failed, save with batch_id = null
+        insertPayload.batch_id = null;
+        const retry = await client.from('exam_attempts').insert(insertPayload).select().single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
       return notifySuccess(this, { success: true, id: data?.id || null });
