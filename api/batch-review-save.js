@@ -90,18 +90,21 @@ module.exports = async function handler(req, res) {
         source_type: isVer ? 'ยืนยันแล้ว' : (q.sourceType || 'รอตรวจ')
       };
 
-      if (q.id) {
-        await fetch(`${SUPABASE_URL}/rest/v1/questions?id=eq.${encodeURIComponent(q.id)}`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify(updatePayload)
-        });
-      } else {
-        await fetch(`${SUPABASE_URL}/rest/v1/questions?batch_id=eq.${encodeURIComponent(batchId)}&question_no=eq.${qNo}`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify(updatePayload)
-        });
+      const qUrl = q.id 
+        ? `${SUPABASE_URL}/rest/v1/questions?id=eq.${encodeURIComponent(q.id)}`
+        : `${SUPABASE_URL}/rest/v1/questions?batch_id=eq.${encodeURIComponent(batchId)}&question_no=eq.${qNo}`;
+
+      let qUpRes = await fetch(qUrl, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(updatePayload)
+      });
+      if (!qUpRes.ok) {
+        const upErr = await qUpRes.text();
+        if (upErr.includes('category')) {
+          const { category, sub_category, ...cleanPayload } = updatePayload;
+          await fetch(qUrl, { method: 'PATCH', headers, body: JSON.stringify(cleanPayload) });
+        }
       }
     }
 

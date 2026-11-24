@@ -37,34 +37,48 @@ module.exports = async function handler(req, res) {
 
     // 2. Sanitize and Insert Questions in chunks of 50
     const rawList = Array.isArray(questions) ? questions : [];
-    const qList = rawList.map(q => ({
-      id: q.id,
-      batch_id: q.batch_id,
-      question_no: q.question_no,
-      question_text: q.question_text,
-      choice_a: q.choice_a || '',
-      choice_b: q.choice_b || '',
-      choice_c: q.choice_c || '',
-      choice_d: q.choice_d || '',
-      choice_e: q.choice_e || '',
-      choice_f: q.choice_f || '',
-      choice_g: q.choice_g || '',
-      choice_h: q.choice_h || '',
-      answer: q.answer || 'ก',
-      explanation: q.explanation || '',
-      is_free_question: q.is_free_question || false,
-      source_type: q.source_type || 'เฉลยไฟล์'
-    }));
+    const qList = rawList.map(q => {
+      const item = {
+        id: q.id,
+        batch_id: q.batch_id,
+        question_no: q.question_no,
+        question_text: q.question_text,
+        choice_a: q.choice_a || '',
+        choice_b: q.choice_b || '',
+        choice_c: q.choice_c || '',
+        choice_d: q.choice_d || '',
+        choice_e: q.choice_e || '',
+        choice_f: q.choice_f || '',
+        choice_g: q.choice_g || '',
+        choice_h: q.choice_h || '',
+        answer: q.answer || 'ก',
+        explanation: q.explanation || '',
+        is_free_question: q.is_free_question || false,
+        source_type: q.source_type || 'เฉลยไฟล์'
+      };
+      if (q.category) item.category = q.category;
+      if (q.sub_category) item.sub_category = q.sub_category;
+      return item;
+    });
 
     for (let i = 0; i < qList.length; i += 50) {
       const chunk = qList.slice(i, i + 50);
-      const qRes = await fetch(`${SUPABASE_URL}/rest/v1/questions`, {
+      let qRes = await fetch(`${SUPABASE_URL}/rest/v1/questions`, {
         method: 'POST',
         headers,
         body: JSON.stringify(chunk)
       });
       if (!qRes.ok) {
-        console.warn('Chunk question insert error:', await qRes.text());
+        const errText = await qRes.text();
+        console.warn('Chunk question insert error, retrying without category fallback:', errText);
+        if (errText.includes('category')) {
+          const fallbackChunk = chunk.map(({ category, sub_category, ...rest }) => rest);
+          await fetch(`${SUPABASE_URL}/rest/v1/questions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(fallbackChunk)
+          });
+        }
       }
     }
 

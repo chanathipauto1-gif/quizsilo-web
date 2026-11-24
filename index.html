@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.02.47</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.22.02</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -4883,7 +4883,7 @@ const CONFIG = Object.freeze({
   MODEL_EXTRACTION: 'google/gemini-2.5-flash',
   MODEL_SOLVER: 'google/gemini-2.5-flash',
   ADMIN_EMAIL: 'chanathipauto1@gmail.com',
-  DEFAULT_CATEGORY: 'ภาค ก: ความรู้ความสามารถทั่วไป',
+  DEFAULT_CATEGORY: 'มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน',
   GUEST_MAX_FILES: 3,
   GUEST_MAX_QUESTIONS: 100,
   HEARTBEAT_INTERVAL_MS: 90_000,
@@ -4897,29 +4897,65 @@ const CONFIG = Object.freeze({
   })
 });
 
-const CATEGORIES_LIST = Object.freeze([
-  'ภาค ก: ความรู้ความสามารถทั่วไป',
+const MAIN_CATEGORIES_LIST = Object.freeze([
   'ความสามารถในการคิดวิเคราะห์',
-  'การคิดวิเคราะห์เชิงภาษา',
-  'การคิดวิเคราะห์เชิงนามธรรม',
-  'การคิดวิเคราะห์เชิงปริมาณ',
   'ทักษะภาษาอังกฤษ',
-  'ไวยากรณ์และโครงสร้าง',
-  'คำศัพท์',
-  'การอ่านเพื่อความเข้าใจ',
-  'บทสนทนาในชีวิตประจำวัน',
   'ความรู้และลักษณะการเป็นข้าราชการที่ดี',
-  'ระเบียบบริหารราชการแผ่นดิน',
-  'กฎหมายว่าด้วยหลักเกณฑ์และวิธีการบริหารกิจการบ้านเมืองที่ดี',
-  'พระราชบัญญัติวิธีปฏิบัติราชการทางปกครอง',
-  'หน้าที่และความรับผิดชอบในการเป็นข้าราชการ ตลอดจนจริยธรรมข้าราชการ',
-  'ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ',
-  'วิชาการศึกษา',
-  'กฎหมายครูและการศึกษา',
-  'วิชาเอก',
-  'วิชาเอก: สังคมศึกษา',
-  'อื่นๆ'
+  'มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน',
+  'มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)',
+  'ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา',
+  'ข้อสอบรวมหลายหมวด'
 ]);
+
+const SUB_CATEGORIES_MAP = Object.freeze({
+  'ความสามารถในการคิดวิเคราะห์': [
+    'การคิดวิเคราะห์เชิงภาษา',
+    'การคิดวิเคราะห์เชิงนามธรรม',
+    'การคิดวิเคราะห์เชิงปริมาณ'
+  ],
+  'ทักษะภาษาอังกฤษ': [
+    'Conversation',
+    'Grammar and Structure',
+    'Vocabulary',
+    'Reading'
+  ],
+  'ความรู้และลักษณะการเป็นข้าราชการที่ดี': [
+    'พ.ร.บ.ระเบียบบริหารราชการแผ่นดิน',
+    'พ.ร.ฎ.ว่าด้วยหลักเกณฑ์และวิธีการการบริหารกิจการบ้านเมืองที่ดี',
+    'พ.ร.บ.วิธีปฏิบัติราชการทางปกครอง',
+    'พ.ร.บ.มาตรฐานทางจริยธรรม',
+    'พ.ร.บ.ความรับผิดละเมิดของเจ้าหน้าที่',
+    'ป.อาญา พ.ศ. 2499 ในส่วนของความผิดต่อตำแหน่งหน้าที่ราชการ'
+  ],
+  'มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน': [
+    'การเปลี่ยนแปลงบริบทของโลก สังคม และเศรษฐกิจพอเพียง',
+    'จิตวิทยาพัฒนาการ จิตวิทยาการศึกษา และจิตวิทยาให้คำปรึกษา',
+    'หลักสูตร ศาสตร์การสอน และเทคโนโลยีดิจิทัล',
+    'การวัดและประเมินผล และการวิจัยในชั้นเรียน',
+    'งานประกันคุณภาพการศึกษา'
+  ],
+  'มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)': [
+    'ภาษาไทย',
+    'ภาษาอังกฤษ',
+    'คณิตศาสตร์',
+    'วิทยาศาสตร์',
+    'สังคมศึกษา',
+    'ปฐมวัย',
+    'อื่นๆ'
+  ],
+  'ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา': [
+    'กฎหมายที่เกี่ยวข้องกับการการศึกษาและบุคลากร',
+    'แนวทางการปฏิรูปการศึกษา',
+    'ยุทธศาสตร์ชาติ แผนการศึกษาแห่งชาติ นโยบายและจุดเน้นกระทรวงศึกษาธิการ'
+  ],
+  'ข้อสอบรวมหลายหมวด': [
+    'ข้อสอบรวม ภาค ก',
+    'ข้อสอบรวม ภาค ข',
+    'ข้อสอบรวม ภาค ก และ ภาค ข'
+  ]
+});
+
+const CATEGORIES_LIST = MAIN_CATEGORIES_LIST;
 
 const ANSWER_NORMALIZE_MAP = Object.freeze({
   A: 'ก', B: 'ข', C: 'ค', D: 'ง', E: 'จ', F: 'ฉ', G: 'ช', H: 'ซ',
@@ -5804,7 +5840,8 @@ const BatchesQuestionsService = {
         id: q.id,
         qNo: String(q.question_no || idx + 1),
         batchId: q.batch_id,
-        category: '',
+        category: q.category || '',
+        subCategory: q.sub_category || '',
         text: q.question_text,
         a: q.choice_a || '',
         b: q.choice_b || '',
@@ -6606,8 +6643,15 @@ function buildExtractionPrompt() {
    - หรือหากในตัวเลือก (ก ถึง ซ) มีตัวเลือกใดที่พิมพ์ด้วย **ตัวหนา (Bold Text)**, ขีดเส้นใต้ (Underline), มีเครื่องหมายวงกลม, ดอกจัน (*), หรือเครื่องหมายถูก ให้ถือว่าตัวเลือกนั้นคือเฉลยที่ระบุในเอกสาร ให้นำตัวอักษรนั้น (เช่น "ข" หรือ "ค") ใส่ในฟิลด์ "ans" ของข้อนั้น
    - หรือหากมีตารางเฉลย/รายการเฉลยท้ายเอกสาร ให้จับคู่เฉลยกับเลขข้อแล้วใส่ใน "ans"
    - สำคัญมาก: หากไม่มีเฉลยระบุไว้ในเอกสารไม่ว่าจะรูปแบบใด ให้กำหนดค่า "ans": "" (เป็นข้อความว่างเปล่า) ห้ามเดาหรือคิดคำตอบขึ้นมาเองเด็ดขาด
-3. การจำแนกหมวดหมู่ (cat):
-   - หากตรงกับหมวดมาตรฐาน ให้ระบุเป็นดัชนีตัวเลข 0 ถึง 20 ตามหมวดหมู่นี้: ${JSON.stringify(CATEGORIES_LIST)}
+3. การจำแนกหมวดหมู่วิชา (cat) และหัวข้อย่อย (sub_cat):
+   - ระบุ "cat" เป็นดัชนีตัวเลข 0 ถึง 5 ตาม 6 หมวดหลักนี้:
+     0: ความสามารถในการคิดวิเคราะห์ (ภาษา, นามธรรม, ปริมาณ/คณิตศาสตร์)
+     1: ทักษะภาษาอังกฤษ (Conversation, Grammar and Structure, Vocabulary, Reading)
+     2: ความรู้และลักษณะการเป็นข้าราชการที่ดี (กฎหมายระเบียบบริหารแผ่นดิน, บริหารบ้านเมืองที่ดี, วิธีปฏิบัติฯ, จริยธรรม, ละเมิด, อาญา)
+     3: มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน (บริบทโลก/พอเพียง, จิตวิทยาพัฒนาการ/การศึกษา, หลักสูตรศาสตร์การสอน/ดิจิทัล, วัดประเมินผล/วิจัย, ประกันคุณภาพ)
+     4: มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก: ภาษาไทย, ภาษาอังกฤษ, คณิตศาสตร์, วิทยาศาสตร์, สังคมศึกษา, ปฐมวัย ฯลฯ)
+     5: ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา (กฎหมายการศึกษาและบุคลากร, แนวทางปฏิรูปการศึกษา, ยุทธศาสตร์ชาติ, แผนการศึกษาแห่งชาติ, นโยบายจุดเน้น ศธ.)
+   - ระบุ "sub_cat": ระบุชื่อหัวข้อย่อยที่ตรงที่สุดตามเนื้อหาของข้อนั้นๆ (เช่น "Grammar and Structure", "การคิดวิเคราะห์เชิงปริมาณ", "พ.ร.บ.วิธีปฏิบัติราชการทางปกครอง", หรือชื่อวิชาเอก)
 
 ตอบกลับเป็น JSON โครงสร้างนี้เท่านั้น:
 {
@@ -6616,6 +6660,7 @@ function buildExtractionPrompt() {
     {
       "no": 1,
       "cat": 0,
+      "sub_cat": "การคิดวิเคราะห์เชิงปริมาณ",
       "t": "ข้อความโจทย์ปัญหา",
       "a": "ตัวเลือก ก",
       "b": "ตัวเลือก ข",
@@ -6647,15 +6692,24 @@ function buildSolverPrompt(rawQuestions) {
 }
 
 function reconcileExtractedQuestions(rawQuestions, aiAnswersArr, batchId, isAutoAI, selectedCategory) {
-  let detectedCategory = isAutoAI ? CONFIG.DEFAULT_CATEGORY : selectedCategory;
+  const catCounts = {};
 
   const questionsToInsert = rawQuestions.map((q, idx) => {
-    if (isAutoAI && idx === 0) {
+    let qCat = '';
+    let qSubCat = String(q.sub_cat || '').trim();
+
+    if (isAutoAI) {
       const catIndex = parseInt(q.cat, 10);
-      if (Number.isInteger(catIndex) && catIndex >= 0 && catIndex < CATEGORIES_LIST.length) {
-        detectedCategory = CATEGORIES_LIST[catIndex];
+      if (Number.isInteger(catIndex) && catIndex >= 0 && catIndex < MAIN_CATEGORIES_LIST.length) {
+        qCat = MAIN_CATEGORIES_LIST[catIndex];
+      } else {
+        qCat = CONFIG.DEFAULT_CATEGORY;
       }
+    } else {
+      qCat = selectedCategory || CONFIG.DEFAULT_CATEGORY;
     }
+
+    catCounts[qCat] = (catCounts[qCat] || 0) + 1;
 
     const rawFileAns = q.ans ? String(q.ans).trim() : '';
     const hasFileAns = Boolean(rawFileAns);
@@ -6687,6 +6741,8 @@ function reconcileExtractedQuestions(rawQuestions, aiAnswersArr, batchId, isAuto
       id: `${batchId}-Q${idx + 1}`,
       batch_id: batchId,
       question_no: q.no ? parseInt(q.no, 10) : idx + 1,
+      category: qCat,
+      sub_category: qSubCat,
       question_text: String(q.t || '').trim(),
       choice_a: String(q.a || '').trim(),
       choice_b: String(q.b || '').trim(),
@@ -6703,7 +6759,26 @@ function reconcileExtractedQuestions(rawQuestions, aiAnswersArr, batchId, isAuto
     };
   });
 
-  return { questionsToInsert, determinedCategory: detectedCategory };
+  let determinedCategory = selectedCategory;
+  if (isAutoAI) {
+    const totalQ = questionsToInsert.length || 1;
+    let topCat = CONFIG.DEFAULT_CATEGORY;
+    let topCount = 0;
+    for (const [c, count] of Object.entries(catCounts)) {
+      if (count > topCount) {
+        topCount = count;
+        topCat = c;
+      }
+    }
+
+    if (topCount / totalQ >= 0.75) {
+      determinedCategory = topCat;
+    } else {
+      determinedCategory = 'ข้อสอบรวมหลายหมวด';
+    }
+  }
+
+  return { questionsToInsert, determinedCategory };
 }
 
 function trackGuestBatchId(batchId) {
@@ -6931,7 +7006,13 @@ const UploadQueueService = {
         const { error: batchErr } = await client.from('batches').insert(batchPayload);
         if (batchErr) throw batchErr;
 
-        await chunkInsert('questions', questionsToInsert);
+        try {
+          await chunkInsert('questions', questionsToInsert);
+        } catch (qErr) {
+          console.warn('chunkInsert questions error, fallback without category columns:', qErr);
+          const stripped = questionsToInsert.map(({ category, sub_category, ...rest }) => rest);
+          await chunkInsert('questions', stripped);
+        }
 
         try {
           await client.from('scan_ledger').insert({
