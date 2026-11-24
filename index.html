@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.22.02</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.22.05</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2278,29 +2278,28 @@
 
       <div>
         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">หมวดหมู่ข้อสอบ</label>
-        <select id="upload-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
-          <option value="AUTO_AI">✨ ให้ AI วิเคราะห์และจัดหมวดหมู่อัตโนมัติ</option>
-          <option value="ภาค ก: ความรู้ความสามารถทั่วไป">ภาค ก: ความรู้ความสามารถทั่วไป</option>
-          <option value="ความสามารถในการคิดวิเคราะห์">├── ความสามารถในการคิดวิเคราะห์</option>
-          <option value="การคิดวิเคราะห์เชิงภาษา">│   ├── การคิดวิเคราะห์เชิงภาษา</option>
-          <option value="การคิดวิเคราะห์เชิงนามธรรม">│   ├── การคิดวิเคราะห์เชิงนามธรรม</option>
-          <option value="การคิดวิเคราะห์เชิงปริมาณ">│   └── การคิดวิเคราะห์เชิงปริมาณ</option>
-          <option value="ทักษะภาษาอังกฤษ">├── ทักษะภาษาอังกฤษ</option>
-          <option value="ไวยากรณ์และโครงสร้าง">│   ├── ไวยากรณ์และโครงสร้าง</option>
-          <option value="คำศัพท์">│   ├── คำศัพท์</option>
-          <option value="การอ่านเพื่อความเข้าใจ">│   ├── การอ่านเพื่อความเข้าใจ</option>
-          <option value="บทสนทนาในชีวิตประจำวัน">│   └── บทสนทนาในชีวิตประจำวัน</option>
-          <option value="ความรู้และลักษณะการเป็นข้าราชการที่ดี">└── ความรู้และลักษณะการเป็นข้าราชการที่ดี</option>
-          <option value="ระเบียบบริหารราชการแผ่นดิน">    ├── ระเบียบบริหารราชการแผ่นดิน</option>
-          <option value="กฎหมายว่าด้วยหลักเกณฑ์และวิธีการบริหารกิจการบ้านเมืองที่ดี">    ├── พ.ร.ฎ. บริหารกิจการบ้านเมืองที่ดี</option>
-          <option value="พระราชบัญญัติวิธีปฏิบัติราชการทางปกครอง">    ├── พ.ร.บ. วิธีปฏิบัติราชการทางปกครอง</option>
-          <option value="หน้าที่และความรับผิดชอบในการเป็นข้าราชการ ตลอดจนจริยธรรมข้าราชการ">    └── หน้าที่ความรับผิดชอบและจริยธรรมข้าราชการ</option>
-          <option value="ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ">ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ</option>
-          <option value="วิชาการศึกษา">├── วิชาการศึกษา</option>
-          <option value="กฏหมายครูและการศึกษา">├── กฎหมายครูและการศึกษา</option>
-          <option value="วิชาเอก">├── วิชาเอก</option>
-          <option value="วิชาเอก: สังคมศึกษา">└── วิชาเอก: สังคมศึกษา</option>
-          <option value="OTHER">📁 อื่นๆ (กำหนดวิชา/หมวดหมู่เอง)</option>
+        <select id="upload-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium">
+          <option value="AUTO_AI">✨ ให้ AI วิเคราะห์และจัดหมวดหมู่อัตโนมัติ (แนะนำ)</option>
+          
+          <optgroup label="── 🔴 ภาค ก: ความรู้ความสามารถทั่วไป ──">
+            <option value="ความสามารถในการคิดวิเคราะห์">ความสามารถในการคิดวิเคราะห์ (ภาษา / นามธรรม / ปริมาณ)</option>
+            <option value="ทักษะภาษาอังกฤษ">ทักษะภาษาอังกฤษ (Conversation / Grammar / Vocab / Reading)</option>
+            <option value="ความรู้และลักษณะการเป็นข้าราชการที่ดี">ความรู้และลักษณะการเป็นข้าราชการที่ดี</option>
+          </optgroup>
+
+          <optgroup label="── 🔵 ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ ──">
+            <option value="มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน">มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน (วิชาการศึกษา)</option>
+            <option value="ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา">ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา</option>
+            <option value="มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)">มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)</option>
+          </optgroup>
+
+          <optgroup label="── 🟣 ข้อสอบรวม / จำลองสอบเสมือนจริง ──">
+            <option value="ข้อสอบรวมหลายหมวด">ข้อสอบรวมหลายหมวด (ฉบับเต็ม / Mock Exam)</option>
+          </optgroup>
+
+          <optgroup label="── 📁 กำหนดเอง ──">
+            <option value="OTHER">อื่นๆ (ระบุวิชา/หมวดหมู่เอง)</option>
+          </optgroup>
         </select>
         <div id="upload-custom-category-box" class="hidden mt-2">
           <input type="text" id="upload-custom-category-input" placeholder="ระบุชื่อวิชาหรือหมวดหมู่ เช่น วิทยาศาสตร์, ฟิสิกส์, ประวัติศาสตร์..."
@@ -2609,28 +2608,23 @@
       <div class="md:col-span-6 space-y-1">
         <label class="block text-[11px] font-semibold text-slate-600">หมวดหมู่หลักของชุดข้อสอบ</label>
         <select id="review-batch-category-select" onchange="handleReviewCategoryChange()"
-          class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
-          <option value="ภาค ก: ความรู้ความสามารถทั่วไป">ภาค ก: ความรู้ความสามารถทั่วไป</option>
-          <option value="ความสามารถในการคิดวิเคราะห์">├── ความสามารถในการคิดวิเคราะห์</option>
-          <option value="การคิดวิเคราะห์เชิงภาษา">│   ├── การคิดวิเคราะห์เชิงภาษา</option>
-          <option value="การคิดวิเคราะห์เชิงนามธรรม">│   ├── การคิดวิเคราะห์เชิงนามธรรม</option>
-          <option value="การคิดวิเคราะห์เชิงปริมาณ">│   └── การคิดวิเคราะห์เชิงปริมาณ</option>
-          <option value="ทักษะภาษาอังกฤษ">├── ทักษะภาษาอังกฤษ</option>
-          <option value="ไวยากรณ์และโครงสร้าง">│   ├── ไวยากรณ์และโครงสร้าง</option>
-          <option value="คำศัพท์">│   ├── คำศัพท์</option>
-          <option value="การอ่านเพื่อความเข้าใจ">│   ├── การอ่านเพื่อความเข้าใจ</option>
-          <option value="บทสนทนาในชีวิตประจำวัน">│   └── บทสนทนาในชีวิตประจำวัน</option>
-          <option value="ความรู้และลักษณะการเป็นข้าราชการที่ดี">└── ความรู้และลักษณะการเป็นข้าราชการที่ดี</option>
-          <option value="ระเบียบบริหารราชการแผ่นดิน">    ├── ระเบียบบริหารราชการแผ่นดิน</option>
-          <option value="กฎหมายว่าด้วยหลักเกณฑ์และวิธีการบริหารกิจการบ้านเมืองที่ดี">    ├── พ.ร.ฎ. บริหารกิจการบ้านเมืองที่ดี</option>
-          <option value="พระราชบัญญัติวิธีปฏิบัติราชการทางปกครอง">    ├── พ.ร.บ. วิธีปฏิบัติราชการทางปกครอง</option>
-          <option value="หน้าที่และความรับผิดชอบในการเป็นข้าราชการ ตลอดจนจริยธรรมข้าราชการ">    └── หน้าที่ความรับผิดชอบและจริยธรรมข้าราชการ</option>
-          <option value="ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ">ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ</option>
-          <option value="วิชาการศึกษา">├── วิชาการศึกษา</option>
-          <option value="กฏหมายครูและการศึกษา">├── กฎหมายครูและการศึกษา</option>
-          <option value="วิชาเอก">├── วิชาเอก</option>
-          <option value="วิชาเอก: สังคมศึกษา">└── วิชาเอก: สังคมศึกษา</option>
-          <option value="OTHER">📁 อื่นๆ (กำหนดวิชา/หมวดหมู่เอง)</option>
+          class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium">
+          <optgroup label="── 🔴 ภาค ก: ความรู้ความสามารถทั่วไป ──">
+            <option value="ความสามารถในการคิดวิเคราะห์">ความสามารถในการคิดวิเคราะห์</option>
+            <option value="ทักษะภาษาอังกฤษ">ทักษะภาษาอังกฤษ</option>
+            <option value="ความรู้และลักษณะการเป็นข้าราชการที่ดี">ความรู้และลักษณะการเป็นข้าราชการที่ดี</option>
+          </optgroup>
+          <optgroup label="── 🔵 ภาค ข: มาตรฐานความรู้และประสบการณ์วิชาชีพ ──">
+            <option value="มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน">มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน</option>
+            <option value="ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา">ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา</option>
+            <option value="มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)">มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)</option>
+          </optgroup>
+          <optgroup label="── 🟣 ข้อสอบรวม / จำลองสอบเสมือนจริง ──">
+            <option value="ข้อสอบรวมหลายหมวด">ข้อสอบรวมหลายหมวด</option>
+          </optgroup>
+          <optgroup label="── 📁 กำหนดเอง ──">
+            <option value="OTHER">อื่นๆ (ระบุวิชา/หมวดหมู่เอง)</option>
+          </optgroup>
         </select>
         <div id="review-custom-category-box" class="hidden mt-1.5">
           <input type="text" id="review-custom-category-input" placeholder="ระบุชื่อวิชาหรือหมวดหมู่ เช่น วิทยาศาสตร์, ภาษาต่างประเทศ..."
@@ -9136,26 +9130,38 @@ if (typeof window !== 'undefined') {
       elSummary.textContent = `ครอบคลุม ${sortedCats.length} หมวดหมู่วิชา`;
     }
 
+    const subjectColors = {
+      'ความสามารถในการคิดวิเคราะห์': 'bg-amber-500',
+      'ทักษะภาษาอังกฤษ': 'bg-sky-500',
+      'ความรู้และลักษณะการเป็นข้าราชการที่ดี': 'bg-rose-500',
+      'มาตรฐานความรู้ทั่วไปในการจัดการเรียนการสอน': 'bg-indigo-600',
+      'ความรอบรู้กฎหมายที่เกี่ยวข้องกับการปฏิบัติงาน และแนวทางการปฏิรูปการศึกษา': 'bg-teal-500',
+      'มาตรฐานความรู้ในเนื้อหาวิชาที่สอน (วิชาเอก)': 'bg-emerald-500',
+      'ข้อสอบรวมหลายหมวด': 'bg-purple-600'
+    };
+
     const palette = [
       'bg-indigo-600', 'bg-violet-500', 'bg-sky-500', 'bg-emerald-500', 
       'bg-amber-500', 'bg-rose-500', 'bg-teal-500', 'bg-fuchsia-500', 'bg-slate-400'
     ];
+
+    const getCatColor = (name, idx) => subjectColors[name] || palette[idx % palette.length];
 
     let barHtml = '';
     const topCats = sortedCats.slice(0, 5);
     const moreCats = sortedCats.slice(5);
 
     sortedCats.forEach((item, idx) => {
-      const colorCls = palette[idx % palette.length];
+      const colorCls = getCatColor(item.name, idx);
       barHtml += `<div class="${colorCls} h-full transition-all duration-500 hover:opacity-90" style="width: ${item.percent}%" title="${escapeHtml(item.name)}: ${item.count} ข้อ (${item.percent}%)"></div>`;
     });
 
     const renderCatPill = (item, idx) => {
-      const colorCls = palette[idx % palette.length];
+      const colorCls = getCatColor(item.name, idx);
       return `
         <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200/70 text-[11px] font-medium shadow-2xs">
           <span class="w-2 h-2 rounded-full ${colorCls} shrink-0"></span>
-          <span class="text-slate-700 truncate max-w-[130px]" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <span class="text-slate-700 truncate max-w-[140px]" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
           <span class="font-bold text-slate-800">${item.count}</span>
           <span class="text-slate-400 text-[10px]">(${item.percent}%)</span>
         </div>
@@ -10287,7 +10293,7 @@ if (typeof window !== 'undefined') {
     if (category === 'OTHER') {
       const customInput = document.getElementById('upload-custom-category-input');
       const customVal = customInput ? customInput.value.trim() : '';
-      category = customVal ? ('อื่นๆ: ' + customVal.replace(/^อื่นๆ\s*[:\-]?\s*/, '')) : 'อื่นๆ';
+      category = customVal ? customVal : 'อื่นๆ';
     }
 
     try {
@@ -12078,7 +12084,7 @@ if (typeof window !== 'undefined') {
     if (editCat === 'OTHER') {
       const customInput = document.getElementById('review-custom-category-input');
       const customVal = customInput ? customInput.value.trim() : '';
-      editCat = customVal ? ('อื่นๆ: ' + customVal.replace(/^อื่นๆ\s*[:\-]?\s*/, '')) : 'อื่นๆ';
+      editCat = customVal ? customVal : 'อื่นๆ';
     }
 
     const extraMeta = {
