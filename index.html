@@ -109,7 +109,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.22.06</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 24.11.23.44</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2061,6 +2061,13 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
+      <!-- ปุ่มสุ่มชุดข้อสอบประจำหน้าคลังกลาง -->
+      <button onclick="openCustomQuizModal()" 
+        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs sm:text-sm font-extrabold shadow-xs hover:shadow-md transition-all cursor-pointer shrink-0">
+        <i data-lucide="shuffle" class="w-4 h-4"></i>
+        <span>สุ่มชุดข้อสอบ</span>
+      </button>
+
       <div class="relative flex-grow sm:flex-grow-0">
         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
         <input type="text" id="search-input" oninput="filterBatches()" placeholder="ค้นหาชื่อชุดข้อสอบ..." 
@@ -4613,12 +4620,12 @@
           </button>
         </div>
 
-        <!-- ส่วนที่ 1: เลือกหมวดหมู่วิชา (Multi-select Categories) -->
+        <!-- ส่วนที่ 1: เลือกหมวดหมู่วิชา (Multi-select Categories & Subcategories) -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
               <i data-lucide="layers" class="w-4 h-4 text-brand-600"></i>
-              <span>1. เลือกหมวดหมู่วิชา (เลือกได้หลายหมวด)</span>
+              <span>1. เลือกหมวดหมู่ / หัวข้อย่อย (เลือกได้หลายหัวข้อ)</span>
             </label>
             <div class="flex items-center gap-2 text-[11px]">
               <button type="button" onclick="toggleSelectAllQuizCategories(true)" class="text-brand-600 hover:text-brand-700 font-bold hover:underline">เลือกทั้งหมด</button>
@@ -4627,10 +4634,10 @@
             </div>
           </div>
 
-          <div id="custom-quiz-category-container" class="max-h-44 overflow-y-auto custom-scrollbar border border-slate-200 rounded-2xl p-2.5 space-y-1 bg-slate-50/50">
+          <div id="custom-quiz-category-container" class="max-h-72 overflow-y-auto custom-scrollbar border border-slate-200 rounded-2xl p-2.5 space-y-2 bg-slate-50/50">
             <div class="py-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
               <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-brand-500"></i>
-              <span>กำลังโหลดหมวดหมู่วิชา...</span>
+              <span>กำลังโหลดหมวดหมู่และหัวข้อย่อย...</span>
             </div>
           </div>
         </div>
@@ -6436,18 +6443,57 @@ const ExamStatsService = {
         return notifySuccess(this, { success: true, categories: [], totalVerified: 0 });
       }
 
-      const categoryCounts = Object.create(null);
-      let totalVerified = 0;
-
+      const batchIds = verifiedBatches.map((b) => b.id);
+      const batchMap = Object.create(null);
       verifiedBatches.forEach((b) => {
-        const cat = (b.batch_category || 'ทั่วไป').split('|')[0].trim() || 'ทั่วไป';
-        const qCount = b.total_questions || 0;
-        categoryCounts[cat] = (categoryCounts[cat] || 0) + qCount;
-        totalVerified += qCount;
+        batchMap[b.id] = (b.batch_category || 'ทั่วไป').split('|')[0].trim() || 'ทั่วไป';
       });
 
-      const categories = Object.entries(categoryCounts)
-        .map(([name, count]) => ({ name, count }))
+      // Fetch questions with category and sub_category in pages (to avoid 1,000-row cap)
+      let allQuestions = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data: qChunk, error: qErr } = await client
+          .from('questions')
+          .select('id, batch_id, category, sub_category')
+          .in('batch_id', batchIds)
+          .range(from, from + pageSize - 1);
+
+        if (qErr) throw qErr;
+        if (!qChunk || !qChunk.length) break;
+        allQuestions.push(...qChunk);
+        if (qChunk.length < pageSize) break;
+        from += pageSize;
+      }
+
+      const tree = Object.create(null);
+      let totalVerified = 0;
+
+      allQuestions.forEach((q) => {
+        const cat = (q.category || batchMap[q.batch_id] || 'ทั่วไป').trim();
+        const subCat = (q.sub_category || 'ทั่วไป').trim();
+
+        if (!tree[cat]) {
+          tree[cat] = {
+            name: cat,
+            count: 0,
+            subCategoryMap: Object.create(null)
+          };
+        }
+        tree[cat].count++;
+        tree[cat].subCategoryMap[subCat] = (tree[cat].subCategoryMap[subCat] || 0) + 1;
+        totalVerified++;
+      });
+
+      const categories = Object.values(tree)
+        .map((catObj) => ({
+          name: catObj.name,
+          count: catObj.count,
+          subCategories: Object.entries(catObj.subCategoryMap)
+            .map(([subName, subCount]) => ({ name: subName, count: subCount }))
+            .sort((a, b) => b.count - a.count)
+        }))
         .sort((a, b) => b.count - a.count);
 
       return notifySuccess(this, { success: true, categories, totalVerified });
@@ -6489,40 +6535,32 @@ const ExamStatsService = {
         return notifyFailure(this, fail, fail);
       }
 
-      const selectedCatSet = new Set((selectedCategories || []).map((c) => String(c).trim().toLowerCase()));
       const batchMap = Object.create(null);
-      const targetBatchIds = [];
-
-      verifiedBatches.forEach((b) => {
+      const batchIds = verifiedBatches.map((b) => {
         const cleanCat = (b.batch_category || 'ทั่วไป').split('|')[0].trim();
-        const lowerCat = cleanCat.toLowerCase();
-        const matches =
-          isQuickRandom ||
-          selectedCatSet.size === 0 ||
-          [...selectedCatSet].some((sc) => sc === 'all' || lowerCat.includes(sc) || sc.includes(lowerCat));
-
-        if (matches) {
-          batchMap[b.id] = { ...b, cleanCat };
-          targetBatchIds.push(b.id);
-        }
+        batchMap[b.id] = { ...b, cleanCat };
+        return b.id;
       });
 
-      if (targetBatchIds.length === 0) {
-        const fail = {
-          success: false,
-          error: 'NO_VERIFIED_QUESTIONS',
-          message: 'ไม่พบข้อสอบในหมวดหมู่วิชาที่เลือกที่ผ่านการตรวจสอบแล้ว'
-        };
-        return notifyFailure(this, fail, fail);
+      // Fetch all verified questions with pagination
+      let allQuestions = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data: chunk, error: qErr } = await client
+          .from('questions')
+          .select('*')
+          .in('batch_id', batchIds)
+          .range(from, from + pageSize - 1);
+
+        if (qErr) throw qErr;
+        if (!chunk || !chunk.length) break;
+        allQuestions.push(...chunk);
+        if (chunk.length < pageSize) break;
+        from += pageSize;
       }
 
-      const { data: questions, error: qErr } = await client
-        .from('questions')
-        .select('*')
-        .in('batch_id', targetBatchIds);
-      if (qErr) throw qErr;
-
-      if (!questions?.length) {
+      if (!allQuestions?.length) {
         const fail = {
           success: false,
           error: 'NO_VERIFIED_QUESTIONS',
@@ -6531,7 +6569,39 @@ const ExamStatsService = {
         return notifyFailure(this, fail, fail);
       }
 
-      const candidates = questions.map((q, idx) => {
+      // Filter questions according to selectedCategories (categories and/or subcategories)
+      const selectedCatSet = new Set((selectedCategories || []).map((c) => String(c).trim().toLowerCase()));
+
+      const matchedQuestions = allQuestions.filter((q) => {
+        if (isQuickRandom || selectedCatSet.size === 0 || selectedCatSet.has('all')) {
+          return true;
+        }
+        const bInfo = batchMap[q.batch_id] || {};
+        const qSub = (q.sub_category || '').trim().toLowerCase();
+        const qCat = (q.category || bInfo.cleanCat || '').trim().toLowerCase();
+        const bCat = (bInfo.cleanCat || '').trim().toLowerCase();
+
+        return (
+          (qSub && selectedCatSet.has(qSub)) ||
+          (qCat && selectedCatSet.has(qCat)) ||
+          (bCat && selectedCatSet.has(bCat)) ||
+          [...selectedCatSet].some((sc) =>
+            (qSub && (qSub.includes(sc) || sc.includes(qSub))) ||
+            (qCat && (qCat.includes(sc) || sc.includes(qCat)))
+          )
+        );
+      });
+
+      if (matchedQuestions.length === 0) {
+        const fail = {
+          success: false,
+          error: 'NO_VERIFIED_QUESTIONS',
+          message: 'ไม่พบข้อสอบในหมวดหมู่หรือหัวข้อย่อยที่เลือกที่ผ่านการตรวจสอบแล้ว'
+        };
+        return notifyFailure(this, fail, fail);
+      }
+
+      const candidates = matchedQuestions.map((q, idx) => {
         const bInfo = batchMap[q.batch_id] || {};
         return {
           row: idx + 1,
@@ -6540,7 +6610,8 @@ const ExamStatsService = {
           batchId: q.batch_id,
           originBatchId: q.batch_id,
           originBatchName: bInfo.batch_name || 'ชุดข้อสอบ',
-          category: bInfo.cleanCat || 'ทั่วไป',
+          category: q.category || bInfo.cleanCat || 'ทั่วไป',
+          subCategory: q.sub_category || '',
           text: q.question_text,
           a: q.choice_a || '',
           b: q.choice_b || '',
@@ -6593,7 +6664,7 @@ const ExamStatsService = {
         catLabel =
           selectedCategories.length <= 2
             ? selectedCategories.join(', ')
-            : `${selectedCategories[0]} และอื่นๆ (${selectedCategories.length} วิชา)`;
+            : `${selectedCategories[0]} และอื่นๆ (${selectedCategories.length} หัวข้อ)`;
       }
 
       const batchName = isQuickRandom
@@ -12224,10 +12295,10 @@ if (typeof window !== 'undefined') {
     container.innerHTML = `
       <div class="py-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
         <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-brand-500"></i>
-        <span>กำลังโหลดหมวดหมู่วิชาที่มีข้อสอบ Review แล้ว...</span>
+        <span>กำลังโหลดหมวดหมู่และหัวข้อย่อย...</span>
       </div>
     `;
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 
     google.script.run
       .withSuccessHandler(res => {
@@ -12240,32 +12311,150 @@ if (typeof window !== 'undefined') {
               ${emptyMsg}
             </div>
           `;
-          document.getElementById('custom-quiz-total-available').textContent = 'มีข้อสอบในคลัง 0 ข้อ';
+          const availEl = document.getElementById('custom-quiz-total-available');
+          if (availEl) availEl.textContent = 'มีข้อสอบในคลัง 0 ข้อ';
           return;
         }
 
         verifiedCategoriesCache = res.categories;
-        document.getElementById('custom-quiz-total-available').textContent = `มีข้อสอบผ่านการตรวจสอบ ${res.totalVerified || 0} ข้อ`;
+        const availEl = document.getElementById('custom-quiz-total-available');
+        if (availEl) availEl.textContent = `มีข้อสอบผ่านการตรวจสอบ ${res.totalVerified || 0} ข้อ`;
 
-        // Render category checkboxes
-        container.innerHTML = res.categories.map((cat, idx) => `
-          <label class="flex items-center justify-between p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 transition-colors cursor-pointer text-xs">
-            <div class="flex items-center gap-2.5">
-              <input type="checkbox" value="${escapeHtml(cat.name)}" checked onchange="handleQuizCategoryToggle(this)"
-                     class="quiz-cat-cb w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
-              <span class="font-medium text-slate-700">${escapeHtml(cat.name)}</span>
+        selectedQuizCategories = new Set();
+
+        // Render accordion tree with main categories and child subcategories
+        container.innerHTML = res.categories.map((cat, cIdx) => {
+          const hasSubs = Array.isArray(cat.subCategories) && cat.subCategories.length > 0;
+          
+          if (hasSubs) {
+            cat.subCategories.forEach(sub => selectedQuizCategories.add(sub.name));
+          } else {
+            selectedQuizCategories.add(cat.name);
+          }
+
+          const subCatsHtml = hasSubs ? `
+            <div id="quiz-subcat-group-${cIdx}" class="ml-5 pl-2.5 border-l-2 border-brand-200 space-y-1 mt-1.5 pt-0.5 pb-0.5">
+              ${cat.subCategories.map((sub) => `
+                <label class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-colors cursor-pointer text-xs">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <input type="checkbox" data-cidx="${cIdx}" value="${escapeHtml(sub.name)}" checked 
+                           onchange="handleSubCatToggle(${cIdx}, this)"
+                           class="quiz-sub-cat-cb quiz-sub-cat-cb-${cIdx} w-3.5 h-3.5 text-brand-600 rounded border-slate-300 focus:ring-brand-500 shrink-0">
+                    <span class="text-slate-700 truncate">${escapeHtml(sub.name)}</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 font-medium shrink-0 ml-1.5 bg-slate-100 px-1.5 py-0.5 rounded">${sub.count} ข้อ</span>
+                </label>
+              `).join('')}
             </div>
-            <span class="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${cat.count} ข้อ</span>
-          </label>
-        `).join('');
+          ` : '';
 
-        selectedQuizCategories = new Set(res.categories.map(c => c.name));
-        lucide.createIcons();
+          return `
+            <div class="bg-white rounded-xl border border-slate-200/90 p-2.5 transition-all shadow-2xs">
+              <div class="flex items-center justify-between gap-1.5">
+                <label class="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                  <input type="checkbox" data-cidx="${cIdx}" value="${escapeHtml(cat.name)}" checked 
+                         onchange="handleMainCatToggle(${cIdx}, this)"
+                         class="quiz-main-cat-cb w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 shrink-0">
+                  <span class="font-bold text-xs text-slate-800 truncate">${escapeHtml(cat.name)}</span>
+                </label>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-[11px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/60">${cat.count} ข้อ</span>
+                  ${hasSubs ? `
+                    <button type="button" onclick="toggleQuizSubCatAccordion(${cIdx})" title="ย่อ/ขยายหัวข้อย่อย"
+                            class="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+                      <i data-lucide="chevron-down" id="quiz-cat-chevron-${cIdx}" class="w-4 h-4 transition-transform duration-200"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+              ${subCatsHtml}
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
       })
       .withFailureHandler(err => {
         container.innerHTML = `<div class="p-3 text-center text-xs text-rose-600">โหลดหมวดหมู่ไม่สำเร็จ: ${err.message}</div>`;
       })
       .getAvailableVerifiedCategories(currentUserProfile, currentQuizSourceScope);
+  }
+
+  function toggleQuizSubCatAccordion(cIdx) {
+    const group = document.getElementById(`quiz-subcat-group-${cIdx}`);
+    const chevron = document.getElementById(`quiz-cat-chevron-${cIdx}`);
+    if (!group) return;
+    if (group.classList.contains('hidden')) {
+      group.classList.remove('hidden');
+      if (chevron) chevron.style.transform = 'rotate(0deg)';
+    } else {
+      group.classList.add('hidden');
+      if (chevron) chevron.style.transform = 'rotate(-90deg)';
+    }
+  }
+
+  function handleMainCatToggle(cIdx, mainCb) {
+    const isChecked = mainCb.checked;
+    const subCbs = document.querySelectorAll(`.quiz-sub-cat-cb-${cIdx}`);
+    if (subCbs.length > 0) {
+      subCbs.forEach(subCb => {
+        subCb.checked = isChecked;
+        if (isChecked) {
+          selectedQuizCategories.add(subCb.value);
+        } else {
+          selectedQuizCategories.delete(subCb.value);
+        }
+      });
+    } else {
+      if (isChecked) {
+        selectedQuizCategories.add(mainCb.value);
+      } else {
+        selectedQuizCategories.delete(mainCb.value);
+      }
+    }
+  }
+
+  function handleSubCatToggle(cIdx, subCb) {
+    if (subCb.checked) {
+      selectedQuizCategories.add(subCb.value);
+    } else {
+      selectedQuizCategories.delete(subCb.value);
+    }
+
+    const subCbs = document.querySelectorAll(`.quiz-sub-cat-cb-${cIdx}`);
+    const mainCb = document.querySelector(`.quiz-main-cat-cb[data-cidx="${cIdx}"]`);
+    if (mainCb && subCbs.length > 0) {
+      const allChecked = Array.from(subCbs).every(cb => cb.checked);
+      const someChecked = Array.from(subCbs).some(cb => cb.checked);
+      mainCb.checked = allChecked || someChecked;
+      mainCb.indeterminate = someChecked && !allChecked;
+    }
+  }
+
+  function toggleSelectAllQuizCategories(select) {
+    const mainCbs = document.querySelectorAll('.quiz-main-cat-cb');
+    const subCbs = document.querySelectorAll('.quiz-sub-cat-cb');
+    selectedQuizCategories.clear();
+
+    mainCbs.forEach(cb => {
+      cb.checked = select;
+      cb.indeterminate = false;
+    });
+
+    subCbs.forEach(cb => {
+      cb.checked = select;
+      if (select) selectedQuizCategories.add(cb.value);
+    });
+
+    if (select) {
+      mainCbs.forEach(cb => {
+        const cIdx = cb.getAttribute('data-cidx');
+        const hasSubs = document.querySelectorAll(`.quiz-sub-cat-cb-${cIdx}`).length > 0;
+        if (!hasSubs) {
+          selectedQuizCategories.add(cb.value);
+        }
+      });
+    }
   }
 
   function closeCustomQuizModal() {
@@ -12279,15 +12468,6 @@ if (typeof window !== 'undefined') {
     } else {
       selectedQuizCategories.delete(cb.value);
     }
-  }
-
-  function toggleSelectAllQuizCategories(select) {
-    const checkboxes = document.querySelectorAll('.quiz-cat-cb');
-    selectedQuizCategories.clear();
-    checkboxes.forEach(cb => {
-      cb.checked = select;
-      if (select) selectedQuizCategories.add(cb.value);
-    });
   }
 
   function setCustomQuizCount(n) {
@@ -12341,9 +12521,24 @@ if (typeof window !== 'undefined') {
   }
 
   function startGenerateCustomQuiz() {
+    // Re-sync selected categories & subcategories from DOM
+    selectedQuizCategories.clear();
+    const subCbs = document.querySelectorAll('.quiz-sub-cat-cb:checked');
+    if (subCbs.length > 0) {
+      subCbs.forEach(cb => selectedQuizCategories.add(cb.value));
+    }
+    const mainCbs = document.querySelectorAll('.quiz-main-cat-cb:checked');
+    mainCbs.forEach(cb => {
+      const cIdx = cb.getAttribute('data-cidx');
+      const hasSubs = document.querySelectorAll(`.quiz-sub-cat-cb-${cIdx}`).length > 0;
+      if (!hasSubs) {
+        selectedQuizCategories.add(cb.value);
+      }
+    });
+
     const cats = Array.from(selectedQuizCategories);
     if (cats.length === 0) {
-      Swal.fire('กรุณาเลือกหมวดหมู่', 'โปรดเลือกหมวดหมู่วิชาอย่างน้อย 1 หมวด หรือกดปุ่มสุ่มด่วนจากทุกชุด', 'info');
+      Swal.fire('กรุณาเลือกหมวดหมู่', 'โปรดเลือกหมวดหมู่วิชาหรือหัวข้อย่อยอย่างน้อย 1 หัวข้อ หรือกดปุ่มสุ่มด่วนจากทุกชุด', 'info');
       return;
     }
 
@@ -12352,7 +12547,7 @@ if (typeof window !== 'undefined') {
 
     Swal.fire({
       title: 'กำลังสุ่มข้อสอบฝึกซ้อม...',
-      text: `กำลังคัดเลือกข้อสอบที่ Review แล้วใน ${cats.length} หมวดหมู่วิชา`,
+      text: `กำลังคัดเลือกข้อสอบที่ Review แล้วใน ${cats.length} หัวข้อย่อย/วิชา`,
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     });
