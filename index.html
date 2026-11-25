@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.02.12</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.02.22</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -3121,34 +3121,54 @@
     </div>
   </div>
 
-  <!-- Admin Navigation Tabs: [สถิติสมาชิกและภาพรวม] & [บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)] & [ศูนย์รับรายงานข้อสอบ (Flagged Questions)] -->
-  <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
-    <button id="admin-tab-btn-stats" onclick="switchAdminTab('stats')" class="px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0">
-      <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
-      <span>📊 สถิติสมาชิกและภาพรวม</span>
-    </button>
-    <button id="admin-tab-btn-logs" onclick="switchAdminTab('logs')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
-      <i data-lucide="history" class="w-4 h-4"></i>
-      <span>🕒 บันทึกความเคลื่อนไหวข้อสอบ (Audit Log)</span>
-    </button>
-    <button id="admin-tab-btn-flags" onclick="switchAdminTab('flags')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0 relative">
-      <i data-lucide="flag" class="w-4 h-4 text-rose-500"></i>
-      <span>🚩 ศูนย์รับรายงานข้อสอบ</span>
-      <span id="admin-flags-count-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black animate-pulse">0</span>
-    </button>
-    <button id="admin-tab-btn-announcement" onclick="switchAdminTab('announcement')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
-      <i data-lucide="megaphone" class="w-4 h-4 text-amber-500"></i>
-      <span>📢 จัดการประกาศหน้าแรก</span>
-    </button>
-    <button id="admin-tab-btn-footer" onclick="switchAdminTab('footer')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
-      <i data-lucide="settings-2" class="w-4 h-4 text-brand-600"></i>
-      <span>⚙️ ตั้งค่าเว็บไซต์ & Footer</span>
-    </button>
-    <button id="admin-tab-btn-promo" onclick="switchAdminTab('promo')" class="px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0">
-      <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
-      <span>🎯 โปรโมทข้อสอบ</span>
-      <span id="admin-promo-count-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-brand-600 text-white font-black">0</span>
-    </button>
+  <!-- Admin Navigation Menu Card (Collapsible Grid) -->
+  <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+    <div onclick="toggleAdminNavCard()" class="px-4 sm:px-5 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-100/70 transition-colors select-none">
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <span class="p-1.5 rounded-xl bg-brand-600 text-white shadow-xs">
+          <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+        </span>
+        <span class="text-xs sm:text-sm font-extrabold text-slate-800">เมนูผู้ดูแลระบบ (Admin Menu)</span>
+        <span id="admin-nav-active-label" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">สถิติสมาชิกและภาพรวม</span>
+      </div>
+      <button type="button" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-600 flex items-center gap-1 shadow-2xs shrink-0">
+        <span id="admin-nav-toggle-text">ซ่อนเมนู</span>
+        <i data-lucide="chevron-up" id="admin-nav-toggle-icon" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+      </button>
+    </div>
+
+    <div id="admin-nav-card-body" class="p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      <button id="admin-tab-btn-stats" onclick="switchAdminTab('stats')" class="p-3 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-md ring-2 ring-brand-500/20 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left">
+        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+        <span class="leading-snug">สถิติสมาชิกและภาพรวม</span>
+      </button>
+      <button id="admin-tab-btn-logs" onclick="switchAdminTab('logs')" class="p-3 rounded-2xl font-bold text-xs bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left">
+        <i data-lucide="history" class="w-4 h-4 text-slate-500"></i>
+        <span class="leading-snug">บันทึกความเคลื่อนไหว (Audit Log)</span>
+      </button>
+      <button id="admin-tab-btn-flags" onclick="switchAdminTab('flags')" class="p-3 rounded-2xl font-bold text-xs bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left relative">
+        <div class="w-full flex items-center justify-between">
+          <i data-lucide="flag" class="w-4 h-4 text-rose-500"></i>
+          <span id="admin-flags-count-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black animate-pulse">0</span>
+        </div>
+        <span class="leading-snug">ศูนย์รับรายงานข้อสอบ</span>
+      </button>
+      <button id="admin-tab-btn-announcement" onclick="switchAdminTab('announcement')" class="p-3 rounded-2xl font-bold text-xs bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left">
+        <i data-lucide="megaphone" class="w-4 h-4 text-amber-500"></i>
+        <span class="leading-snug">จัดการประกาศหน้าแรก</span>
+      </button>
+      <button id="admin-tab-btn-footer" onclick="switchAdminTab('footer')" class="p-3 rounded-2xl font-bold text-xs bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left">
+        <i data-lucide="settings-2" class="w-4 h-4 text-brand-600"></i>
+        <span class="leading-snug">ตั้งค่าเว็บไซต์ & Footer</span>
+      </button>
+      <button id="admin-tab-btn-promo" onclick="switchAdminTab('promo')" class="p-3 rounded-2xl font-bold text-xs bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left">
+        <div class="w-full flex items-center justify-between">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+          <span id="admin-promo-count-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-brand-600 text-white font-black">0</span>
+        </div>
+        <span class="leading-snug">โปรโมทข้อสอบ</span>
+      </button>
+    </div>
   </div>
 
   <!-- TAB 1: สถิติสมาชิกและภาพรวม (Stats Content) -->
@@ -10485,7 +10505,7 @@ if (typeof window !== 'undefined') {
 
     google.script.run
       .withSuccessHandler(status => {
-        if (icon) icon.classList.remove('animate-spin');
+        document.getElementById('refresh-queue-icon')?.classList.remove('animate-spin');
         if (!status) return;
 
         document.getElementById('stat-pending-count').textContent = `${status.pending || 0} ชุด`;
@@ -13503,6 +13523,16 @@ if (typeof window !== 'undefined') {
   let allAdminFlags = [];
   let allAutoHiddenBatches = [];
 
+  function toggleAdminNavCard() {
+    const body = document.getElementById('admin-nav-card-body');
+    const txt = document.getElementById('admin-nav-toggle-text');
+    const icon = document.getElementById('admin-nav-toggle-icon');
+    if (!body) return;
+    const isHidden = body.classList.toggle('hidden');
+    if (txt) txt.textContent = isHidden ? 'แสดงเมนู' : 'ซ่อนเมนู';
+    if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+
   function switchAdminTab(tab) {
     currentAdminTab = tab;
     const btnStats = document.getElementById('admin-tab-btn-stats');
@@ -13518,15 +13548,26 @@ if (typeof window !== 'undefined') {
     const contentFooter = document.getElementById('admin-tab-content-footer');
     const contentPromo = document.getElementById('admin-tab-content-promo');
 
-    const activeCls = 'px-4 py-2.5 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0';
-    const inactiveCls = 'px-4 py-2.5 rounded-2xl font-bold text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all flex items-center gap-2 cursor-pointer shrink-0';
+    const activeCls = 'p-3 rounded-2xl font-extrabold text-xs bg-brand-600 text-white shadow-md ring-2 ring-brand-500/20 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left';
+    const inactiveCls = 'p-3 rounded-2xl font-bold text-xs bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900 transition-all flex flex-col items-start justify-between gap-2 cursor-pointer text-left';
 
     if (btnStats) btnStats.className = tab === 'stats' ? activeCls : inactiveCls;
     if (btnLogs) btnLogs.className = tab === 'logs' ? activeCls : inactiveCls;
-    if (btnFlags) btnFlags.className = tab === 'flags' ? activeCls : (inactiveCls + ' relative');
+    if (btnFlags) btnFlags.className = (tab === 'flags' ? activeCls : inactiveCls) + ' relative';
     if (btnAnn) btnAnn.className = tab === 'announcement' ? activeCls : inactiveCls;
     if (btnFooter) btnFooter.className = tab === 'footer' ? activeCls : inactiveCls;
     if (btnPromo) btnPromo.className = tab === 'promo' ? activeCls : inactiveCls;
+
+    const tabLabels = {
+      stats: 'สถิติสมาชิกและภาพรวม',
+      logs: 'บันทึกความเคลื่อนไหว (Audit Log)',
+      flags: 'ศูนย์รับรายงานข้อสอบ',
+      announcement: 'จัดการประกาศหน้าแรก',
+      footer: 'ตั้งค่าเว็บไซต์ & Footer',
+      promo: 'โปรโมทข้อสอบ'
+    };
+    const activeLabelEl = document.getElementById('admin-nav-active-label');
+    if (activeLabelEl) activeLabelEl.textContent = tabLabels[tab] || tab;
 
     if (contentStats) contentStats.classList.toggle('hidden', tab !== 'stats');
     if (contentLogs) contentLogs.classList.toggle('hidden', tab !== 'logs');
@@ -13569,7 +13610,7 @@ if (typeof window !== 'undefined') {
 
     google.script.run
       .withSuccessHandler(res => {
-        if (icon) icon.classList.remove('animate-spin');
+        document.getElementById('admin-flags-refresh-icon')?.classList.remove('animate-spin');
         allAdminFlags = (res && res.flags) ? res.flags : [];
         allAutoHiddenBatches = (res && res.autoHiddenBatches) ? res.autoHiddenBatches : [];
 
@@ -14123,7 +14164,7 @@ if (typeof window !== 'undefined') {
 
     google.script.run
       .withSuccessHandler(res => {
-        if (icon) icon.classList.remove('animate-spin');
+        document.getElementById('admin-ann-refresh-icon')?.classList.remove('animate-spin');
         const ann = (res && res.announcement) ? res.announcement : null;
         currentGlobalAnnouncement = ann;
 
@@ -14146,7 +14187,7 @@ if (typeof window !== 'undefined') {
         updateAdminAnnouncementLivePreview();
       })
       .withFailureHandler(err => {
-        if (icon) icon.classList.remove('animate-spin');
+        document.getElementById('admin-ann-refresh-icon')?.classList.remove('animate-spin');
         console.error('loadAdminAnnouncementForm error:', err);
         showToast('error', 'โหลดข้อมูลประกาศไม่สำเร็จ');
       })
@@ -14279,11 +14320,11 @@ if (typeof window !== 'undefined') {
 
     google.script.run
       .withSuccessHandler(res => {
-        if (icon) icon.classList.remove('animate-spin');
+        document.getElementById('admin-logs-refresh-icon')?.classList.remove('animate-spin');
         renderAdminAuditLogs(res && res.logs ? res.logs : []);
       })
       .withFailureHandler(err => {
-        if (icon) icon.classList.remove('animate-spin');
+        document.getElementById('admin-logs-refresh-icon')?.classList.remove('animate-spin');
         console.error('loadAdminAuditLogs error:', err);
         if (tbody) {
           tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-rose-500 text-xs">โหลดบันทึกไม่สำเร็จ: ${err.message || err}</td></tr>`;
@@ -14731,7 +14772,8 @@ if (typeof window !== 'undefined') {
       if (statusBadge) statusBadge.textContent = '● โหมดออฟไลน์ (Local)';
       if (showFeedback) showToast('error', 'ซิงก์ Cloud ไม่สำเร็จ: ' + (e.message || e));
     } finally {
-      if (icon) icon.classList.remove('animate-spin');
+      const curIcon = document.getElementById('admin-promo-refresh-icon');
+      if (curIcon) curIcon.classList.remove('animate-spin');
     }
   }
 
@@ -16056,6 +16098,7 @@ if (typeof window !== 'undefined') {
 
   // Global Window Expose
   window.changeUserRole = changeUserRole;
+  window.toggleAdminNavCard = toggleAdminNavCard;
   window.switchAdminTab = switchAdminTab;
   window.loadAdminAuditLogs = loadAdminAuditLogs;
   window.renderAdminAuditLogs = renderAdminAuditLogs;
