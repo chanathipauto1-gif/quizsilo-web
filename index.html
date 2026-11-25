@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 25.11.01.33</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 25.11.23.53</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -3763,8 +3763,24 @@
             <button id="admin-promo-filter-pending" onclick="filterAdminPromoQueue('pending')" class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">⏳ รอทำ (<span id="promo-cnt-pending">0</span>)</button>
             <button id="admin-promo-filter-done" onclick="filterAdminPromoQueue('done')" class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">✅ โปรโมทแล้ว (<span id="promo-cnt-done">0</span>)</button>
           </div>
-          <button onclick="renderAdminPromoTab()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer" title="รีเฟรชตาราง">
+          <button onclick="syncPromoQueueFromSupabase(true)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer" title="ซิงก์ข้อมูลล่าสุดจาก Cloud">
             <i data-lucide="refresh-cw" id="admin-promo-refresh-icon" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Make.com Webhook & Cloud Sync Bar -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50/70 p-3.5 sm:px-5 rounded-2xl border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 text-xs">
+          <span class="px-2.5 py-1 rounded-xl bg-indigo-600 text-white font-black text-[10px] shrink-0">☁️ AUTO-POST</span>
+          <span class="font-bold text-indigo-950">Make.com Instant Webhook URL:</span>
+          <span id="admin-promo-cloud-status" class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full hidden sm:inline-block">● เชื่อมต่อ Cloud Queue</span>
+        </div>
+        <div class="flex items-center gap-2 flex-1 sm:max-w-md">
+          <input type="url" id="admin-promo-webhook-url" placeholder="https://hook.eu2.make.com/..."
+                 class="flex-1 px-3 py-1.5 bg-white border border-indigo-200 rounded-xl text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <button type="button" onclick="saveMakeWebhookUrl()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs">
+            บันทึก URL
           </button>
         </div>
       </div>
@@ -3935,10 +3951,10 @@
 
           <!-- Save Edits Button -->
           <div class="pt-2 flex items-center justify-between">
-            <span class="text-[11px] text-slate-400">แก้ไขข้อความข้างต้นแล้วกดบันทึกลงคิวได้ตลอดเวลา</span>
-            <button type="button" onclick="saveAdminStudioEditsToQueue()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-              <i data-lucide="save" class="w-3.5 h-3.5"></i>
-              <span>บันทึกการแก้ไขลงคิว</span>
+            <span class="text-[11px] text-slate-400">บันทึกข้อมูล + อัปโหลดรูปขึ้นคิว Supabase เพื่อให้ Make.com ดึงไปโพสต์อัตโนมัติ</span>
+            <button type="button" onclick="saveAdminStudioEditsToQueue()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+              <span>บันทึก & อัปโหลดลงคิว Cloud</span>
             </button>
           </div>
 
@@ -3962,7 +3978,12 @@
 
           <!-- Action Buttons Stack -->
           <div class="w-full space-y-2 pt-2">
-            <button type="button" onclick="downloadAdminStudioPng()" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+            <button type="button" onclick="publishPromoItemNow()" id="btn-admin-studio-publish-now" class="w-full py-3.5 px-4 bg-gradient-to-r from-[#1877F2] to-indigo-600 hover:from-[#166FE5] hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>🚀 โพสต์ลงเพจ Facebook ทันที (รูป + แคปชั่น + เมนต์เฉลย)</span>
+            </button>
+
+            <button type="button" onclick="downloadAdminStudioPng()" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
               <i data-lucide="download" class="w-4 h-4"></i>
               <span>📥 ดาวน์โหลดรูปภาพ PNG (1080x1350)</span>
             </button>
@@ -14532,8 +14553,186 @@ if (typeof window !== 'undefined') {
   // Social Promo Queue & Full-Screen Studio (Admin Only 👑)
   // ==========================================
   const PROMO_QUEUE_KEY = 'quizsilo_promo_queue';
+  const PROMO_WEBHOOK_KEY = 'quizsilo_make_webhook_url';
   let currentPromoFilter = 'all';
   let activeStudioItem = null;
+  let hasSyncedPromoCloud = false;
+
+  function getMakeWebhookUrl() {
+    return (localStorage.getItem(PROMO_WEBHOOK_KEY) || '').trim();
+  }
+
+  function saveMakeWebhookUrl(silent = false) {
+    const input = document.getElementById('admin-promo-webhook-url');
+    const url = (input?.value || '').trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      if (!silent) showToast('error', 'กรุณากรอก URL ที่ขึ้นต้นด้วย https://');
+      return;
+    }
+    if (url) localStorage.setItem(PROMO_WEBHOOK_KEY, url);
+    else localStorage.removeItem(PROMO_WEBHOOK_KEY);
+    if (!silent) showToast('success', url ? '🔗 บันทึก Make.com Webhook URL เรียบร้อยแล้ว' : 'ลบ Webhook URL แล้ว');
+  }
+
+  function renderOffscreenPromoCanvas(item) {
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = 1080;
+    offCanvas.height = 1350;
+    drawPromoCanvas(offCanvas, {
+      tag: item.tag || 'ข้อใดถูกต้อง',
+      questionText: item.questionText || '',
+      choiceA: item.a || '',
+      choiceB: item.b || '',
+      choiceC: item.c || '',
+      choiceD: item.d || '',
+      mode: item.mode || 4,
+      theme: item.theme || 'watercolor-sky'
+    });
+    return offCanvas;
+  }
+
+  async function uploadPromoCanvasToSupabase(canvas, itemId) {
+    const client = window.sbClient;
+    if (!client || !canvas) return null;
+    try {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) return null;
+      const safeName = String(itemId || Date.now()).replace(/[^a-zA-Z0-9_-]/g, '_') + '.png';
+      const { error: upErr } = await client.storage
+        .from('promo-images')
+        .upload(safeName, blob, { upsert: true, contentType: 'image/png' });
+      if (upErr) {
+        console.warn('promo-images upload error:', upErr.message);
+        return null;
+      }
+      const { data: pubData } = client.storage.from('promo-images').getPublicUrl(safeName);
+      if (!pubData?.publicUrl) return null;
+      return `${pubData.publicUrl}?t=${Date.now()}`;
+    } catch (e) {
+      console.warn('uploadPromoCanvasToSupabase failed:', e);
+      return null;
+    }
+  }
+
+  async function upsertPromoItemToSupabase(item, canvasElement = null) {
+    const client = window.sbClient;
+    if (!client || !item) return { ok: false, error: 'Supabase not ready' };
+    try {
+      const targetCanvas = canvasElement || renderOffscreenPromoCanvas(item);
+      const uploadedUrl = await uploadPromoCanvasToSupabase(targetCanvas, item.id);
+      if (uploadedUrl) {
+        item.imageUrl = uploadedUrl;
+      }
+      const row = {
+        id: item.id,
+        batch_id: item.batchId || '',
+        batch_name: item.batchName || 'ชุดข้อสอบ',
+        batch_category: item.batchCategory || 'ทั่วไป',
+        q_id: String(item.qId ?? ''),
+        disp_no: String(item.dispNo ?? '1'),
+        question_text: item.questionText || '',
+        choice_a: item.a || '',
+        choice_b: item.b || '',
+        choice_c: item.c || '',
+        choice_d: item.d || '',
+        answer: item.answer || 'A',
+        explanation: item.explanation || '',
+        tag: item.tag || '',
+        mode: Number(item.mode || 4),
+        theme: item.theme || 'watercolor-sky',
+        custom_caption: item.customCaption || '',
+        custom_comment: item.customComment || '',
+        image_url: item.imageUrl || null,
+        status: item.isPromoted ? 'promoted' : 'pending',
+        fb_post_id: item.fbPostId || null,
+        queued_at: item.queuedAt || new Date().toISOString(),
+        promoted_at: item.promotedAt || null
+      };
+      const { error } = await client.from('promo_queue').upsert(row, { onConflict: 'id' });
+      if (error) {
+        console.warn('promo_queue upsert error:', error.message);
+        return { ok: false, error: error.message };
+      }
+      // Update localStorage copy with latest imageUrl
+      const queue = getPromoQueue();
+      const idx = queue.findIndex(x => x.id === item.id || (x.batchId === item.batchId && String(x.qId) === String(item.qId)));
+      if (idx >= 0) {
+        queue[idx] = item;
+        savePromoQueue(queue);
+      }
+      return { ok: true, imageUrl: item.imageUrl };
+    } catch (e) {
+      console.warn('upsertPromoItemToSupabase error:', e);
+      return { ok: false, error: e.message || String(e) };
+    }
+  }
+
+  async function deletePromoItemFromSupabase(id) {
+    const client = window.sbClient;
+    if (!client || !id) return;
+    try {
+      await client.from('promo_queue').delete().eq('id', id);
+      const safeName = String(id).replace(/[^a-zA-Z0-9_-]/g, '_') + '.png';
+      await client.storage.from('promo-images').remove([safeName]);
+    } catch (e) {
+      console.warn('deletePromoItemFromSupabase failed:', e);
+    }
+  }
+
+  async function syncPromoQueueFromSupabase(showFeedback = false) {
+    const client = window.sbClient;
+    const icon = document.getElementById('admin-promo-refresh-icon');
+    const statusBadge = document.getElementById('admin-promo-cloud-status');
+    if (!client) return;
+    if (icon) icon.classList.add('animate-spin');
+    try {
+      const { data, error } = await client
+        .from('promo_queue')
+        .select('*')
+        .order('queued_at', { ascending: false });
+
+      if (error) throw error;
+      hasSyncedPromoCloud = true;
+
+      if (Array.isArray(data)) {
+        const mapped = data.map(r => ({
+          id: r.id,
+          batchId: r.batch_id || '',
+          batchName: r.batch_name || 'ชุดข้อสอบ',
+          batchCategory: r.batch_category || 'ทั่วไป',
+          qId: r.q_id,
+          dispNo: r.disp_no || '1',
+          questionText: r.question_text || '',
+          a: r.choice_a || '',
+          b: r.choice_b || '',
+          c: r.choice_c || '',
+          d: r.choice_d || '',
+          answer: r.answer || 'A',
+          explanation: r.explanation || '',
+          tag: r.tag || '',
+          mode: r.mode || 4,
+          theme: r.theme || 'watercolor-sky',
+          customCaption: r.custom_caption || '',
+          customComment: r.custom_comment || '',
+          imageUrl: r.image_url || null,
+          fbPostId: r.fb_post_id || null,
+          queuedAt: r.queued_at,
+          isPromoted: r.status === 'promoted',
+          promotedAt: r.promoted_at
+        }));
+        savePromoQueue(mapped);
+        renderAdminPromoTab(true);
+        if (statusBadge) statusBadge.textContent = `● ซิงก์ Cloud แล้ว (${mapped.length})`;
+        if (showFeedback) showToast('success', `☁️ ซิงก์คิวจาก Cloud สำเร็จ (${mapped.length} ข้อ)`);
+      }
+    } catch (e) {
+      console.warn('syncPromoQueueFromSupabase error:', e);
+      if (statusBadge) statusBadge.textContent = '● โหมดออฟไลน์ (Local)';
+      if (showFeedback) showToast('error', 'ซิงก์ Cloud ไม่สำเร็จ: ' + (e.message || e));
+    } finally {
+      if (icon) icon.classList.remove('animate-spin');
+    }
+  }
 
   function getPromoQueue() {
     try {
@@ -14687,6 +14886,7 @@ if (typeof window !== 'undefined') {
       const queue = getPromoQueue();
       queue.unshift(newItem);
       savePromoQueue(queue);
+      upsertPromoItemToSupabase(newItem);
 
       if (typeof renderCurrentQuestion === 'function') renderCurrentQuestion();
 
@@ -14730,6 +14930,7 @@ if (typeof window !== 'undefined') {
           let queue = getPromoQueue();
           queue = queue.filter(x => !(x.batchId === bId && String(x.qId) === String(qId)));
           savePromoQueue(queue);
+          deletePromoItemFromSupabase(`${bId}::${qId}`);
           showToast('info', 'นำข้อนี้ออกจากคิวโปรโมทเรียบร้อยแล้ว');
           if (typeof renderCurrentQuestion === 'function') renderCurrentQuestion();
         }
@@ -14790,6 +14991,7 @@ if (typeof window !== 'undefined') {
       const queue = getPromoQueue();
       queue.unshift(newItem);
       savePromoQueue(queue);
+      upsertPromoItemToSupabase(newItem);
 
       if (typeof renderReviewForm === 'function') renderReviewForm(questions);
 
@@ -14832,6 +15034,7 @@ if (typeof window !== 'undefined') {
           let queue = getPromoQueue();
           queue = queue.filter(x => !(x.batchId === bId && String(x.qId) === String(qId)));
           savePromoQueue(queue);
+          deletePromoItemFromSupabase(`${bId}::${qId}`);
           showToast('info', 'นำข้อนี้ออกจากคิวโปรโมทเรียบร้อยแล้ว');
           if (typeof renderReviewForm === 'function') renderReviewForm(questions);
         }
@@ -14872,14 +15075,22 @@ if (typeof window !== 'undefined') {
         let queue = getPromoQueue();
         queue = queue.filter(x => !(x.batchId === batchId && String(x.qId) === String(qId)));
         savePromoQueue(queue);
+        deletePromoItemFromSupabase(`${batchId}::${qId}`);
         showToast('info', 'ลบข้อสอบออกจากคิวโปรโมทแล้ว');
-        renderAdminPromoTab();
+        renderAdminPromoTab(true);
       }
     });
   }
 
-  function renderAdminPromoTab() {
+  function renderAdminPromoTab(skipSync = false) {
     updatePromoBadgesCount();
+    const webhookInput = document.getElementById('admin-promo-webhook-url');
+    if (webhookInput && !webhookInput.value) {
+      webhookInput.value = getMakeWebhookUrl();
+    }
+    if (!skipSync && !hasSyncedPromoCloud && window.sbClient) {
+      syncPromoQueueFromSupabase(false);
+    }
     const queue = getPromoQueue();
     const pendingCount = queue.filter(x => !x.isPromoted).length;
     const doneCount = queue.filter(x => x.isPromoted).length;
@@ -15088,6 +15299,7 @@ if (typeof window !== 'undefined') {
       queue[idx] = activeStudioItem;
       savePromoQueue(queue);
     }
+    upsertPromoItemToSupabase(activeStudioItem, document.getElementById('admin-promo-canvas'));
     updateAdminStudioStatusBadge();
     showToast('info', activeStudioItem.isPromoted ? 'มาร์กข้อนี้ว่าโปรโมทแล้ว ✅' : 'เปลี่ยนสถานะเป็น: รอทำโปรโมท ⏳');
   }
@@ -15229,7 +15441,7 @@ if (typeof window !== 'undefined') {
     drawPromoCanvas(canvas, data);
   }
 
-  function saveAdminStudioEditsToQueue(silent = false) {
+  async function saveAdminStudioEditsToQueue(silent = false) {
     if (!activeStudioItem) return;
     activeStudioItem.tag = document.getElementById('admin-studio-tag-input')?.value || activeStudioItem.tag;
     activeStudioItem.questionText = document.getElementById('admin-studio-q-input')?.value || activeStudioItem.questionText;
@@ -15247,7 +15459,107 @@ if (typeof window !== 'undefined') {
       queue[idx] = activeStudioItem;
       savePromoQueue(queue);
     }
-    if (!silent) showToast('success', '💾 บันทึกการแก้ไขลงคิวโปรโมทเรียบร้อยแล้ว!');
+    const canvas = document.getElementById('admin-promo-canvas');
+    if (!silent) showToast('info', '☁️ กำลังอัปโหลดรูปและบันทึกลงคิว Cloud...');
+    const res = await upsertPromoItemToSupabase(activeStudioItem, canvas);
+    if (!silent) {
+      if (res.ok) {
+        showToast('success', '💾 บันทึก & อัปโหลดรูปขึ้นคิว Cloud เรียบร้อยแล้ว!');
+      } else {
+        showToast('warning', 'บันทึกในเครื่องแล้ว แต่ซิงก์ Cloud ไม่สำเร็จ: ' + (res.error || ''));
+      }
+    }
+  }
+
+  async function publishPromoItemNow() {
+    if (!activeStudioItem) return;
+    let webhookUrl = getMakeWebhookUrl();
+
+    if (!webhookUrl) {
+      const promptRes = await Swal.fire({
+        title: 'เชื่อมต่อ Make.com Instant Webhook',
+        html: '<p class="text-xs text-slate-600 mb-2">วางลิงก์ Webhook จาก Make.com เพื่อใช้ปุ่มโพสต์ลงเพจ Facebook ทันที</p>',
+        input: 'url',
+        inputPlaceholder: 'https://hook.eu2.make.com/...',
+        showCancelButton: true,
+        confirmButtonText: 'บันทึกและโพสต์ทันที',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#1877F2',
+        inputValidator: (val) => {
+          if (!val || !/^https?:\/\//i.test(val.trim())) {
+            return 'กรุณากรอก URL ที่ถูกต้อง (ขึ้นต้นด้วย https://)';
+          }
+        }
+      });
+      if (!promptRes.isConfirmed) return;
+      webhookUrl = promptRes.value.trim();
+      localStorage.setItem(PROMO_WEBHOOK_KEY, webhookUrl);
+      const urlInput = document.getElementById('admin-promo-webhook-url');
+      if (urlInput) urlInput.value = webhookUrl;
+    }
+
+    Swal.fire({
+      title: '🚀 กำลังอัปโหลดรูปและส่งโพสต์ขึ้น Facebook...',
+      html: '<p class="text-xs text-slate-500">ระบบกำลังเรนเดอร์รูป 1080x1350 -> ส่งเข้า Make.com -> โพสต์รูป + แคปชัน + คอมเมนต์เฉลย</p>',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      await saveAdminStudioEditsToQueue(true);
+      const canvas = document.getElementById('admin-promo-canvas');
+      const syncRes = await upsertPromoItemToSupabase(activeStudioItem, canvas);
+      if (!syncRes.ok || !activeStudioItem.imageUrl) {
+        throw new Error(syncRes.error || 'ไม่สามารถอัปโหลดรูปภาพขึ้น Supabase Storage ได้');
+      }
+
+      const payload = {
+        id: activeStudioItem.id,
+        batch_id: activeStudioItem.batchId,
+        batch_name: activeStudioItem.batchName,
+        q_id: activeStudioItem.qId,
+        image_url: activeStudioItem.imageUrl,
+        caption: activeStudioItem.customCaption || '',
+        first_comment: activeStudioItem.customComment || ''
+      };
+
+      const resp = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => '');
+        throw new Error(`Make.com ตอบกลับ HTTP ${resp.status} ${errText}`);
+      }
+
+      activeStudioItem.isPromoted = true;
+      activeStudioItem.promotedAt = new Date().toISOString();
+
+      let queue = getPromoQueue();
+      const idx = queue.findIndex(x => x.batchId === activeStudioItem.batchId && String(x.qId) === String(activeStudioItem.qId));
+      if (idx >= 0) {
+        queue[idx] = activeStudioItem;
+        savePromoQueue(queue);
+      }
+      await upsertPromoItemToSupabase(activeStudioItem, canvas);
+      updateAdminStudioStatusBadge();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'ส่งโพสต์ขึ้น Facebook สำเร็จ! 🎉',
+        html: '<p class="text-xs text-slate-600">Make.com กำลังโพสต์รูป + แคปชัน + คอมเมนต์เฉลยลงเพจ <b>"แจกข้อสอบจนกว่าจะครบแสนข้อ"</b> ให้ทันทีครับ</p>',
+        confirmButtonColor: '#4f46e5'
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'โพสต์ไม่สำเร็จ',
+        text: err.message || String(err),
+        confirmButtonColor: '#ef4444'
+      });
+    }
   }
 
   function downloadAdminStudioPng() {
@@ -15265,6 +15577,7 @@ if (typeof window !== 'undefined') {
       queue[idx] = activeStudioItem;
       savePromoQueue(queue);
     }
+    upsertPromoItemToSupabase(activeStudioItem, document.getElementById('admin-promo-canvas'));
     updateAdminStudioStatusBadge();
 
     const dataUrl = canvas.toDataURL('image/png');
@@ -15780,6 +16093,9 @@ if (typeof window !== 'undefined') {
   window.copyAdminStudioComment = copyAdminStudioComment;
   window.toggleCurrentStudioPromotedStatus = toggleCurrentStudioPromotedStatus;
   window.saveAdminStudioEditsToQueue = saveAdminStudioEditsToQueue;
+  window.syncPromoQueueFromSupabase = syncPromoQueueFromSupabase;
+  window.saveMakeWebhookUrl = saveMakeWebhookUrl;
+  window.publishPromoItemNow = publishPromoItemNow;
   window.getQuestionPromoStatus = getQuestionPromoStatus;
   window.openPromoModalFromReview = openPromoModalFromReview;
   window.openPromoModalFromExam = openPromoModalFromExam;
