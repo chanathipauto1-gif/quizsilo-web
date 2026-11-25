@@ -431,6 +431,114 @@ module.exports = async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
+    // Branch 3B: Bulk Folder & Bulk Delete Operations
+    // -------------------------------------------------------------
+    if (flag === 'bulk_set_folder') {
+      const { batchIds, scope, folderName, userProfile } = body;
+      if (!Array.isArray(batchIds) || batchIds.length === 0) {
+        return res.status(400).json({ error: 'Missing batchIds' });
+      }
+      const isPublicScope = scope === 'public';
+      const actorRole = userProfile?.role || '';
+      const actorId = userProfile?.uuid || '';
+      const actorEmail = (userProfile?.email || '').toLowerCase();
+      const isAdmin = actorRole === 'admin' || actorEmail === 'chanathipauto1@gmail.com';
+
+      if (isPublicScope && !isAdmin) {
+        return res.status(403).json({ error: 'เฉพาะ Super Admin เท่านั้นที่สามารถจัดโฟลเดอร์คลังกลางได้' });
+      }
+
+      let allowedIds = batchIds.filter(Boolean);
+      if (!isPublicScope && !isAdmin) {
+        if (!actorId) return res.status(403).json({ error: 'กรุณาเข้าสู่ระบบก่อนจัดการโฟลเดอร์ส่วนตัว' });
+        const chkRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${allowedIds.map(id => encodeURIComponent(id)).join(',')})&select=id,user_id`, { headers });
+        const chkRows = await chkRes.json();
+        allowedIds = (Array.isArray(chkRows) ? chkRows : []).filter(r => r.user_id === actorId).map(r => r.id);
+      }
+      if (allowedIds.length === 0) {
+        return res.status(403).json({ error: 'ไม่มีชุดข้อสอบที่ได้รับสิทธิ์แก้ไข' });
+      }
+
+      const colName = isPublicScope ? 'public_folder' : 'personal_folder';
+      const cleanFolder = (folderName && String(folderName).trim()) ? String(folderName).trim() : null;
+      const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${allowedIds.map(id => encodeURIComponent(id)).join(',')})`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ [colName]: cleanFolder, updated_at: new Date().toISOString() })
+      });
+      if (!patchRes.ok) {
+        const errTxt = await patchRes.text();
+        return res.status(500).json({ success: false, error: errTxt });
+      }
+      return res.status(200).json({ success: true, updatedCount: allowedIds.length, folderName: cleanFolder, scope });
+    }
+
+    if (flag === 'bulk_delete_batches') {
+      const { batchIds, userProfile } = body;
+      if (!Array.isArray(batchIds) || batchIds.length === 0) {
+        return res.status(400).json({ error: 'Missing batchIds' });
+      }
+      const actorRole = userProfile?.role || '';
+      const actorId = userProfile?.uuid || '';
+      const actorEmail = (userProfile?.email || '').toLowerCase();
+      const isAdmin = actorRole === 'admin' || actorEmail === 'chanathipauto1@gmail.com';
+
+      const inList = batchIds.filter(Boolean).map(id => encodeURIComponent(id)).join(',');
+      const chkRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${inList})&select=id,user_id,batch_name,total_questions`, { headers });
+      const chkRows = await chkRes.json();
+      const targetRows = (Array.isArray(chkRows) ? chkRows : []).filter(r => isAdmin || (actorId && r.user_id === actorId));
+
+      if (targetRows.length === 0) {
+        return res.status(403).json({ error: 'ไม่มีสิทธิ์ลบชุดข้อสอบที่เลือก' });
+      }
+
+      const delIdsParam = targetRows.map(r => encodeURIComponent(r.id)).join(',');
+      await fetch(`${SUPABASE_URL}/rest/v1/questions?batch_id=in.(${delIdsParam})`, { method: 'DELETE', headers });
+      await fetch(`${SUPABASE_URL}/rest/v1/exam_attempts?batch_id=in.(${delIdsParam})`, { method: 'DELETE', headers });
+      await fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${delIdsParam})`, { method: 'DELETE', headers });
+
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: actorId || null,
+            batch_id: targetRows[0].id,
+            questions_scanned: targetRows.reduce((s, r) => s + (r.total_questions || 0), 0),
+            status: 'LOG: ' + JSON.stringify({
+              action: 'BULK_DELETE_BATCHES',
+              user_name: userProfile?.nickname || userProfile?.name || 'ผู้ใช้',
+              user_avatar: userProfile?.avatar || '👤',
+              user_role: isAdmin ? 'admin' : 'member',
+              batch_name: `ลบ ${targetRows.length} ชุดข้อสอบ`,
+              details: targetRows.map(r => r.batch_name).slice(0, 5).join(', '),
+              timestamp: new Date().toISOString()
+            })
+          })
+        });
+      } catch (le) {}
+
+      return res.status(200).json({ success: true, deletedIds: targetRows.map(r => r.id), deletedCount: targetRows.length });
+    }
+
+    if (flag === 'bulk_delete_attempts') {
+      const { attemptIds, userId } = body;
+      if (!Array.isArray(attemptIds) || attemptIds.length === 0 || !userId) {
+        return res.status(400).json({ error: 'Missing attemptIds or userId' });
+      }
+      const inList = attemptIds.filter(Boolean).map(id => encodeURIComponent(id)).join(',');
+      const delRes = await fetch(`${SUPABASE_URL}/rest/v1/exam_attempts?id=in.(${inList})&user_id=eq.${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+        headers
+      });
+      if (!delRes.ok) {
+        const errTxt = await delRes.text();
+        return res.status(500).json({ success: false, error: errTxt });
+      }
+      return res.status(200).json({ success: true, deletedCount: attemptIds.length });
+    }
+
+    // -------------------------------------------------------------
     // For other operations, batchId is required
     // -------------------------------------------------------------
     if (!batchId) return res.status(400).json({ error: 'Missing batchId' });

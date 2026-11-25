@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.02.34</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.02.59</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2062,6 +2062,24 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
+      <!-- สลับมุมมอง โฟลเดอร์ / ตาราง -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold shrink-0">
+        <button type="button" id="lib-view-toggle-folder" onclick="setLibraryViewMode('folder')" class="px-2.5 py-1.5 rounded-lg bg-white text-brand-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer">
+          <i data-lucide="folder" class="w-3.5 h-3.5"></i>
+          <span>โฟลเดอร์</span>
+        </button>
+        <button type="button" id="lib-view-toggle-table" onclick="setLibraryViewMode('table')" class="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer">
+          <i data-lucide="list" class="w-3.5 h-3.5"></i>
+          <span>ตาราง</span>
+        </button>
+      </div>
+
+      <!-- ปุ่มสร้างโฟลเดอร์กลาง (เฉพาะ Super Admin) -->
+      <button type="button" id="btn-lib-create-public-folder" onclick="createPublicFolderModal()" class="hidden inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0">
+        <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+        <span>สร้างโฟลเดอร์กลาง</span>
+      </button>
+
       <!-- ปุ่มสุ่มชุดข้อสอบประจำหน้าคลังกลาง -->
       <button onclick="openCustomQuizModal()" 
         class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs sm:text-sm font-extrabold shadow-xs hover:shadow-md transition-all cursor-pointer shrink-0">
@@ -2098,13 +2116,57 @@
     </div>
   </div>
 
+  <!-- Folder Breadcrumb Bar -->
+  <div id="lib-folder-breadcrumb" class="hidden bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700">
+      <button type="button" onclick="closePublicFolder()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        <span>กลับหน้าโฟลเดอร์</span>
+      </button>
+      <span class="text-slate-300">/</span>
+      <span class="inline-flex items-center gap-1.5 text-brand-700">
+        <i data-lucide="folder-open" class="w-4 h-4"></i>
+        <span id="lib-folder-breadcrumb-name">ชื่อโฟลเดอร์</span>
+      </span>
+    </div>
+    <span id="lib-folder-breadcrumb-count" class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">0 ชุด</span>
+  </div>
+
+  <!-- Admin Bulk Action Bar -->
+  <div id="lib-bulk-bar" class="hidden bg-indigo-950 text-white px-4 py-3 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2 text-xs sm:text-sm font-bold">
+      <span class="px-2.5 py-1 rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-indigo-100">
+        เลือกแล้ว <span id="lib-bulk-count">0</span> ชุด
+      </span>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" onclick="bulkMoveLibBatches()" class="px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+        <i data-lucide="folder-input" class="w-3.5 h-3.5"></i>
+        <span>ย้ายเข้าโฟลเดอร์</span>
+      </button>
+      <button type="button" onclick="bulkDeleteLibBatches()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        <span>ลบชุดที่เลือก</span>
+      </button>
+      <button type="button" onclick="clearLibSelection()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer">
+        ยกเลิก
+      </button>
+    </div>
+  </div>
+
+  <!-- Folder Grid View -->
+  <div id="lib-folder-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+
   <!-- Table & Cards View -->
-  <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+  <div id="lib-table-container" class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
     <!-- Desktop & Tablet View: Table -->
     <div class="hidden sm:block overflow-x-auto custom-scrollbar">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-50/80 border-b border-slate-200/80 text-slate-600 text-xs font-bold whitespace-nowrap">
+            <th id="lib-th-select" class="hidden py-3 px-2.5 w-10 text-center">
+              <input type="checkbox" id="lib-select-all" onchange="toggleLibSelectAll(this.checked)" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer" title="เลือกทั้งหมดในหน้านี้">
+            </th>
             <th class="py-3 px-2.5 w-8 text-center">#</th>
             <th class="py-3 px-3 pl-10 min-w-[220px]">ชื่อชุดข้อสอบ</th>
             <th class="py-3 px-2.5 w-20 text-center">เจ้าของ</th>
@@ -2969,7 +3031,25 @@
         </h2>
         <p class="text-xs text-slate-400 mt-0.5">ชุดข้อสอบที่คุณนำเข้าสู่ระบบ ตรวจสอบเฉลยให้ครบ 100% เพื่อเผยแพร่สู่คลังกลาง</p>
       </div>
-      <div class="flex items-center gap-2 self-start sm:self-auto">
+      <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+          <button type="button" id="my-view-toggle-folder" onclick="setMyLibraryViewMode('folder')" class="px-2.5 py-1 rounded-lg bg-white text-indigo-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer">
+            <i data-lucide="folder" class="w-3.5 h-3.5"></i>
+            <span>โฟลเดอร์</span>
+          </button>
+          <button type="button" id="my-view-toggle-table" onclick="setMyLibraryViewMode('table')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer">
+            <i data-lucide="list" class="w-3.5 h-3.5"></i>
+            <span>ตาราง</span>
+          </button>
+        </div>
+        <div class="relative">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="dash-my-search" oninput="renderMyBatches()" placeholder="ค้นหา..." class="pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-32 sm:w-40 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+        </div>
+        <button type="button" onclick="createMyFolderModal()" class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl transition-all cursor-pointer">
+          <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+          <span>สร้างโฟลเดอร์</span>
+        </button>
         <span id="dash-my-batches-count" class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/60 px-3 py-1.5 rounded-full">0 รายการ</span>
         <button onclick="switchPage('upload')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -2978,11 +3058,53 @@
       </div>
     </div>
 
+    <!-- Personal Folder Breadcrumb -->
+    <div id="dash-my-folder-breadcrumb" class="hidden px-5 py-3 bg-slate-50/80 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+        <button type="button" onclick="closeMyFolder()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>กลับหน้าโฟลเดอร์</span>
+        </button>
+        <span class="text-slate-300">/</span>
+        <span class="inline-flex items-center gap-1.5 text-indigo-700">
+          <i data-lucide="folder-open" class="w-4 h-4"></i>
+          <span id="dash-my-folder-breadcrumb-name">โฟลเดอร์</span>
+        </span>
+      </div>
+      <span id="dash-my-folder-breadcrumb-count" class="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-full">0 ชุด</span>
+    </div>
+
+    <!-- Personal Library Bulk Action Bar -->
+    <div id="dash-my-bulk-bar" class="hidden px-5 py-3 bg-indigo-950 text-white flex flex-wrap items-center justify-between gap-3">
+      <span class="px-2.5 py-1 rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-xs font-bold text-indigo-100">
+        เลือกแล้ว <span id="dash-my-bulk-count">0</span> ชุด
+      </span>
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="bulkMoveMyBatches()" class="px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="folder-input" class="w-3.5 h-3.5"></i>
+          <span>ย้ายเข้าโฟลเดอร์</span>
+        </button>
+        <button type="button" onclick="bulkDeleteMyBatches()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>ลบชุดที่เลือก</span>
+        </button>
+        <button type="button" onclick="clearMySelection()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+
+    <!-- Personal Folder Grid View -->
+    <div id="dash-my-folder-grid" class="hidden p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+
     <!-- My Batches Table -->
-    <div class="overflow-x-auto custom-scrollbar">
+    <div id="dash-my-table-container" class="overflow-x-auto custom-scrollbar">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 text-xs font-bold whitespace-nowrap">
+            <th class="py-3 px-3 w-10 text-center">
+              <input type="checkbox" id="my-select-all" onchange="toggleMySelectAll(this.checked)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="เลือกทั้งหมด">
+            </th>
             <th class="py-3 px-4 w-12 text-center">#</th>
             <th class="py-3 px-4 min-w-[220px]">ชื่อชุดข้อสอบ</th>
             <th class="py-3 px-4 w-36 text-center">หมวดหมู่วิชา</th>
@@ -3049,11 +3171,30 @@
       </div>
     </div>
 
+    <!-- Attempts Bulk Action Bar -->
+    <div id="dash-attempts-bulk-bar" class="hidden px-5 py-3 bg-rose-950 text-white flex flex-wrap items-center justify-between gap-3">
+      <span class="px-2.5 py-1 rounded-xl bg-rose-500/30 border border-rose-400/40 text-xs font-bold text-rose-100">
+        เลือกประวัติแล้ว <span id="dash-attempts-bulk-count">0</span> รายการ
+      </span>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="bulkDeleteDashboardAttempts()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>ลบประวัติที่เลือก</span>
+        </button>
+        <button type="button" onclick="clearAttemptSelection()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+
     <!-- Attempts Table -->
     <div class="overflow-x-auto custom-scrollbar">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 text-xs font-bold whitespace-nowrap">
+            <th class="py-3 px-3 w-10 text-center">
+              <input type="checkbox" id="attempts-select-all" onchange="toggleAttemptsSelectAll(this.checked)" class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer" title="เลือกทั้งหมด">
+            </th>
             <th class="py-3 px-4 w-12 text-center">#</th>
             <th class="py-3 px-4 min-w-[220px]">ชื่อชุดข้อสอบ</th>
             <th class="py-3 px-4 w-36 text-center">วันที่ทำ</th>
@@ -5861,6 +6002,8 @@ const BatchesQuestionsService = {
           wrongCount: myWrong,
           scorePercent: myScorePercent,
           batchCategory: b.batch_category,
+          publicFolder: b.public_folder || null,
+          personalFolder: b.personal_folder || null,
           sourceSummary: 'Supabase Cloud',
           fileType: b.file_type || 'DOCUMENT',
           savedState: '',
@@ -6233,6 +6376,67 @@ const BatchesQuestionsService = {
       throw new Error(apiRes?.error || 'Failed to submit rating');
     } catch (err) {
       console.error('submitBatchRating error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async bulkSetBatchFolder(batchIds, scope, folderName, userProfile) {
+    try {
+      const activeProfile = getActiveProfile(userProfile);
+      const apiRes = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'bulk_set_folder',
+          batchIds,
+          scope,
+          folderName,
+          userProfile: activeProfile
+        }
+      });
+      if (apiRes?.success) return notifySuccess(this, apiRes);
+      throw new Error(apiRes?.error || 'Failed to set folder');
+    } catch (err) {
+      console.error('bulkSetBatchFolder error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async bulkDeleteBatches(batchIds, userProfile) {
+    try {
+      const activeProfile = getActiveProfile(userProfile);
+      const apiRes = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'bulk_delete_batches',
+          batchIds,
+          userProfile: activeProfile
+        }
+      });
+      if (apiRes?.success) return notifySuccess(this, apiRes);
+      throw new Error(apiRes?.error || 'Failed to bulk delete batches');
+    } catch (err) {
+      console.error('bulkDeleteBatches error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
+  async bulkDeleteUserAttempts(attemptIds, userProfile) {
+    try {
+      const activeProfile = getActiveProfile(userProfile);
+      const userId = resolveUserId(activeProfile) || currentSupabaseUser?.id;
+      if (!userId) throw new Error('User not authenticated');
+      const apiRes = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'bulk_delete_attempts',
+          attemptIds,
+          userId
+        }
+      });
+      if (apiRes?.success) return notifySuccess(this, apiRes);
+      throw new Error(apiRes?.error || 'Failed to bulk delete attempts');
+    } catch (err) {
+      console.error('bulkDeleteUserAttempts error:', err);
       return notifyFailure(this, err);
     }
   }
@@ -7660,6 +7864,9 @@ const adapterImpl = {
   getFilePreview: BatchesQuestionsService.getFilePreview,
   saveReviewedQuestions: BatchesQuestionsService.saveReviewedQuestions,
   deleteSingleQuestion: BatchesQuestionsService.deleteSingleQuestion,
+  bulkSetBatchFolder: BatchesQuestionsService.bulkSetBatchFolder,
+  bulkDeleteBatches: BatchesQuestionsService.bulkDeleteBatches,
+  bulkDeleteUserAttempts: BatchesQuestionsService.bulkDeleteUserAttempts,
   toggleBatchFlag: BatchesQuestionsService.toggleBatchFlag,
   submitBatchRating: BatchesQuestionsService.submitBatchRating,
 
@@ -8946,6 +9153,80 @@ if (typeof window !== 'undefined') {
     filterDashboardAttempts();
   }
 
+  let selectedAttemptIds = new Set();
+  let lastVisibleAttempts = [];
+
+  function updateAttemptsBulkBar() {
+    const bar = document.getElementById('dash-attempts-bulk-bar');
+    const cnt = document.getElementById('dash-attempts-bulk-count');
+    if (bar) {
+      if (selectedAttemptIds.size > 0) {
+        bar.classList.remove('hidden');
+        if (cnt) cnt.textContent = selectedAttemptIds.size;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+    const sa = document.getElementById('attempts-select-all');
+    if (sa && lastVisibleAttempts.length > 0) {
+      sa.checked = lastVisibleAttempts.every(a => a.id && selectedAttemptIds.has(String(a.id)));
+    } else if (sa) {
+      sa.checked = false;
+    }
+  }
+
+  function toggleAttemptSelect(attemptId, checked) {
+    if (!attemptId) return;
+    const key = String(attemptId);
+    if (checked) selectedAttemptIds.add(key);
+    else selectedAttemptIds.delete(key);
+    updateAttemptsBulkBar();
+  }
+
+  function toggleAttemptsSelectAll(checked) {
+    if (checked) {
+      lastVisibleAttempts.forEach(a => { if (a.id) selectedAttemptIds.add(String(a.id)); });
+    } else {
+      selectedAttemptIds.clear();
+    }
+    filterDashboardAttempts();
+  }
+
+  function clearAttemptSelection() {
+    selectedAttemptIds.clear();
+    updateAttemptsBulkBar();
+    document.querySelectorAll('.attempt-row-checkbox').forEach(cb => { cb.checked = false; });
+    const sa = document.getElementById('attempts-select-all');
+    if (sa) sa.checked = false;
+  }
+
+  function bulkDeleteDashboardAttempts() {
+    const ids = [...selectedAttemptIds];
+    if (ids.length === 0) return;
+    Swal.fire({
+      title: `ลบประวัติการทำ ${ids.length} รายการที่เลือก?`,
+      text: 'สถิติและคะแนนของรายการที่เลือกจะถูกลบถาวร ไม่สามารถกู้คืนได้',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `ลบ ${ids.length} รายการ`,
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      Swal.fire({ title: `กำลังลบประวัติ ${ids.length} รายการ...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          currentAttemptsData = (currentAttemptsData || []).filter(a => !ids.includes(String(a.id)));
+          clearAttemptSelection();
+          Swal.close();
+          showToast('success', `ลบประวัติการทำ ${ids.length} รายการเรียบร้อยแล้ว`);
+          filterDashboardAttempts();
+        })
+        .withFailureHandler(err => Swal.fire('ลบไม่สำเร็จ', err.message || err, 'error'))
+        .bulkDeleteUserAttempts(ids, currentUserProfile);
+    });
+  }
+
   function filterDashboardAttempts() {
     const searchInput = document.getElementById('dash-attempt-search');
     const sortSelect = document.getElementById('dash-attempt-sort');
@@ -8974,14 +9255,18 @@ if (typeof window !== 'undefined') {
     });
 
     if (countBadge) countBadge.textContent = filtered.length + ' รายการ';
+    lastVisibleAttempts = filtered;
 
     if (filtered.length === 0) {
       tbody.innerHTML = '';
       if (emptyState) emptyState.classList.remove('hidden');
+      updateAttemptsBulkBar();
     } else {
       if (emptyState) emptyState.classList.add('hidden');
       let rowsHtml = '';
       filtered.forEach((item, idx) => {
+        const attId = item.id ? String(item.id) : '';
+        const isChecked = attId && selectedAttemptIds.has(attId);
         const isPass = parseFloat(item.percent) >= 50;
         const scoreBadgeCls = isPass 
           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
@@ -8993,6 +9278,9 @@ if (typeof window !== 'undefined') {
 
         rowsHtml += `
           <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-3 px-3 text-center">
+              ${attId ? `<input type="checkbox" class="attempt-row-checkbox w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer" ${isChecked ? 'checked' : ''} onchange="toggleAttemptSelect('${attId}', this.checked)">` : ''}
+            </td>
             <td class="py-3 px-4 text-center font-medium text-slate-400 text-xs">${idx + 1}</td>
             <td class="py-3 px-4 font-bold text-slate-800">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -9026,6 +9314,7 @@ if (typeof window !== 'undefined') {
       });
       tbody.innerHTML = rowsHtml;
       if (typeof lucide !== 'undefined') lucide.createIcons();
+      updateAttemptsBulkBar();
     }
   }
 
@@ -9105,6 +9394,217 @@ if (typeof window !== 'undefined') {
       .deleteUserExamAttempt(attemptId, batchId, currentUserProfile);
   }
 
+  let myLibraryViewMode = localStorage.getItem('quizsilo_my_view_mode') || 'folder';
+  let activePersonalFolder = null;
+  let selectedMyBatchIds = new Set();
+  let lastVisibleMyBatches = [];
+  const CUSTOM_PERSONAL_FOLDERS_KEY = 'quizsilo_custom_personal_folders';
+  const UNGROUPED_MY_FOLDER = '📂 ยังไม่ได้จัดโฟลเดอร์';
+
+  function getCustomPersonalFolders() {
+    try { return JSON.parse(localStorage.getItem(CUSTOM_PERSONAL_FOLDERS_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function saveCustomPersonalFolders(list) {
+    try { localStorage.setItem(CUSTOM_PERSONAL_FOLDERS_KEY, JSON.stringify([...new Set(list.filter(Boolean))])); } catch(e) {}
+  }
+
+  function getEffectivePersonalFolder(b) {
+    return (b && b.personalFolder && String(b.personalFolder).trim()) ? String(b.personalFolder).trim() : UNGROUPED_MY_FOLDER;
+  }
+
+  function setMyLibraryViewMode(mode) {
+    myLibraryViewMode = mode === 'table' ? 'table' : 'folder';
+    localStorage.setItem('quizsilo_my_view_mode', myLibraryViewMode);
+    if (myLibraryViewMode === 'table') activePersonalFolder = null;
+    clearMySelection();
+    renderMyBatches();
+  }
+
+  function openMyFolder(name) {
+    activePersonalFolder = name;
+    clearMySelection();
+    renderMyBatches();
+  }
+
+  function closeMyFolder() {
+    activePersonalFolder = null;
+    clearMySelection();
+    renderMyBatches();
+  }
+
+  function updateMyBulkBar() {
+    const bar = document.getElementById('dash-my-bulk-bar');
+    const cnt = document.getElementById('dash-my-bulk-count');
+    if (bar) {
+      if (selectedMyBatchIds.size > 0) {
+        bar.classList.remove('hidden');
+        if (cnt) cnt.textContent = selectedMyBatchIds.size;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+    const sa = document.getElementById('my-select-all');
+    if (sa && lastVisibleMyBatches.length > 0) {
+      sa.checked = lastVisibleMyBatches.every(b => selectedMyBatchIds.has(b.batchId));
+    } else if (sa) {
+      sa.checked = false;
+    }
+  }
+
+  function toggleMyBatchSelect(batchId, checked) {
+    if (checked) selectedMyBatchIds.add(batchId);
+    else selectedMyBatchIds.delete(batchId);
+    updateMyBulkBar();
+  }
+
+  function toggleMySelectAll(checked) {
+    if (checked) {
+      lastVisibleMyBatches.forEach(b => selectedMyBatchIds.add(b.batchId));
+    } else {
+      lastVisibleMyBatches.forEach(b => selectedMyBatchIds.delete(b.batchId));
+    }
+    renderMyBatches();
+  }
+
+  function clearMySelection() {
+    selectedMyBatchIds.clear();
+    updateMyBulkBar();
+    document.querySelectorAll('.my-row-checkbox').forEach(cb => { cb.checked = false; });
+    const sa = document.getElementById('my-select-all');
+    if (sa) sa.checked = false;
+  }
+
+  function createMyFolderModal() {
+    Swal.fire({
+      title: '📁 สร้างโฟลเดอร์ส่วนตัวใหม่',
+      input: 'text',
+      inputPlaceholder: 'เช่น ติวภาค ก, ชุดที่ต้องทบทวน, วิชาเอก',
+      showCancelButton: true,
+      confirmButtonText: 'สร้างโฟลเดอร์',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#4f46e5',
+      inputValidator: v => (!v || !v.trim()) ? 'กรุณาตั้งชื่อโฟลเดอร์' : null
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      const name = res.value.trim();
+      const list = getCustomPersonalFolders();
+      list.push(name);
+      saveCustomPersonalFolders(list);
+      showToast('success', `สร้างโฟลเดอร์ "${name}" เรียบร้อยแล้ว`);
+      myLibraryViewMode = 'folder';
+      activePersonalFolder = null;
+      renderMyBatches();
+    });
+  }
+
+  function renameMyFolderModal(oldName) {
+    if (oldName === UNGROUPED_MY_FOLDER) return;
+    Swal.fire({
+      title: `✏️ เปลี่ยนชื่อโฟลเดอร์ "${oldName}"`,
+      input: 'text',
+      inputValue: oldName,
+      showCancelButton: true,
+      confirmButtonText: 'บันทึกชื่อใหม่',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#4f46e5',
+      inputValidator: v => (!v || !v.trim()) ? 'กรุณาระบุชื่อโฟลเดอร์' : null
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      const newName = res.value.trim();
+      if (newName === oldName) return;
+      const targets = (allBatches || []).filter(b => isOwner(b) && b.personalFolder === oldName).map(b => b.batchId);
+      const list = getCustomPersonalFolders().filter(n => n !== oldName);
+      list.push(newName);
+      saveCustomPersonalFolders(list);
+
+      if (targets.length === 0) {
+        if (activePersonalFolder === oldName) activePersonalFolder = newName;
+        renderMyBatches();
+        showToast('success', `เปลี่ยนชื่อเป็น "${newName}" แล้ว`);
+        return;
+      }
+      Swal.fire({ title: 'กำลังเปลี่ยนชื่อโฟลเดอร์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches.forEach(b => { if (targets.includes(b.batchId)) b.personalFolder = newName; });
+          if (activePersonalFolder === oldName) activePersonalFolder = newName;
+          Swal.close();
+          showToast('success', `เปลี่ยนชื่อเป็น "${newName}" เรียบร้อยแล้ว`);
+          renderMyBatches();
+        })
+        .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+        .bulkSetBatchFolder(targets, 'personal', newName, currentUserProfile);
+    });
+  }
+
+  function deleteMyFolderModal(folderName) {
+    if (folderName === UNGROUPED_MY_FOLDER) return;
+    const targets = (allBatches || []).filter(b => isOwner(b) && b.personalFolder === folderName).map(b => b.batchId);
+    Swal.fire({
+      title: `ลบโฟลเดอร์ "${folderName}"?`,
+      html: targets.length > 0
+        ? `ชุดข้อสอบ ${targets.length} ชุดข้างในจะไม่ถูกลบ แต่จะถูกย้ายกลับไปที่ "${UNGROUPED_MY_FOLDER}"`
+        : 'คุณต้องการลบโฟลเดอร์นี้ใช่หรือไม่?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบโฟลเดอร์',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      saveCustomPersonalFolders(getCustomPersonalFolders().filter(n => n !== folderName));
+      if (targets.length === 0) {
+        if (activePersonalFolder === folderName) activePersonalFolder = null;
+        renderMyBatches();
+        showToast('info', 'ลบโฟลเดอร์เรียบร้อยแล้ว');
+        return;
+      }
+      Swal.fire({ title: 'กำลังย้ายชุดข้อสอบออก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches.forEach(b => { if (targets.includes(b.batchId)) b.personalFolder = null; });
+          if (activePersonalFolder === folderName) activePersonalFolder = null;
+          Swal.close();
+          showToast('info', 'ลบโฟลเดอร์เรียบร้อยแล้ว');
+          renderMyBatches();
+        })
+        .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+        .bulkSetBatchFolder(targets, 'personal', null, currentUserProfile);
+    });
+  }
+
+  function bulkMoveMyBatches() {
+    openMoveFolderModal([...selectedMyBatchIds], 'personal');
+  }
+
+  function bulkDeleteMyBatches() {
+    const ids = [...selectedMyBatchIds];
+    if (ids.length === 0) return;
+    Swal.fire({
+      title: `ลบชุดข้อสอบของฉัน ${ids.length} ชุดที่เลือก?`,
+      text: 'ข้อมูลคำถามและประวัติการทำของชุดที่เลือกจะถูกลบถาวร ไม่สามารถกู้คืนได้!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `ลบ ${ids.length} ชุดถาวร`,
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      Swal.fire({ title: `กำลังลบ ${ids.length} ชุดข้อสอบ...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches = (allBatches || []).filter(b => !ids.includes(b.batchId));
+          clearMySelection();
+          Swal.close();
+          showToast('success', `ลบชุดข้อสอบ ${ids.length} ชุดเรียบร้อยแล้ว`);
+          renderMyBatches();
+          filterBatches();
+        })
+        .withFailureHandler(err => Swal.fire('ลบไม่สำเร็จ', err.message || err, 'error'))
+        .bulkDeleteBatches(ids, currentUserProfile);
+    });
+  }
+
   function renderMyBatches() {
     const tbody = document.getElementById('dash-my-batches-table-body');
     const emptyState = document.getElementById('dash-my-batches-empty-state');
@@ -9112,23 +9612,122 @@ if (typeof window !== 'undefined') {
     if (!tbody) return;
 
     const isAdmin = currentUserProfile && currentUserProfile.role === 'admin';
-    const myBatches = (allBatches || []).filter(b => {
-      return isOwner(b);
-    });
+    const kw = (document.getElementById('dash-my-search')?.value || '').toLowerCase().trim();
+    const myBatchesAll = (allBatches || []).filter(b => isOwner(b));
+    const myBatches = kw ? myBatchesAll.filter(b => (b.batchName || '').toLowerCase().includes(kw)) : myBatchesAll;
 
-    if (countBadge) countBadge.textContent = `${myBatches.length} รายการ`;
+    if (countBadge) countBadge.textContent = `${myBatchesAll.length} รายการ`;
     const tabBadge = document.getElementById('tab-badge-my-batches');
-    if (tabBadge) tabBadge.textContent = myBatches.length;
+    if (tabBadge) tabBadge.textContent = myBatchesAll.length;
 
-    if (myBatches.length === 0) {
+    // Sync view mode buttons
+    const btnFolder = document.getElementById('my-view-toggle-folder');
+    const btnTable = document.getElementById('my-view-toggle-table');
+    if (btnFolder && btnTable) {
+      const act = 'px-2.5 py-1 rounded-lg bg-white text-indigo-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer';
+      const inact = 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer';
+      btnFolder.className = myLibraryViewMode === 'folder' ? act : inact;
+      btnTable.className = myLibraryViewMode === 'table' ? act : inact;
+    }
+
+    const folderGrid = document.getElementById('dash-my-folder-grid');
+    const breadcrumb = document.getElementById('dash-my-folder-breadcrumb');
+    const tableContainer = document.getElementById('dash-my-table-container');
+
+    if (myBatchesAll.length === 0 && getCustomPersonalFolders().length === 0) {
       tbody.innerHTML = '';
+      if (folderGrid) folderGrid.classList.add('hidden');
+      if (breadcrumb) breadcrumb.classList.add('hidden');
+      if (tableContainer) tableContainer.classList.add('hidden');
       if (emptyState) emptyState.classList.remove('hidden');
+      updateMyBulkBar();
+      return;
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+
+    // Folder Grid Mode
+    if (myLibraryViewMode === 'folder' && !kw && activePersonalFolder === null) {
+      if (folderGrid) folderGrid.classList.remove('hidden');
+      if (breadcrumb) breadcrumb.classList.add('hidden');
+      if (tableContainer) tableContainer.classList.add('hidden');
+
+      const groups = {};
+      getCustomPersonalFolders().forEach(fn => {
+        groups[fn] = { name: fn, count: 0, questions: 0, isCustom: true };
+      });
+      myBatches.forEach(b => {
+        const fName = getEffectivePersonalFolder(b);
+        if (!groups[fName]) groups[fName] = { name: fName, count: 0, questions: 0, isCustom: fName !== UNGROUPED_MY_FOLDER };
+        groups[fName].count += 1;
+        groups[fName].questions += (Number(b.totalQuestions) || 0);
+      });
+
+      const folderList = Object.values(groups).sort((a, b) => {
+        if (a.name === UNGROUPED_MY_FOLDER) return 1;
+        if (b.name === UNGROUPED_MY_FOLDER) return -1;
+        return b.count - a.count;
+      });
+
+      if (folderGrid) {
+        folderGrid.innerHTML = folderList.map(g => {
+          const safeName = escapeHtml(g.name).replace(/'/g, "\\'");
+          const isUngrouped = g.name === UNGROUPED_MY_FOLDER;
+          return `
+            <div onclick="openMyFolder('${safeName}')" class="group bg-slate-50/70 hover:bg-indigo-50/40 p-4 rounded-2xl border border-slate-200/90 hover:border-indigo-400 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between gap-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="w-10 h-10 rounded-xl ${isUngrouped ? 'bg-slate-200 text-slate-600' : 'bg-indigo-100 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white'} flex items-center justify-center transition-colors shrink-0">
+                  <i data-lucide="${isUngrouped ? 'folder-open' : 'folder'}" class="w-5 h-5"></i>
+                </div>
+                ${!isUngrouped ? `
+                  <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                    <button type="button" onclick="renameMyFolderModal('${safeName}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer" title="เปลี่ยนชื่อโฟลเดอร์">
+                      <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="deleteMyFolderModal('${safeName}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="ลบโฟลเดอร์">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+              <div>
+                <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 group-hover:text-indigo-700 line-clamp-2 leading-snug">${escapeHtml(g.name)}</h3>
+                <p class="text-[11px] font-semibold text-slate-500 mt-1">${g.count} ชุดวิชา • ${g.questions.toLocaleString()} ข้อ</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      updateMyBulkBar();
       return;
     }
 
-    if (emptyState) emptyState.classList.add('hidden');
+    // Table / Inside Folder Mode
+    if (folderGrid) folderGrid.classList.add('hidden');
+    if (tableContainer) tableContainer.classList.remove('hidden');
 
-    tbody.innerHTML = myBatches.map((b, idx) => {
+    let displayMyBatches = myBatches;
+    if (myLibraryViewMode === 'folder' && !kw && activePersonalFolder !== null) {
+      displayMyBatches = myBatches.filter(b => getEffectivePersonalFolder(b) === activePersonalFolder);
+      if (breadcrumb) {
+        breadcrumb.classList.remove('hidden');
+        const bNameEl = document.getElementById('dash-my-folder-breadcrumb-name');
+        const bCntEl = document.getElementById('dash-my-folder-breadcrumb-count');
+        if (bNameEl) bNameEl.textContent = activePersonalFolder;
+        if (bCntEl) bCntEl.textContent = `${displayMyBatches.length} ชุด`;
+      }
+    } else if (breadcrumb) {
+      breadcrumb.classList.add('hidden');
+    }
+
+    lastVisibleMyBatches = displayMyBatches;
+    if (displayMyBatches.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-slate-400 text-xs">ไม่มีชุดข้อสอบในโฟลเดอร์นี้</td></tr>`;
+      updateMyBulkBar();
+      return;
+    }
+
+    tbody.innerHTML = displayMyBatches.map((b, idx) => {
       const isVerified = checkBatchAllVerified(b);
       let fileTypeBadge = '';
       if (b.isCustomQuiz || b.fileType === 'ชุดสุ่ม') {
@@ -9179,7 +9778,8 @@ if (typeof window !== 'undefined') {
            </span>`;
       }
 
-      const deleteBtn = `<button onclick="confirmDeleteMyBatch('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="ลบชุดข้อสอบนี้"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+      const moveBtn = `<button onclick="openMoveFolderModal(['${b.batchId}'], 'personal')" class="p-1.5 text-slate-400 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="ย้ายโฟลเดอร์"><i data-lucide="folder-input" class="w-4 h-4"></i></button>`;
+      const deleteBtn = `${moveBtn}<button onclick="confirmDeleteMyBatch('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="ลบชุดข้อสอบนี้"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
 
       let actionBtn = '';
       if (isAutoHidden) {
@@ -9223,9 +9823,13 @@ if (typeof window !== 'undefined') {
       }
 
       const cleanCat = b.batchCategory ? b.batchCategory.split('|')[0].trim() : 'ทั่วไป';
+      const isChecked = selectedMyBatchIds.has(b.batchId);
 
       return `
         <tr class="hover:bg-slate-50/80 transition-colors">
+          <td class="py-3 px-3 text-center">
+            <input type="checkbox" class="my-row-checkbox w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" ${isChecked ? 'checked' : ''} onchange="toggleMyBatchSelect('${b.batchId}', this.checked)">
+          </td>
           <td class="py-3 px-4 text-center font-medium text-slate-400 text-xs">${idx + 1}</td>
           <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-2 flex-wrap">
@@ -9517,14 +10121,401 @@ if (typeof window !== 'undefined') {
     renderLibraryTable(filtered);
   }
 
+  let libraryViewMode = localStorage.getItem('quizsilo_lib_view_mode') || 'folder';
+  let activePublicFolder = null;
+  let selectedLibBatchIds = new Set();
+  let lastFilteredLibBatches = [];
+  let lastVisibleLibBatches = [];
+  const CUSTOM_PUBLIC_FOLDERS_KEY = 'quizsilo_custom_public_folders';
+
+  function getCustomPublicFolders() {
+    try { return JSON.parse(localStorage.getItem(CUSTOM_PUBLIC_FOLDERS_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function saveCustomPublicFolders(list) {
+    try { localStorage.setItem(CUSTOM_PUBLIC_FOLDERS_KEY, JSON.stringify([...new Set(list.filter(Boolean))])); } catch(e) {}
+  }
+
+  function getEffectivePublicFolder(b) {
+    if (b && b.publicFolder && String(b.publicFolder).trim()) return String(b.publicFolder).trim();
+    if (b && b.batchCategory) return String(b.batchCategory).split('|')[0].trim() || 'ทั่วไป';
+    return 'ทั่วไป';
+  }
+
+  function setLibraryViewMode(mode) {
+    libraryViewMode = mode === 'table' ? 'table' : 'folder';
+    localStorage.setItem('quizsilo_lib_view_mode', libraryViewMode);
+    if (libraryViewMode === 'table') activePublicFolder = null;
+    clearLibSelection();
+    filterBatches();
+  }
+
+  function openPublicFolder(folderName) {
+    activePublicFolder = folderName;
+    clearLibSelection();
+    filterBatches();
+  }
+
+  function closePublicFolder() {
+    activePublicFolder = null;
+    clearLibSelection();
+    filterBatches();
+  }
+
+  function updateLibBulkBar() {
+    const bar = document.getElementById('lib-bulk-bar');
+    const cnt = document.getElementById('lib-bulk-count');
+    const isAdmin = currentUserProfile && currentUserProfile.role === 'admin';
+    if (!bar) return;
+    if (isAdmin && selectedLibBatchIds.size > 0) {
+      bar.classList.remove('hidden');
+      if (cnt) cnt.textContent = selectedLibBatchIds.size;
+    } else {
+      bar.classList.add('hidden');
+    }
+    const selectAll = document.getElementById('lib-select-all');
+    if (selectAll && lastVisibleLibBatches.length > 0) {
+      selectAll.checked = lastVisibleLibBatches.every(b => selectedLibBatchIds.has(b.batchId));
+    } else if (selectAll) {
+      selectAll.checked = false;
+    }
+  }
+
+  function toggleLibBatchSelect(batchId, checked) {
+    if (checked) selectedLibBatchIds.add(batchId);
+    else selectedLibBatchIds.delete(batchId);
+    updateLibBulkBar();
+  }
+
+  function toggleLibSelectAll(checked) {
+    if (checked) {
+      lastVisibleLibBatches.forEach(b => selectedLibBatchIds.add(b.batchId));
+    } else {
+      lastVisibleLibBatches.forEach(b => selectedLibBatchIds.delete(b.batchId));
+    }
+    renderLibraryTable(lastFilteredLibBatches);
+  }
+
+  function clearLibSelection() {
+    selectedLibBatchIds.clear();
+    updateLibBulkBar();
+    document.querySelectorAll('.lib-row-checkbox').forEach(cb => { cb.checked = false; });
+    const sa = document.getElementById('lib-select-all');
+    if (sa) sa.checked = false;
+  }
+
+  function createPublicFolderModal() {
+    Swal.fire({
+      title: '📁 สร้างโฟลเดอร์กลางใหม่',
+      input: 'text',
+      inputPlaceholder: 'เช่น สอบครูผู้ช่วย, ก.พ. ภาค ก, TOEIC',
+      showCancelButton: true,
+      confirmButtonText: 'สร้างโฟลเดอร์',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#4f46e5',
+      inputValidator: v => (!v || !v.trim()) ? 'กรุณาตั้งชื่อโฟลเดอร์' : null
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      const name = res.value.trim();
+      const list = getCustomPublicFolders();
+      list.push(name);
+      saveCustomPublicFolders(list);
+      showToast('success', `สร้างโฟลเดอร์ "${name}" เรียบร้อยแล้ว`);
+      if (libraryViewMode !== 'folder') libraryViewMode = 'folder';
+      activePublicFolder = null;
+      filterBatches();
+    });
+  }
+
+  function renamePublicFolderModal(oldName) {
+    Swal.fire({
+      title: `✏️ เปลี่ยนชื่อโฟลเดอร์ "${oldName}"`,
+      input: 'text',
+      inputValue: oldName,
+      showCancelButton: true,
+      confirmButtonText: 'บันทึกชื่อใหม่',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#4f46e5',
+      inputValidator: v => (!v || !v.trim()) ? 'กรุณาระบุชื่อโฟลเดอร์' : null
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      const newName = res.value.trim();
+      if (newName === oldName) return;
+      const targets = (allBatches || []).filter(b => getEffectivePublicFolder(b) === oldName).map(b => b.batchId);
+      const customList = getCustomPublicFolders().filter(n => n !== oldName);
+      customList.push(newName);
+      saveCustomPublicFolders(customList);
+
+      if (targets.length === 0) {
+        filterBatches();
+        showToast('success', `เปลี่ยนชื่อโฟลเดอร์เป็น "${newName}" แล้ว`);
+        return;
+      }
+      Swal.fire({ title: 'กำลังอัปเดตโฟลเดอร์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches.forEach(b => { if (targets.includes(b.batchId)) b.publicFolder = newName; });
+          if (activePublicFolder === oldName) activePublicFolder = newName;
+          Swal.close();
+          showToast('success', `เปลี่ยนชื่อเป็น "${newName}" เรียบร้อยแล้ว`);
+          filterBatches();
+        })
+        .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+        .bulkSetBatchFolder(targets, 'public', newName, currentUserProfile);
+    });
+  }
+
+  function deletePublicFolderModal(folderName) {
+    const targets = (allBatches || []).filter(b => b.publicFolder === folderName).map(b => b.batchId);
+    Swal.fire({
+      title: `ลบโฟลเดอร์ "${folderName}"?`,
+      html: targets.length > 0
+        ? `ชุดข้อสอบ ${targets.length} ชุดในโฟลเดอร์นี้จะไม่ถูกลบ แต่จะถูกย้ายกลับไปจัดกลุ่มตามหมวดหมู่วิชาอัตโนมัติ`
+        : 'คุณต้องการลบโฟลเดอร์นี้ใช่หรือไม่?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบโฟลเดอร์',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      saveCustomPublicFolders(getCustomPublicFolders().filter(n => n !== folderName));
+      if (targets.length === 0) {
+        if (activePublicFolder === folderName) activePublicFolder = null;
+        filterBatches();
+        showToast('info', 'ลบโฟลเดอร์เรียบร้อยแล้ว');
+        return;
+      }
+      Swal.fire({ title: 'กำลังย้ายชุดข้อสอบกลับหมวดหมู่...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches.forEach(b => { if (targets.includes(b.batchId)) b.publicFolder = null; });
+          if (activePublicFolder === folderName) activePublicFolder = null;
+          Swal.close();
+          showToast('info', 'ลบโฟลเดอร์และย้ายชุดข้อสอบกลับหมวดหมู่แล้ว');
+          filterBatches();
+        })
+        .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+        .bulkSetBatchFolder(targets, 'public', null, currentUserProfile);
+    });
+  }
+
+  function openMoveFolderModal(batchIds, scope) {
+    if (!batchIds || batchIds.length === 0) return;
+    const isPublic = scope === 'public';
+    let existingFolders = [];
+    if (isPublic) {
+      const set = new Set(getCustomPublicFolders());
+      (allBatches || []).forEach(b => set.add(getEffectivePublicFolder(b)));
+      existingFolders = [...set].filter(Boolean);
+    } else {
+      const set = new Set(typeof getCustomPersonalFolders === 'function' ? getCustomPersonalFolders() : []);
+      const myEmail = (currentUserProfile?.email || '').toLowerCase();
+      const myUuid = currentUserProfile?.uuid || '';
+      (allBatches || []).forEach(b => {
+        if ((b.userId && b.userId === myUuid) || (b.uploader?.email && b.uploader.email.toLowerCase() === myEmail)) {
+          if (b.personalFolder) set.add(b.personalFolder);
+        }
+      });
+      existingFolders = [...set].filter(Boolean);
+    }
+
+    const chipsHtml = existingFolders.map(f =>
+      `<button type="button" onclick="document.getElementById('swal-move-folder-input').value='${escapeHtml(f).replace(/'/g, "\\'")}'" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold cursor-pointer">${escapeHtml(f)}</button>`
+    ).join('');
+
+    Swal.fire({
+      title: `📁 ย้าย ${batchIds.length} ชุดข้อสอบเข้าโฟลเดอร์`,
+      html: `
+        <div class="text-left space-y-3">
+          ${existingFolders.length > 0 ? `<div><p class="text-xs font-bold text-slate-600 mb-1.5">เลือกโฟลเดอร์ที่มีอยู่:</p><div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">${chipsHtml}</div></div>` : ''}
+          <div>
+            <p class="text-xs font-bold text-slate-600 mb-1">หรือพิมพ์ชื่อโฟลเดอร์ใหม่ (ปล่อยว่างเพื่อนำออกจากโฟลเดอร์):</p>
+            <input id="swal-move-folder-input" type="text" class="swal2-input !m-0 !w-full !text-sm" placeholder="พิมพ์ชื่อโฟลเดอร์...">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'ย้ายเข้าโฟลเดอร์',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#4f46e5',
+      preConfirm: () => (document.getElementById('swal-move-folder-input')?.value || '').trim()
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      const folderName = res.value || null;
+      if (folderName) {
+        if (isPublic) {
+          const list = getCustomPublicFolders();
+          list.push(folderName);
+          saveCustomPublicFolders(list);
+        } else if (typeof saveCustomPersonalFolders === 'function' && typeof getCustomPersonalFolders === 'function') {
+          const list = getCustomPersonalFolders();
+          list.push(folderName);
+          saveCustomPersonalFolders(list);
+        }
+      }
+      Swal.fire({ title: 'กำลังย้ายโฟลเดอร์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches.forEach(b => {
+            if (batchIds.includes(b.batchId)) {
+              if (isPublic) b.publicFolder = folderName;
+              else b.personalFolder = folderName;
+            }
+          });
+          Swal.close();
+          showToast('success', folderName ? `ย้าย ${batchIds.length} ชุดเข้า "${folderName}" แล้ว` : `นำ ${batchIds.length} ชุดออกจากโฟลเดอร์แล้ว`);
+          if (isPublic) {
+            clearLibSelection();
+            filterBatches();
+          } else {
+            if (typeof clearMySelection === 'function') clearMySelection();
+            if (typeof renderMyBatches === 'function') renderMyBatches();
+          }
+        })
+        .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
+        .bulkSetBatchFolder(batchIds, scope, folderName, currentUserProfile);
+    });
+  }
+
+  function bulkMoveLibBatches() {
+    openMoveFolderModal([...selectedLibBatchIds], 'public');
+  }
+
+  function bulkDeleteLibBatches() {
+    const ids = [...selectedLibBatchIds];
+    if (ids.length === 0) return;
+    Swal.fire({
+      title: `ลบชุดข้อสอบ ${ids.length} ชุดที่เลือก?`,
+      text: 'ข้อมูลคำถามและประวัติการทำของชุดที่เลือกจะถูกลบถาวร ไม่สามารถกู้คืนได้!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `ลบ ${ids.length} ชุดถาวร`,
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      Swal.fire({ title: `กำลังลบ ${ids.length} ชุดข้อสอบ...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches = (allBatches || []).filter(b => !ids.includes(b.batchId));
+          clearLibSelection();
+          Swal.close();
+          showToast('success', `ลบชุดข้อสอบ ${ids.length} ชุดเรียบร้อยแล้ว`);
+          filterBatches();
+          if (typeof renderMyBatches === 'function') renderMyBatches();
+        })
+        .withFailureHandler(err => Swal.fire('ลบไม่สำเร็จ', err.message || err, 'error'))
+        .bulkDeleteBatches(ids, currentUserProfile);
+    });
+  }
+
   function renderLibraryTable(batches) {
     renderLibraryAnalyticsChart();
     const isAdmin = currentUserProfile && currentUserProfile.role === 'admin';
+    lastFilteredLibBatches = batches || [];
     let displayBatches = batches || [];
     if (!isAdmin) {
       displayBatches = displayBatches.filter(b => checkBatchAllVerified(b) && !b.isHidden);
     }
 
+    // Sync view mode buttons & admin folder button
+    const btnFolder = document.getElementById('lib-view-toggle-folder');
+    const btnTable = document.getElementById('lib-view-toggle-table');
+    const btnCreateFolder = document.getElementById('btn-lib-create-public-folder');
+    if (btnFolder && btnTable) {
+      const act = 'px-2.5 py-1.5 rounded-lg bg-white text-brand-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer';
+      const inact = 'px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1 cursor-pointer';
+      btnFolder.className = libraryViewMode === 'folder' ? act : inact;
+      btnTable.className = libraryViewMode === 'table' ? act : inact;
+    }
+    if (btnCreateFolder) btnCreateFolder.classList.toggle('hidden', !isAdmin);
+
+    const thSelect = document.getElementById('lib-th-select');
+    if (thSelect) thSelect.classList.toggle('hidden', !isAdmin);
+
+    const keyword = (document.getElementById('search-input')?.value || '').trim();
+    const folderGrid = document.getElementById('lib-folder-grid');
+    const breadcrumb = document.getElementById('lib-folder-breadcrumb');
+    const tableContainer = document.getElementById('lib-table-container');
+
+    // Folder Grid Mode (when view is 'folder', no active search keyword, and no folder opened)
+    if (libraryViewMode === 'folder' && !keyword && activePublicFolder === null) {
+      if (folderGrid) folderGrid.classList.remove('hidden');
+      if (breadcrumb) breadcrumb.classList.add('hidden');
+      if (tableContainer) tableContainer.classList.add('hidden');
+
+      const groups = {};
+      if (isAdmin) {
+        getCustomPublicFolders().forEach(fn => {
+          if (!groups[fn]) groups[fn] = { name: fn, count: 0, questions: 0, isCustom: true };
+        });
+      }
+      displayBatches.forEach(b => {
+        const fName = getEffectivePublicFolder(b);
+        if (!groups[fName]) groups[fName] = { name: fName, count: 0, questions: 0, isCustom: Boolean(b.publicFolder) };
+        groups[fName].count += 1;
+        groups[fName].questions += (Number(b.totalQuestions) || 0);
+        if (b.publicFolder === fName) groups[fName].isCustom = true;
+      });
+
+      const folderList = Object.values(groups).sort((a, b) => b.count - a.count);
+      if (folderGrid) {
+        if (folderList.length === 0) {
+          folderGrid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">ไม่พบชุดข้อสอบในคลัง</div>`;
+        } else {
+          folderGrid.innerHTML = folderList.map(g => {
+            const safeName = escapeHtml(g.name).replace(/'/g, "\\'");
+            return `
+              <div onclick="openPublicFolder('${safeName}')" class="group bg-white hover:bg-indigo-50/40 p-4 rounded-2xl border border-slate-200/90 hover:border-brand-400 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between gap-3 relative">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <i data-lucide="folder" class="w-5 h-5"></i>
+                  </div>
+                  ${isAdmin ? `
+                    <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                      <button type="button" onclick="renamePublicFolderModal('${safeName}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer" title="เปลี่ยนชื่อโฟลเดอร์">
+                        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                      </button>
+                      ${g.isCustom ? `
+                        <button type="button" onclick="deletePublicFolderModal('${safeName}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="ลบโฟลเดอร์">
+                          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                      ` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+                <div>
+                  <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 group-hover:text-brand-700 line-clamp-2 leading-snug">${escapeHtml(g.name)}</h3>
+                  <p class="text-[11px] font-semibold text-slate-500 mt-1">${g.count} ชุดวิชา • ${g.questions.toLocaleString()} ข้อ</p>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      updateLibBulkBar();
+      return;
+    }
+
+    // Inside Folder or Table Mode
+    if (folderGrid) folderGrid.classList.add('hidden');
+    if (tableContainer) tableContainer.classList.remove('hidden');
+
+    if (libraryViewMode === 'folder' && !keyword && activePublicFolder !== null) {
+      displayBatches = displayBatches.filter(b => getEffectivePublicFolder(b) === activePublicFolder);
+      if (breadcrumb) {
+        breadcrumb.classList.remove('hidden');
+        const bNameEl = document.getElementById('lib-folder-breadcrumb-name');
+        const bCntEl = document.getElementById('lib-folder-breadcrumb-count');
+        if (bNameEl) bNameEl.textContent = activePublicFolder;
+        if (bCntEl) bCntEl.textContent = `${displayBatches.length} ชุด`;
+      }
+    } else if (breadcrumb) {
+      breadcrumb.classList.add('hidden');
+    }
+
+    lastVisibleLibBatches = displayBatches;
     const tbody = document.getElementById('library-table-body');
     const tableCountInfo = document.getElementById('table-count-info');
     if (tableCountInfo) {
@@ -9533,8 +10524,9 @@ if (typeof window !== 'undefined') {
 
     const mobileContainer = document.getElementById('library-mobile-cards');
     if (displayBatches.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="py-14 text-center text-slate-400">ไม่พบชุดข้อสอบที่พร้อมเริ่มในคลัง</td></tr>`;
-      if (mobileContainer) mobileContainer.innerHTML = `<div class="py-12 text-center text-slate-400 text-xs">ไม่พบชุดข้อสอบที่พร้อมเริ่มในคลัง</div>`;
+      tbody.innerHTML = `<tr><td colspan="${isAdmin ? 8 : 7}" class="py-14 text-center text-slate-400">ไม่พบชุดข้อสอบในมุมมองนี้</td></tr>`;
+      if (mobileContainer) mobileContainer.innerHTML = `<div class="py-12 text-center text-slate-400 text-xs">ไม่พบชุดข้อสอบในมุมมองนี้</div>`;
+      updateLibBulkBar();
       return;
     }
 
@@ -9706,21 +10698,26 @@ if (typeof window !== 'undefined') {
 
       const uploadDateDisplay = formatUploadDateTime(b.createdAt);
 
+      const isSelected = selectedLibBatchIds.has(b.batchId);
+
       // Mobile card template
       cardsHtml.push(`
         <div class="${mobileCardClass}">
           <div class="flex items-start justify-between gap-2">
-            <div class="space-y-1">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                ${fileTypeBadge}
-                ${verifiedBadge}
-                ${featuredBadge}
-                ${hiddenBadge}
-                ${ratingBadge}
-                <span class="text-xs font-bold text-slate-800 cursor-pointer" onclick="${btnAction}">${escapeHtml(displayName)}</span>
-                ${infoBtn}
+            <div class="flex items-start gap-2.5 min-w-0">
+              ${isAdmin ? `<input type="checkbox" class="lib-row-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0" ${isSelected ? 'checked' : ''} onchange="toggleLibBatchSelect('${b.batchId}', this.checked)">` : ''}
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  ${fileTypeBadge}
+                  ${verifiedBadge}
+                  ${featuredBadge}
+                  ${hiddenBadge}
+                  ${ratingBadge}
+                  <span class="text-xs font-bold text-slate-800 cursor-pointer" onclick="${btnAction}">${escapeHtml(displayName)}</span>
+                  ${infoBtn}
+                </div>
+                <div class="text-[10px] text-slate-400">อัปโหลด: ${uploadDateDisplay}</div>
               </div>
-              <div class="text-[10px] text-slate-400">อัปโหลด: ${uploadDateDisplay}</div>
             </div>
             <span class="shrink-0 text-xs font-bold px-2 py-0.5 bg-slate-200/80 text-slate-700 rounded-md">${b.totalQuestions} ข้อ</span>
           </div>
@@ -9737,6 +10734,7 @@ if (typeof window !== 'undefined') {
               <button onclick="openReviewMode('${b.batchId}')" class="p-2 text-slate-500 hover:text-brand-600 bg-white border border-slate-200 rounded-xl transition-all" title="ตรวจสอบและแก้ไข (Review)"><i data-lucide="pen-line" class="w-4 h-4"></i></button>
             ` : ''}
             ${isAdmin ? `
+              <button onclick="openMoveFolderModal(['${b.batchId}'], 'public')" class="p-2 text-slate-500 hover:text-indigo-600 bg-white border border-slate-200 rounded-xl transition-all" title="ย้ายโฟลเดอร์กลาง"><i data-lucide="folder-input" class="w-4 h-4"></i></button>
               <button onclick="toggleBatchFeatured('${b.batchId}', ${!b.isFeatured})" class="p-2 ${b.isFeatured ? 'text-indigo-600 bg-indigo-50 border-indigo-200' : 'text-slate-400 hover:text-indigo-600 bg-white border-slate-200'} border rounded-xl transition-all" title="${b.isFeatured ? 'ยกเลิกปักหมุด' : 'ปักหมุดข้อสอบเด่น'}"><i data-lucide="pin" class="w-4 h-4 ${b.isFeatured ? 'text-indigo-600 rotate-45' : ''}"></i></button>
               <button onclick="toggleBatchVisibility('${b.batchId}', ${!b.isHidden})" class="p-2 ${b.isHidden ? 'text-rose-600 bg-rose-50' : 'text-slate-400 hover:text-rose-600 bg-white'} border border-slate-200 rounded-xl transition-all" title="${b.isHidden ? 'แสดงชุดข้อสอบ' : 'ซ่อนชุดข้อสอบ'}"><i data-lucide="${b.isHidden ? 'eye-off' : 'eye'}" class="w-4 h-4"></i></button>
               <button onclick="confirmResetStats('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-2 text-slate-400 hover:text-rose-600 bg-white border border-slate-200 rounded-xl transition-all" title="ล้างสถิติ"><i data-lucide="brush" class="w-4 h-4"></i></button>
@@ -9749,6 +10747,7 @@ if (typeof window !== 'undefined') {
       // Desktop Row template:
       return `
         <tr class="${rowClass}">
+          ${isAdmin ? `<td class="py-3 px-2.5 text-center"><input type="checkbox" class="lib-row-checkbox w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer" ${isSelected ? 'checked' : ''} onchange="toggleLibBatchSelect('${b.batchId}', this.checked)"></td>` : ''}
           <td class="py-3 px-2.5 text-center font-medium text-slate-400 text-xs">${idx + 1}</td>
           <td class="py-3 px-3">
             <div class="flex items-center gap-2">
@@ -9790,6 +10789,7 @@ if (typeof window !== 'undefined') {
                 <button onclick="openReviewMode('${b.batchId}')" class="p-2 text-slate-500 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition-all" title="ตรวจสอบและแก้ไข (Review)"><i data-lucide="pen-line" class="w-4 h-4"></i></button>
               ` : ''}
               ${isAdmin ? `
+                <button onclick="openMoveFolderModal(['${b.batchId}'], 'public')" class="p-2 text-slate-400 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="ย้ายโฟลเดอร์กลาง"><i data-lucide="folder-input" class="w-4 h-4"></i></button>
                 <button onclick="toggleBatchFeatured('${b.batchId}', ${!b.isFeatured})" class="p-2 ${b.isFeatured ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200' : 'text-slate-400 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50'} rounded-xl transition-all" title="${b.isFeatured ? 'ยกเลิกปักหมุดข้อสอบเด่น' : 'ปักหมุดเป็นข้อสอบเด่น (Pin)'}"><i data-lucide="pin" class="w-4 h-4 ${b.isFeatured ? 'text-indigo-600 rotate-45' : ''}"></i></button>
                 <button onclick="toggleBatchVisibility('${b.batchId}', ${!b.isHidden})" class="p-2 ${b.isHidden ? 'text-rose-600 bg-rose-50 hover:bg-emerald-50' : 'text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50'} rounded-xl transition-all" title="${b.isHidden ? 'แสดงชุดข้อสอบ (ปัจจุบันซ่อนอยู่)' : 'ซ่อนชุดข้อสอบจากคลัง'}"><i data-lucide="${b.isHidden ? 'eye-off' : 'eye'}" class="w-4 h-4"></i></button>
                 <button onclick="confirmResetStats('${b.batchId}', '${escapeHtml(b.batchName)}')" class="p-2 text-slate-400 hover:text-amber-600 bg-slate-100 hover:bg-amber-50 rounded-xl transition-all" title="ล้างสถิติ"><i data-lucide="brush" class="w-4 h-4"></i></button>
@@ -9823,6 +10823,7 @@ if (typeof window !== 'undefined') {
 
     if (mobileContainer) mobileContainer.innerHTML = cardsHtml.join('');
     lucide.createIcons();
+    updateLibBulkBar();
   }
 
   function alertUnreviewedBatch(batchName, uploaderDisplay) {
@@ -15238,6 +16239,7 @@ if (typeof window !== 'undefined') {
     }).join('');
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    updateMyBulkBar();
   }
 
   // ==========================================
@@ -16160,6 +17162,33 @@ if (typeof window !== 'undefined') {
   window.getQuestionPromoStatus = getQuestionPromoStatus;
   window.openPromoModalFromReview = openPromoModalFromReview;
   window.openPromoModalFromExam = openPromoModalFromExam;
+  window.setLibraryViewMode = setLibraryViewMode;
+  window.openPublicFolder = openPublicFolder;
+  window.closePublicFolder = closePublicFolder;
+  window.toggleLibBatchSelect = toggleLibBatchSelect;
+  window.toggleLibSelectAll = toggleLibSelectAll;
+  window.clearLibSelection = clearLibSelection;
+  window.createPublicFolderModal = createPublicFolderModal;
+  window.renamePublicFolderModal = renamePublicFolderModal;
+  window.deletePublicFolderModal = deletePublicFolderModal;
+  window.openMoveFolderModal = openMoveFolderModal;
+  window.bulkMoveLibBatches = bulkMoveLibBatches;
+  window.bulkDeleteLibBatches = bulkDeleteLibBatches;
+  window.setMyLibraryViewMode = setMyLibraryViewMode;
+  window.openMyFolder = openMyFolder;
+  window.closeMyFolder = closeMyFolder;
+  window.toggleMyBatchSelect = toggleMyBatchSelect;
+  window.toggleMySelectAll = toggleMySelectAll;
+  window.clearMySelection = clearMySelection;
+  window.createMyFolderModal = createMyFolderModal;
+  window.renameMyFolderModal = renameMyFolderModal;
+  window.deleteMyFolderModal = deleteMyFolderModal;
+  window.bulkMoveMyBatches = bulkMoveMyBatches;
+  window.bulkDeleteMyBatches = bulkDeleteMyBatches;
+  window.toggleAttemptSelect = toggleAttemptSelect;
+  window.toggleAttemptsSelectAll = toggleAttemptsSelectAll;
+  window.clearAttemptSelection = clearAttemptSelection;
+  window.bulkDeleteDashboardAttempts = bulkDeleteDashboardAttempts;
   window.closePromoModal = closePromoModal;
 </script>
 
