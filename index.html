@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.01.12</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.02.12</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -14820,7 +14820,7 @@ if (typeof window !== 'undefined') {
     const choicePrompt = mode === 2 ? 'ก หรือ ข' : 'ก ข ค หรือ ง';
     const qText = item.questionText || '';
 
-    return `[${tag}] ข้อนี้ออกสอบบ่อยมาก แต่คนสับสนและตอบผิดกันเยอะ! 📖✨\n\n${qText}\n\n👉 ${choicePrompt} คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยในคอมเมนต์แรกนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`;
+    return `${qText}\n\n📚 หมวด: ${tag}\n👉 ${choicePrompt} คอมเมนต์คำตอบทิ้งไว้ด้านล่างได้เลยครับ 👇\n(เดี๋ยวมาเฉลยในอีก 15 นาทีนะครับ)\n\n#QuizSilo #เตรียมสอบ #แนวข้อสอบ`;
   }
 
   function generatePromoComment(item) {
@@ -15799,36 +15799,51 @@ if (typeof window !== 'undefined') {
   function wrapCanvasTextSmart(ctx, text, x, y, maxWidth, lineHeight, align = 'center') {
     const lines = [];
     const paras = (text || '').split('\n');
+    const wordSeg = (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function')
+      ? new Intl.Segmenter('th', { granularity: 'word' })
+      : null;
+    const graphemeSeg = (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function')
+      ? new Intl.Segmenter('th', { granularity: 'grapheme' })
+      : null;
 
     for (const para of paras) {
       if (!para.trim()) {
         lines.push('');
         continue;
       }
-      const words = para.split(' ');
+      const tokens = wordSeg
+        ? Array.from(wordSeg.segment(para), s => s.segment)
+        : para.split(/(\s+)/);
+
       let currentLine = '';
 
-      for (let w of words) {
-        if (ctx.measureText(w).width > maxWidth) {
-          for (let char of w) {
-            if (ctx.measureText(currentLine + char).width > maxWidth) {
-              lines.push(currentLine);
-              currentLine = char;
-            } else {
-              currentLine += char;
-            }
-          }
+      for (const tok of tokens) {
+        if (!currentLine && !tok.trim()) continue;
+        const testLine = currentLine + tok;
+        if (ctx.measureText(testLine.trimEnd()).width <= maxWidth) {
+          currentLine = testLine;
         } else {
-          const testLine = currentLine ? (currentLine + ' ' + w) : w;
-          if (ctx.measureText(testLine).width > maxWidth) {
-            lines.push(currentLine);
-            currentLine = w;
+          if (currentLine.trimEnd()) {
+            lines.push(currentLine.trimEnd());
+            currentLine = '';
+          }
+          if (!tok.trim()) continue;
+          if (ctx.measureText(tok).width > maxWidth) {
+            const units = graphemeSeg ? Array.from(graphemeSeg.segment(tok), s => s.segment) : Array.from(tok);
+            for (const u of units) {
+              if (ctx.measureText(currentLine + u).width > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = u;
+              } else {
+                currentLine += u;
+              }
+            }
           } else {
-            currentLine = testLine;
+            currentLine = tok;
           }
         }
       }
-      if (currentLine) lines.push(currentLine);
+      if (currentLine.trimEnd()) lines.push(currentLine.trimEnd());
     }
 
     let curY = y;
