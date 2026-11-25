@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 25.11.23.53</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.01.12</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -14717,6 +14717,7 @@ if (typeof window !== 'undefined') {
           imageUrl: r.image_url || null,
           fbPostId: r.fb_post_id || null,
           queuedAt: r.queued_at,
+          status: r.status || 'pending',
           isPromoted: r.status === 'promoted',
           promotedAt: r.promoted_at
         }));
@@ -15141,7 +15142,9 @@ if (typeof window !== 'undefined') {
 
       const statusBadge = item.isPromoted
         ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">✅ โปรโมทแล้ว</span>`
-        : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">⏳ รอทำโปรโมท</span>`;
+        : (item.status === 'waiting_comment'
+          ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-900 border border-sky-300 animate-pulse">💬 รอเมนต์เฉลย</span>`
+          : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">⏳ รอทำโปรโมท</span>`);
 
       const ansThai = getThaiChoiceLetter(item.answer);
       const isAnsA = ansThai === 'ก';
