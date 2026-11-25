@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.03.24</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.03.36</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -15717,7 +15717,7 @@ if (typeof window !== 'undefined') {
         custom_caption: item.customCaption || '',
         custom_comment: item.customComment || '',
         image_url: item.imageUrl || null,
-        status: item.isPromoted ? 'promoted' : 'pending',
+        status: item.isPromoted ? 'promoted' : (item.status || 'draft'),
         fb_post_id: item.fbPostId || null,
         queued_at: item.queuedAt || new Date().toISOString(),
         promoted_at: item.promotedAt || null
@@ -15952,6 +15952,7 @@ if (typeof window !== 'undefined') {
         customCaption: '',
         customComment: '',
         queuedAt: new Date().toISOString(),
+        status: 'draft',
         isPromoted: false,
         promotedAt: null
       };
@@ -16057,6 +16058,7 @@ if (typeof window !== 'undefined') {
         customCaption: '',
         customComment: '',
         queuedAt: new Date().toISOString(),
+        status: 'draft',
         isPromoted: false,
         promotedAt: null
       };
@@ -16216,14 +16218,12 @@ if (typeof window !== 'undefined') {
         : '-';
 
       const statusBadge = item.isPromoted
-        ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">✅ โปรโมทแล้ว</span>`
+        ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">✅ สมบูรณ์</span>`
         : (item.status === 'waiting_comment'
-          ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-900 border border-sky-300 animate-pulse">💬 รอเมนต์เฉลย</span>`
-          : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">⏳ รอทำโปรโมท</span>`);
-
-      const cloudBadge = item.imageUrl
-        ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">☁️ บันทึกลง Cloud แล้ว</span>`
-        : `<span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">💾 รออัปโหลด Cloud</span>`;
+          ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-900 border border-sky-300 animate-pulse">💬 โพสต์แล้วรอเฉลย</span>`
+          : ((item.status === 'pending' || (item.status !== 'draft' && item.imageUrl))
+            ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">☁️ บันทึกลง Cloud แล้ว</span>`
+            : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">⏳ รอทำโปรโมท</span>`));
 
       const ansThai = getThaiChoiceLetter(item.answer);
       const isAnsA = ansThai === 'ก';
@@ -16260,7 +16260,7 @@ if (typeof window !== 'undefined') {
             ${choicesPreviewHtml}
           </td>
           <td class="py-3.5 px-4 text-xs text-slate-500">${dateStr}</td>
-          <td class="py-3.5 px-4 text-center"><div class="flex flex-col items-center gap-1">${statusBadge}${cloudBadge}</div></td>
+          <td class="py-3.5 px-4 text-center">${statusBadge}</td>
           <td class="py-3.5 px-4 text-center space-x-1">
             <button onclick="openAdminPromoStudio('${item.batchId}', '${item.qId}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer" title="เปิดสตูดิโอสร้างโปรโมทข้อนี้">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -16356,19 +16356,30 @@ if (typeof window !== 'undefined') {
     if (!activeStudioItem) return;
     const badge = document.getElementById('admin-studio-status-badge');
     const label = document.getElementById('btn-admin-studio-status-label');
-    const cloudSuffix = activeStudioItem.imageUrl ? ' • ☁️ บันทึกลง Cloud แล้ว' : ' • 💾 ยังไม่ขึ้น Cloud';
     if (activeStudioItem.isPromoted) {
       if (badge) {
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-400 text-slate-950';
-        badge.textContent = `✅ โปรโมทแล้ว (${new Date(activeStudioItem.promotedAt).toLocaleDateString('th-TH')})${cloudSuffix}`;
+        badge.textContent = `✅ สมบูรณ์ (${new Date(activeStudioItem.promotedAt).toLocaleDateString('th-TH')})`;
       }
       if (label) label.textContent = 'เปลี่ยนเป็น: รอทำโปรโมท';
+    } else if (activeStudioItem.status === 'waiting_comment') {
+      if (badge) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-400 text-slate-950';
+        badge.textContent = '💬 โพสต์แล้วรอเฉลย';
+      }
+      if (label) label.textContent = 'มาร์กเป็นสมบูรณ์ ✅';
+    } else if (activeStudioItem.status === 'pending') {
+      if (badge) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-400 text-slate-950';
+        badge.textContent = '☁️ บันทึกลง Cloud แล้ว';
+      }
+      if (label) label.textContent = 'มาร์กเป็นสมบูรณ์ ✅';
     } else {
       if (badge) {
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950';
-        badge.textContent = (activeStudioItem.status === 'waiting_comment' ? '💬 รอเมนต์เฉลย' : '⏳ รอทำโปรโมท') + cloudSuffix;
+        badge.textContent = '⏳ รอทำโปรโมท';
       }
-      if (label) label.textContent = 'มาร์กเป็นโปรโมทแล้ว ✅';
+      if (label) label.textContent = 'มาร์กเป็นสมบูรณ์ ✅';
     }
   }
 
@@ -16536,6 +16547,9 @@ if (typeof window !== 'undefined') {
     activeStudioItem.theme = document.getElementById('admin-studio-theme-select')?.value || activeStudioItem.theme;
     activeStudioItem.customCaption = document.getElementById('admin-studio-caption-input')?.value || activeStudioItem.customCaption;
     activeStudioItem.customComment = document.getElementById('admin-studio-comment-input')?.value || activeStudioItem.customComment;
+    if (!silent && !activeStudioItem.isPromoted && activeStudioItem.status !== 'waiting_comment') {
+      activeStudioItem.status = 'pending';
+    }
 
     let queue = getPromoQueue();
     const idx = queue.findIndex(x => x.batchId === activeStudioItem.batchId && String(x.qId) === String(activeStudioItem.qId));
