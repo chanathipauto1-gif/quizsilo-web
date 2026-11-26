@@ -473,6 +473,65 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, updatedCount: allowedIds.length, folderName: cleanFolder, scope });
     }
 
+    if (flag === 'bulk_verify_batches') {
+      const { batchIds, userProfile } = body;
+      if (!Array.isArray(batchIds) || batchIds.length === 0) {
+        return res.status(400).json({ error: 'Missing batchIds' });
+      }
+      const actorRole = userProfile?.role || '';
+      const actorId = userProfile?.uuid || '';
+      const actorEmail = (userProfile?.email || '').toLowerCase();
+      const isAdmin = actorRole === 'admin' || actorEmail === 'chanathipauto1@gmail.com';
+      if (!isAdmin) {
+        return res.status(403).json({ error: 'เฉพาะ Super Admin เท่านั้นที่สามารถใช้ปุ่มตรวจด่วนได้' });
+      }
+
+      const cleanIds = batchIds.filter(Boolean);
+      const inList = cleanIds.map(id => encodeURIComponent(id)).join(',');
+      const nowIso = new Date().toISOString();
+
+      const [qRes, bRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/questions?batch_id=in.(${inList})`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ is_verified: true })
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${inList})`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ is_verified: true, updated_at: nowIso })
+        })
+      ]);
+
+      if (!qRes.ok || !bRes.ok) {
+        const errTxt = (!qRes.ok ? await qRes.text() : await bRes.text());
+        return res.status(500).json({ success: false, error: errTxt });
+      }
+
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: actorId || null,
+            batch_id: cleanIds[0],
+            questions_scanned: 0,
+            status: 'LOG: ' + JSON.stringify({
+              action: 'BULK_VERIFY_BATCHES',
+              user_name: userProfile?.nickname || userProfile?.name || 'Admin',
+              user_avatar: userProfile?.avatar || '👑',
+              user_role: 'admin',
+              batch_name: `ตรวจด่วน ${cleanIds.length} ชุดข้อสอบ`,
+              details: 'ยืนยันข้อสอบครบทุกข้อและเผยแพร่ลงคลังกลางแบบด่วน',
+              timestamp: nowIso
+            })
+          })
+        });
+      } catch (le) {}
+
+      return res.status(200).json({ success: true, verifiedIds: cleanIds, verifiedCount: cleanIds.length });
+    }
+
     if (flag === 'bulk_delete_batches') {
       const { batchIds, userProfile } = body;
       if (!Array.isArray(batchIds) || batchIds.length === 0) {

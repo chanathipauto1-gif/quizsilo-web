@@ -110,7 +110,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.17.29</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.17.49</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -2148,6 +2148,10 @@
       </span>
     </div>
     <div class="flex flex-wrap items-center gap-2">
+      <button type="button" onclick="bulkVerifyLibBatches()" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs">
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+        <span>ตรวจด่วน (เผยแพร่)</span>
+      </button>
       <button type="button" onclick="bulkMoveLibBatches()" class="px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
         <i data-lucide="folder-input" class="w-3.5 h-3.5"></i>
         <span>ย้ายเข้าโฟลเดอร์</span>
@@ -6411,6 +6415,25 @@ const BatchesQuestionsService = {
     }
   },
 
+  async bulkVerifyBatches(batchIds, userProfile) {
+    try {
+      const activeProfile = getActiveProfile(userProfile);
+      const apiRes = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: {
+          flag: 'bulk_verify_batches',
+          batchIds,
+          userProfile: activeProfile
+        }
+      });
+      if (apiRes?.success) return notifySuccess(this, apiRes);
+      throw new Error(apiRes?.error || 'Failed to bulk verify batches');
+    } catch (err) {
+      console.error('bulkVerifyBatches error:', err);
+      return notifyFailure(this, err);
+    }
+  },
+
   async bulkDeleteBatches(batchIds, userProfile) {
     try {
       const activeProfile = getActiveProfile(userProfile);
@@ -7895,6 +7918,7 @@ const adapterImpl = {
   saveReviewedQuestions: BatchesQuestionsService.saveReviewedQuestions,
   deleteSingleQuestion: BatchesQuestionsService.deleteSingleQuestion,
   bulkSetBatchFolder: BatchesQuestionsService.bulkSetBatchFolder,
+  bulkVerifyBatches: BatchesQuestionsService.bulkVerifyBatches,
   bulkDeleteBatches: BatchesQuestionsService.bulkDeleteBatches,
   bulkDeleteUserAttempts: BatchesQuestionsService.bulkDeleteUserAttempts,
   toggleBatchFlag: BatchesQuestionsService.toggleBatchFlag,
@@ -10426,6 +10450,40 @@ if (typeof window !== 'undefined') {
         })
         .withFailureHandler(err => Swal.fire('เกิดข้อผิดพลาด', err.message || err, 'error'))
         .bulkSetBatchFolder(batchIds, scope, folderName, currentUserProfile);
+    });
+  }
+
+  function bulkVerifyLibBatches() {
+    const ids = [...selectedLibBatchIds];
+    if (ids.length === 0) return;
+    Swal.fire({
+      title: `⚡ ตรวจด่วน ${ids.length} ชุดข้อสอบ?`,
+      html: `ยืนยันว่าข้อสอบทั้ง <b>${ids.length} ชุด</b> ที่เลือกถูกต้องครบทุกข้อ และเผยแพร่ลงคลังกลางทันที`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: `⚡ ยืนยันตรวจด่วน (${ids.length} ชุด)`,
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#10b981'
+    }).then(res => {
+      if (!res.isConfirmed) return;
+      Swal.fire({ title: `กำลังตรวจด่วน ${ids.length} ชุดข้อสอบ...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          allBatches.forEach(b => {
+            if (ids.includes(b.batchId)) {
+              b.isVerified = true;
+              const tot = b.totalQuestions || 0;
+              b.verifiedSummary = `${tot}/${tot}`;
+            }
+          });
+          clearLibSelection();
+          Swal.close();
+          showToast('success', `⚡ ตรวจด่วนและเผยแพร่ ${ids.length} ชุดเรียบร้อยแล้ว!`);
+          filterBatches();
+          if (typeof renderMyBatches === 'function') renderMyBatches();
+        })
+        .withFailureHandler(err => Swal.fire('ตรวจด่วนไม่สำเร็จ', err.message || err, 'error'))
+        .bulkVerifyBatches(ids, currentUserProfile);
     });
   }
 
@@ -17272,6 +17330,7 @@ if (typeof window !== 'undefined') {
   window.deletePublicFolderModal = deletePublicFolderModal;
   window.openMoveFolderModal = openMoveFolderModal;
   window.bulkMoveLibBatches = bulkMoveLibBatches;
+  window.bulkVerifyLibBatches = bulkVerifyLibBatches;
   window.bulkDeleteLibBatches = bulkDeleteLibBatches;
   window.setMyLibraryViewMode = setMyLibraryViewMode;
   window.openMyFolder = openMyFolder;
