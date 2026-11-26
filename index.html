@@ -118,7 +118,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.22.10</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.22.16</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -17407,17 +17407,22 @@ if (typeof window !== 'undefined') {
 
   async function triggerPwaInstall() {
     if (deferredPwaPrompt) {
-      deferredPwaPrompt.prompt();
-      const { outcome } = await deferredPwaPrompt.userChoice;
-      deferredPwaPrompt = null;
-      if (outcome === 'accepted') {
-        const btn = document.getElementById('btn-pwa-install');
-        if (btn) {
-          btn.classList.add('hidden');
-          btn.classList.remove('inline-flex');
+      try {
+        await deferredPwaPrompt.prompt();
+        const { outcome } = await deferredPwaPrompt.userChoice;
+        deferredPwaPrompt = null;
+        if (outcome === 'accepted') {
+          const btn = document.getElementById('btn-pwa-install');
+          if (btn) {
+            btn.classList.add('hidden');
+            btn.classList.remove('inline-flex');
+          }
         }
+        return;
+      } catch (err) {
+        console.warn('PWA native prompt fallback:', err);
+        deferredPwaPrompt = null;
       }
-      return;
     }
 
     const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent || '');
