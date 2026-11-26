@@ -12,6 +12,14 @@
   <meta property="og:description" content="ทำข้อสอบออนไลน์ จับเวลาจริง รู้ผลทันทีพร้อมเฉลยละเอียด ไม่ต้องโหลดแอป ลองทำฟรีได้ทันที!">
   <meta property="og:image" content="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&h=630&fit=crop&q=80">
   <meta name="twitter:card" content="summary_large_image">
+  <!-- PWA & App Icons -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="QuizSilo">
   <!-- Google Fonts: Prompt & Mali (Warm Handwriting) -->
   <link href="https://fonts.googleapis.com/css2?family=Mali:ital,wght@0,500;0,600;0,700;1,500&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Tailwind CSS -->
@@ -110,7 +118,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.17.54</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.21.57</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -118,6 +126,12 @@
 
         <!-- Row 1 Right on Mobile / Far Right on Desktop: Mode indicator & Auth Container -->
         <div class="order-2 sm:order-3 flex items-center gap-2">
+          <button id="btn-pwa-install" type="button" onclick="triggerPwaInstall()" class="hidden items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0" title="ติดตั้ง QuizSilo ลงหน้าจอโฮมเหมือนแอป">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">ติดตั้งแอป</span>
+            <span class="sm:hidden">แอป</span>
+          </button>
+
           <div id="exam-mode-indicator" class="hidden items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-brand-50 border border-brand-200 text-brand-700 rounded-xl text-xs font-bold whitespace-nowrap">
             <span class="w-2 h-2 rounded-full bg-brand-600 animate-ping shrink-0"></span><span>โหมดห้องสอบ</span>
           </div>
@@ -17347,6 +17361,89 @@ if (typeof window !== 'undefined') {
   window.toggleAttemptsSelectAll = toggleAttemptsSelectAll;
   window.clearAttemptSelection = clearAttemptSelection;
   window.bulkDeleteDashboardAttempts = bulkDeleteDashboardAttempts;
+  // ==========================================
+  // PWA Install (Add to Home Screen)
+  // ==========================================
+  let deferredPwaPrompt = null;
+
+  (function initPwaSupport() {
+    if (typeof window === 'undefined') return;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent || '');
+    const btnInstall = document.getElementById('btn-pwa-install');
+
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    if (isStandalone) return;
+
+    if (isIos && btnInstall) {
+      btnInstall.classList.remove('hidden');
+      btnInstall.classList.add('inline-flex');
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const btn = document.getElementById('btn-pwa-install');
+      if (btn) {
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-flex');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPwaPrompt = null;
+      const btn = document.getElementById('btn-pwa-install');
+      if (btn) {
+        btn.classList.add('hidden');
+        btn.classList.remove('inline-flex');
+      }
+      showToast('success', '🎉 ติดตั้งแอป QuizSilo ลงหน้าจอโฮมเรียบร้อยแล้ว!');
+    });
+  })();
+
+  async function triggerPwaInstall() {
+    if (deferredPwaPrompt) {
+      deferredPwaPrompt.prompt();
+      const { outcome } = await deferredPwaPrompt.userChoice;
+      deferredPwaPrompt = null;
+      if (outcome === 'accepted') {
+        const btn = document.getElementById('btn-pwa-install');
+        if (btn) {
+          btn.classList.add('hidden');
+          btn.classList.remove('inline-flex');
+        }
+      }
+      return;
+    }
+
+    const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent || '');
+    if (isIos) {
+      Swal.fire({
+        title: '📲 ติดตั้ง QuizSilo บน iPhone / iPad',
+        html: `
+          <div class="text-left text-xs sm:text-sm text-slate-600 space-y-2.5 leading-relaxed">
+            <p>1. แตะปุ่ม <b>แชร์ (Share ⬆️)</b> ที่แถบเมนูด้านล่างของ Safari</p>
+            <p>2. เลื่อนลงแล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</b></p>
+            <p>3. กด <b>เพิ่ม (Add)</b> มุมขวาบน ก็จะได้ไอคอนแอป QuizSilo เต็มจอเลยครับ!</p>
+          </div>
+        `,
+        confirmButtonText: 'เข้าใจแล้ว',
+        confirmButtonColor: '#4f46e5'
+      });
+    } else {
+      Swal.fire({
+        title: '📲 ติดตั้ง QuizSilo เป็นแอป',
+        html: '<p class="text-xs sm:text-sm text-slate-600">กดเมนู <b>⋮</b> (มุมขวาบนของเบราว์เซอร์) แล้วเลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก (Add to Home screen)"</b> ได้เลยครับ</p>',
+        confirmButtonText: 'รับทราบ',
+        confirmButtonColor: '#4f46e5'
+      });
+    }
+  }
+
+  window.triggerPwaInstall = triggerPwaInstall;
   window.closePromoModal = closePromoModal;
 </script>
 
