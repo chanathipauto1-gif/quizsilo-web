@@ -108,7 +108,7 @@
   <!-- NAVBAR -->
   <header id="app-header" class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
     <div class="max-w-7xl mx-auto px-3 sm:px-6">
-      <div class="flex flex-wrap sm:flex-nowrap justify-between items-center py-2 sm:py-0 min-h-14 sm:h-16 gap-y-2">
+      <div class="flex flex-wrap sm:flex-nowrap justify-between items-center py-1.5 sm:py-0 min-h-12 sm:h-16 gap-y-1.5">
         
         <!-- Row 1 Left (Mobile & Desktop): Logo -->
         <div id="brand-logo" class="order-1 flex items-center space-x-2.5 sm:space-x-3 cursor-pointer shrink-0 group" onclick="handleLogoClick()">
@@ -118,7 +118,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.22.22</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.22.49</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -192,17 +192,17 @@
 
         <!-- Row 2 on Mobile (Full Width) / Center on Desktop: Main Navigation Tabs -->
         <nav id="main-nav" class="order-3 sm:order-2 w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1 sm:gap-2 bg-slate-100/80 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-200/80">
-          <button onclick="switchPage('library')" id="tab-library" class="flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200/80 shadow-xs hover:text-brand-600">
+          <button onclick="switchPage('library')" id="tab-library" class="flex-1 min-w-0 justify-center flex items-center gap-1 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200/80 shadow-xs hover:text-brand-600">
             <i data-lucide="book-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i><span>คลังข้อสอบ</span>
           </button>
-          <button onclick="switchPage('upload')" id="tab-upload" class="flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200/80 shadow-xs hover:text-brand-600">
+          <button onclick="switchPage('upload')" id="tab-upload" class="flex-1 min-w-0 justify-center flex items-center gap-1 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200/80 shadow-xs hover:text-brand-600">
             <i data-lucide="cloud-upload" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i><span>นำเข้าไฟล์</span>
-            <span id="nav-queue-badge" class="hidden ml-1 px-1.5 py-0.5 text-[10px] sm:text-xs font-extrabold bg-amber-500 text-white rounded-full animate-pulse">0</span>
+            <span id="nav-queue-badge" class="hidden ml-0.5 px-1.5 py-0.5 text-[10px] sm:text-xs font-extrabold bg-amber-500 text-white rounded-full animate-pulse">0</span>
           </button>
-          <button onclick="switchPage('dashboard')" id="tab-dashboard" class="flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-brand-600 text-white shadow-sm shadow-brand-500/30">
+          <button onclick="switchPage('dashboard')" id="tab-dashboard" class="flex-1 min-w-0 justify-center flex items-center gap-1 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-brand-600 text-white shadow-sm shadow-brand-500/30">
             <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i><span>แดชบอร์ด</span>
           </button>
-          <button onclick="switchPage('admin')" id="tab-admin" class="hidden flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200/80 shadow-xs hover:text-amber-600 cursor-pointer">
+          <button onclick="switchPage('admin')" id="tab-admin" class="hidden flex-1 min-w-0 justify-center flex items-center gap-1 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200/80 shadow-xs hover:text-amber-600 cursor-pointer">
             <i data-lucide="shield-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-amber-500"></i><span>แอดมิน</span>
           </button>
         </nav>
@@ -220,7 +220,7 @@
   </div>
 
   <!-- MAIN CONTENT -->
-  <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6">
+  <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 pt-2.5 pb-5 sm:pt-4 sm:pb-6">
     <!-- รวมไฟล์ย่อยด้วยคำสั่ง include -->
     <!-- ========================================================================== -->
 <!-- VIEW: LANDING PAGE (หน้าแรกสำหรับต้อนรับผู้ใช้งานใหม่และผู้เยี่ยมชม)      -->
@@ -1993,7 +1993,7 @@
   };
 </script>
 
-    <section id="page-library" class="hidden space-y-4 sm:space-y-5">
+    <section id="page-library" class="hidden space-y-3 sm:space-y-5">
 
   <!-- Container for Announcement -->
   <div id="hero-banner-container">
@@ -2030,26 +2030,32 @@
   </div>
 
   <!-- Bento Analytics Card: คลังแสงสถิติข้อสอบทั้งระบบ -->
-  <div id="library-analytics-card" class="bg-gradient-to-br from-white to-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+  <div id="library-analytics-card" class="bg-gradient-to-br from-white to-slate-50/70 p-3 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-center">
     <!-- ฝั่งซ้าย: Hero Metric Box (md:col-span-4) -->
-    <div class="md:col-span-4 flex items-center gap-4 pr-0 md:pr-4 md:border-r border-slate-200/80">
-      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20">
-        <i data-lucide="book-marked" class="w-7 h-7"></i>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight" id="lib-total-questions-count">0</span>
-          <span class="text-xs sm:text-sm font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/60">ข้อสอบทั้งหมด</span>
+    <div class="md:col-span-4 flex items-center justify-between gap-3 pr-0 md:pr-4 md:border-r border-slate-200/80">
+      <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+        <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20">
+          <i data-lucide="book-marked" class="w-5 h-5 sm:w-7 sm:h-7"></i>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 font-medium">
-          <i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>
-          <span>พร้อมให้ฝึกซ้อม <b id="lib-total-batches-count" class="text-slate-700">0</b> ชุดวิชา</span>
-        </p>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <span class="text-xl sm:text-3xl font-extrabold text-slate-800 tracking-tight" id="lib-total-questions-count">0</span>
+            <span class="text-[11px] sm:text-sm font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/60">ข้อสอบทั้งหมด</span>
+          </div>
+          <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5 flex items-center gap-1 font-medium">
+            <i data-lucide="layers" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400"></i>
+            <span>พร้อมให้ฝึกซ้อม <b id="lib-total-batches-count" class="text-slate-700">0</b> ชุดวิชา</span>
+          </p>
+        </div>
       </div>
+      <button type="button" onclick="toggleLibAnalyticsMobile()" class="md:hidden shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold cursor-pointer">
+        <span id="lib-analytics-toggle-text">ดูกราฟ</span>
+        <i data-lucide="chevron-down" id="lib-analytics-toggle-icon" class="w-3.5 h-3.5 transition-transform"></i>
+      </button>
     </div>
 
     <!-- ฝั่งขวา: Subject Breakdown Chart (md:col-span-8) -->
-    <div class="md:col-span-8 space-y-2">
+    <div id="lib-analytics-chart-wrap" class="hidden md:block md:col-span-8 space-y-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
       <div class="flex items-center justify-between text-xs text-slate-600 font-bold mb-1">
         <span class="flex items-center gap-1.5"><i data-lucide="pie-chart" class="w-3.5 h-3.5 text-brand-600"></i> สัดส่วนข้อสอบแยกตามหมวดหมู่วิชา</span>
         <span id="lib-top-categories-summary" class="text-[11px] text-slate-400 font-normal hidden sm:inline-block">ประมวลผลอัตโนมัติ</span>
@@ -2232,27 +2238,27 @@
 
 </section>
 
-    <section id="page-upload" class="hidden space-y-5">
+    <section id="page-upload" class="hidden space-y-3 sm:space-y-5">
 
   <!-- Bento Guide: Extraction Capability & Sustainability Notice (Top Placement with Toggle) -->
-  <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
-    <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
+  <div class="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs space-y-3 sm:space-y-4">
+    <div class="flex items-center justify-between gap-2 pb-1 sm:pb-2 border-b border-slate-100">
       <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-500/20">
-          <i data-lucide="sparkles" class="w-5 h-5"></i>
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-500/20">
+          <i data-lucide="sparkles" class="w-4 h-4 sm:w-5 sm:h-5"></i>
         </div>
         <div class="min-w-0">
-          <h3 class="text-sm sm:text-base font-extrabold text-slate-800 truncate">คำแนะนำรูปแบบไฟล์ที่ AI สกัดได้แม่นยำสูงสุด</h3>
-          <p class="text-[11px] text-slate-500 truncate sm:whitespace-normal">เกณฑ์แนะนำการนำเข้าไฟล์ เพื่อผลลัพธ์ที่แม่นยำและลดเวลาตรวจทานเฉลย</p>
+          <h3 class="text-xs sm:text-base font-extrabold text-slate-800 truncate">คำแนะนำรูปแบบไฟล์ที่ AI สกัดได้แม่นยำ</h3>
+          <p class="text-[11px] text-slate-500 truncate hidden sm:block">เกณฑ์แนะนำการนำเข้าไฟล์ เพื่อผลลัพธ์ที่แม่นยำและลดเวลาตรวจทานเฉลย</p>
         </div>
       </div>
-      <button id="upload-guide-toggle-btn" onclick="toggleUploadGuide()" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer">
-        <span id="upload-guide-toggle-text">ซ่อนคำแนะนำ</span>
-        <i id="upload-guide-chevron" data-lucide="chevron-up" class="w-4 h-4"></i>
+      <button id="upload-guide-toggle-btn" onclick="toggleUploadGuide()" class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] sm:text-xs font-bold transition-all cursor-pointer">
+        <span id="upload-guide-toggle-text">ดูคำแนะนำ</span>
+        <i id="upload-guide-chevron" data-lucide="chevron-down" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
       </button>
     </div>
 
-    <div id="upload-guide-content" class="space-y-4">
+    <div id="upload-guide-content" class="hidden space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
         <!-- Col 1: แนะนำ (Emerald Box) -->
         <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-200/80 space-y-3">
@@ -2264,7 +2270,7 @@
             <li class="flex items-start gap-2">
               <span class="text-emerald-600 font-bold shrink-0">•</span>
               <div>
-                <b class="text-slate-800">ไฟล์ PDF (1 ไฟล์ต่อครั้ง):</b> ความยาวไม่เกิน 10 หน้า มีเฉลยอยู่ในไฟล์ (ท้ายเล่ม, ตาราง OMR หรือท้ายข้อ) <span class="text-rose-600 font-bold bg-white/70 px-1.5 py-0.5 rounded border border-rose-200">*กรุณากดอัปโหลดและประมวลผลทีละ 1 ไฟล์ PDF*</span>
+                <b class="text-slate-800">ไฟล์ PDF / TXT / MD (ส่งหลายไฟล์พร้อมกันได้):</b> เลือกอัปโหลดหลายไฟล์ในครั้งเดียวได้ทันที ระบบจะแยกเป็นคนละชุดข้อสอบและทยอยประมวลผลทีละคิวให้อัตโนมัติ <span class="text-emerald-700 font-bold bg-white/70 px-1.5 py-0.5 rounded border border-emerald-200">แนะนำ PDF ไม่เกิน 10 หน้าต่อไฟล์และมีเฉลยในไฟล์</span>
               </div>
             </li>
             <li class="flex items-start gap-2">
@@ -2843,7 +2849,7 @@
 </section>
 
     <!-- ================= หน้าที่ 5: My Dashboard (แดชบอร์ดสถิติส่วนบุคคล) ================= -->
-<section id="page-dashboard" class="space-y-6">
+<section id="page-dashboard" class="space-y-3 sm:space-y-5">
 
   <!-- Guest Quota & Login Encouragement Banner -->
   <div id="dash-guest-quota-banner" class="hidden p-4 rounded-3xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
@@ -2896,29 +2902,29 @@
   </div>
 
   <!-- Unified Homepage Welcome & Tier Banner -->
-  <div id="dash-welcome-card" class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-2xl sm:rounded-3xl p-4 sm:p-7 text-white shadow-lg relative overflow-hidden">
+  <div id="dash-welcome-card" class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 text-white shadow-lg relative overflow-hidden">
     <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-5 relative z-10">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-5 relative z-10">
       
       <!-- User Greeting & Info -->
-      <div class="flex items-start sm:items-center gap-3.5 sm:gap-5 flex-1 min-w-0">
-        <div id="dash-hero-avatar-wrap" class="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-inner shrink-0 overflow-hidden transition-transform hover:scale-105">
+      <div class="flex items-start sm:items-center gap-3 sm:gap-5 flex-1 min-w-0">
+        <div id="dash-hero-avatar-wrap" class="w-11 h-11 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-inner shrink-0 overflow-hidden transition-transform hover:scale-105">
           <img id="dash-hero-avatar-img" src="" class="w-full h-full object-cover hidden" alt="Avatar">
           <span id="dash-hero-avatar-fallback" class="text-xl sm:text-3xl">👤</span>
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <h1 class="text-base sm:text-xl md:text-2xl font-black tracking-tight leading-snug">
+            <h1 class="text-sm sm:text-xl md:text-2xl font-black tracking-tight leading-snug">
               สวัสดี <span id="dash-hero-name" class="underline decoration-amber-300 decoration-wavy">ผู้ฝึกซ้อม</span> 👋
             </h1>
             <span id="dash-hero-badge" class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-white/20 border border-white/30 tracking-wide uppercase">ผู้ฝึกซ้อม</span>
           </div>
-          <p class="text-[11px] sm:text-sm text-indigo-100 mt-0.5 sm:mt-1 font-medium leading-relaxed">
+          <p class="hidden sm:block text-sm text-indigo-100 mt-1 font-medium leading-relaxed">
             ยินดีต้อนรับสู่ <span class="font-bold text-white">QuizSilo</span> คลังข้อสอบอัจฉริยะสำหรับคนเตรียมสอบ
           </p>
 
           <!-- Merged Tier & Quota Bar inside Welcome Banner -->
-          <div class="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-white/15 max-w-xl">
+          <div class="mt-1.5 sm:mt-3 pt-1.5 sm:pt-3 border-t border-white/15 max-w-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] sm:text-xs text-indigo-100 font-bold mb-1">
               <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <span id="dash-tier-icon-wrap" class="w-4 h-4 sm:w-5 sm:h-5 rounded-md sm:rounded-lg bg-white/20 flex items-center justify-center text-[10px] sm:text-xs">👑</span>
@@ -2940,16 +2946,16 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
-        <button onclick="openCustomQuizModal()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer">
+      <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+        <button onclick="openCustomQuizModal()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer whitespace-nowrap">
           <i data-lucide="shuffle" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-          <span>🎲 สุ่มชุดข้อสอบ</span>
+          <span>สุ่มชุดข้อสอบ</span>
         </button>
-        <button onclick="switchPage('upload')" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer">
+        <button onclick="switchPage('upload')" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer whitespace-nowrap">
           <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
           <span>นำเข้าไฟล์</span>
         </button>
-        <button onclick="loadUserDashboard(true)" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2.5 bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer" title="รีเฟรชสถิติ">
+        <button onclick="loadUserDashboard(true)" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2.5 bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer shrink-0" title="รีเฟรชสถิติ">
           <i data-lucide="refresh-cw" id="dash-refresh-icon" class="w-3.5 h-3.5"></i>
           <span class="hidden sm:inline">รีเฟรช</span>
         </button>
@@ -2958,66 +2964,66 @@
   </div>
 
   <!-- 4 Bento Stat Cards (Mobile Optimized: 2x2 Compact Grid, Tablet/PC: 4 Columns) -->
-  <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+  <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
     
     <!-- Stat 1: ชุดข้อสอบที่ทำแล้ว -->
-    <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-1.5 sm:mb-3">
+    <div class="bg-white p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-1 sm:mb-3">
         <span class="text-[11px] sm:text-xs font-bold text-slate-500 truncate">ชุดที่ฝึกซ้อมแล้ว</span>
-        <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
-          <i data-lucide="book-check" class="w-3.5 h-3.5 sm:w-5 sm:h-5"></i>
+        <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-2xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
+          <i data-lucide="book-check" class="w-3 h-3 sm:w-5 sm:h-5"></i>
         </div>
       </div>
-      <div class="flex items-baseline gap-1.5 sm:gap-2">
-        <span id="stat-total-attempts" class="text-xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">0</span>
+      <div class="flex items-baseline gap-1 sm:gap-2">
+        <span id="stat-total-attempts" class="text-lg sm:text-3xl font-extrabold text-slate-800 tracking-tight">0</span>
         <span class="text-[10px] sm:text-xs font-semibold text-slate-400">รอบ</span>
       </div>
       <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1 hidden sm:block">รวมทุกการส่งกระดาษคำตอบ</p>
     </div>
 
     <!-- Stat 2: จำนวนข้อที่ทำทั้งหมด -->
-    <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-1.5 sm:mb-3">
+    <div class="bg-white p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-1 sm:mb-3">
         <span class="text-[11px] sm:text-xs font-bold text-slate-500 truncate">ข้อที่ฝึกทำทั้งหมด</span>
-        <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center shrink-0">
-          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 sm:w-5 sm:h-5"></i>
+        <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-2xl bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center shrink-0">
+          <i data-lucide="check-circle-2" class="w-3 h-3 sm:w-5 sm:h-5"></i>
         </div>
       </div>
-      <div class="flex items-baseline gap-1.5 sm:gap-2">
-        <span id="stat-total-questions" class="text-xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">0</span>
+      <div class="flex items-baseline gap-1 sm:gap-2">
+        <span id="stat-total-questions" class="text-lg sm:text-3xl font-extrabold text-slate-800 tracking-tight">0</span>
         <span class="text-[10px] sm:text-xs font-semibold text-slate-400">ข้อ</span>
       </div>
       <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1 hidden sm:block">สะสมจากการฝึกฝนอย่างสม่ำเสมอ</p>
     </div>
 
     <!-- Stat 3: คะแนนเฉลี่ยความถูกต้อง -->
-    <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-1.5 sm:mb-3">
+    <div class="bg-white p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-1 sm:mb-3">
         <span class="text-[11px] sm:text-xs font-bold text-slate-500 truncate">ความถูกต้องเฉลี่ย</span>
-        <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center shrink-0">
-          <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-5 sm:h-5"></i>
+        <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center shrink-0">
+          <i data-lucide="trending-up" class="w-3 h-3 sm:w-5 sm:h-5"></i>
         </div>
       </div>
-      <div class="flex items-baseline gap-1.5 sm:gap-2">
-        <span id="stat-avg-score" class="text-xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">0%</span>
+      <div class="flex items-baseline gap-1 sm:gap-2">
+        <span id="stat-avg-score" class="text-lg sm:text-3xl font-extrabold text-emerald-600 tracking-tight">0%</span>
         <span class="text-[10px] sm:text-xs font-semibold text-slate-400">เฉลี่ย</span>
       </div>
-      <div class="w-full bg-slate-100 h-1.5 sm:h-2 rounded-full mt-1.5 sm:mt-2.5 overflow-hidden">
+      <div class="w-full bg-slate-100 h-1.5 sm:h-2 rounded-full mt-1 sm:mt-2.5 overflow-hidden">
         <div id="stat-avg-score-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
       </div>
     </div>
 
     <!-- Stat 4: เวลาเฉลี่ยต่อชุด -->
-    <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-1.5 sm:mb-3">
+    <div class="bg-white p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-1 sm:mb-3">
         <span class="text-[11px] sm:text-xs font-bold text-slate-500 truncate">เวลาเฉลี่ยต่อชุด</span>
-        <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center shrink-0">
-          <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-5 sm:h-5"></i>
+        <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-2xl bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center shrink-0">
+          <i data-lucide="clock" class="w-3 h-3 sm:w-5 sm:h-5"></i>
         </div>
       </div>
-      <div class="flex items-baseline gap-1.5 sm:gap-2">
-        <span id="stat-avg-time" class="text-xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">0</span>
-        <span class="text-[10px] sm:text-xs font-semibold text-slate-400">นาที</span>
+      <div class="flex items-baseline gap-1 sm:gap-2">
+        <span id="stat-avg-time" class="text-lg sm:text-3xl font-extrabold text-slate-800 tracking-tight">0</span>
+        <span class="text-[10px] sm:text-xs font-semibold text-slate-400">ต่อชุด</span>
       </div>
       <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1 hidden sm:block">บริหารเวลาได้ดีขึ้นเรื่อยๆ</p>
     </div>
@@ -3258,22 +3264,22 @@
 </section>
 
     <!-- ================= หน้าที่ 6: Admin Console (แผงควบคุมและสถิติภาพรวมสำหรับแอดมิน) ================= -->
-<section id="page-admin" class="hidden space-y-6">
+<section id="page-admin" class="hidden space-y-3 sm:space-y-5">
 
   <!-- Header Card -->
-  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
     <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-      <div class="flex items-center gap-4 sm:gap-5">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-tr from-amber-400 to-amber-500 rounded-2xl flex items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20 shrink-0">
-          <i data-lucide="shield-check" class="w-8 h-8"></i>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4 relative z-10">
+      <div class="flex items-center gap-3 sm:gap-5">
+        <div class="w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-tr from-amber-400 to-amber-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20 shrink-0">
+          <i data-lucide="shield-check" class="w-5 h-5 sm:w-8 sm:h-8"></i>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white">QuizSilo Admin Console</h1>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 shadow-sm tracking-wider uppercase">System Admin</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-2xl font-black tracking-tight text-white">QuizSilo Admin Console</h1>
+            <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-amber-400 text-slate-950 shadow-sm tracking-wider uppercase">System Admin</span>
           </div>
-          <p class="text-xs sm:text-sm text-slate-300 mt-1 font-medium">
+          <p class="hidden sm:block text-xs sm:text-sm text-slate-300 mt-1 font-medium">
             ศูนย์วิเคราะห์ข้อมูลผู้ใช้งาน สถิติเชิงลึก และติดตามความเคลื่อนไหวทั้งระบบแบบ Real-time
           </p>
         </div>
@@ -8862,14 +8868,15 @@ if (typeof window !== 'undefined') {
     const isAdminOrAssistant = currentUserProfile && 
       (currentUserProfile.role === 'admin' || currentUserProfile.role === 'assistant_admin');
 
-    tabLib.className = 'flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200';
-    tabUp.className = 'flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200';
+    const navBaseCls = 'flex-1 sm:flex-initial min-w-0 justify-center flex items-center gap-1 sm:gap-2 px-1 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all duration-200';
+    tabLib.className = navBaseCls;
+    tabUp.className = navBaseCls;
     if (tabDash) {
-      tabDash.className = 'flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200';
+      tabDash.className = navBaseCls;
     }
     if (tabAdmin) {
       if (isAdminOrAssistant) {
-        tabAdmin.className = 'flex-1 sm:flex-initial justify-center flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200';
+        tabAdmin.className = navBaseCls;
       } else {
         tabAdmin.className = 'hidden';
       }
@@ -14721,6 +14728,17 @@ if (typeof window !== 'undefined') {
     const activeLabelEl = document.getElementById('admin-nav-active-label');
     if (activeLabelEl) activeLabelEl.textContent = tabLabels[tab] || tab;
 
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      const body = document.getElementById('admin-nav-card-body');
+      const txt = document.getElementById('admin-nav-toggle-text');
+      const icon = document.getElementById('admin-nav-toggle-icon');
+      if (body && !body.classList.contains('hidden')) {
+        body.classList.add('hidden');
+        if (txt) txt.textContent = 'แสดงเมนู';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+      }
+    }
+
     if (contentStats) contentStats.classList.toggle('hidden', tab !== 'stats');
     if (contentLogs) contentLogs.classList.toggle('hidden', tab !== 'logs');
     if (contentFlags) contentFlags.classList.toggle('hidden', tab !== 'flags');
@@ -17447,6 +17465,17 @@ if (typeof window !== 'undefined') {
     }
   }
 
+  function toggleLibAnalyticsMobile() {
+    const wrap = document.getElementById('lib-analytics-chart-wrap');
+    const txt = document.getElementById('lib-analytics-toggle-text');
+    const icon = document.getElementById('lib-analytics-toggle-icon');
+    if (!wrap) return;
+    const isHidden = wrap.classList.toggle('hidden');
+    if (txt) txt.textContent = isHidden ? 'ดูกราฟ' : 'ซ่อนกราฟ';
+    if (icon) icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+
+  window.toggleLibAnalyticsMobile = toggleLibAnalyticsMobile;
   window.triggerPwaInstall = triggerPwaInstall;
 </script>
 
