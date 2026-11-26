@@ -118,7 +118,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.22.49</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.23.14</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -7870,6 +7870,54 @@ const AdminAuditService = {
     }
   },
 
+  async getCloudExamDrafts(userId) {
+    try {
+      if (!userId || String(userId).startsWith('guest_')) {
+        return notifySuccess(this, { success: true, drafts: [] });
+      }
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: { flag: 'get_exam_drafts', userId }
+      });
+      return notifySuccess(this, data?.success ? data : { success: true, drafts: [] });
+    } catch (err) {
+      console.warn('getCloudExamDrafts error:', err);
+      return notifySuccess(this, { success: true, drafts: [] });
+    }
+  },
+
+  async saveCloudExamDraft(userId, batchId, draftData) {
+    try {
+      if (!userId || String(userId).startsWith('guest_') || !batchId || !draftData) {
+        return notifySuccess(this, { success: false });
+      }
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: { flag: 'save_exam_draft', userId, batchId, draftData }
+      });
+      return notifySuccess(this, data || { success: true });
+    } catch (err) {
+      console.warn('saveCloudExamDraft error:', err);
+      return notifySuccess(this, { success: false });
+    }
+  },
+
+  async clearCloudExamDraft(userId, batchId) {
+    try {
+      if (!userId || String(userId).startsWith('guest_') || !batchId) {
+        return notifySuccess(this, { success: true });
+      }
+      const data = await fetchJsonApi('/api/batch-flag', {
+        method: 'POST',
+        body: { flag: 'clear_exam_draft', userId, batchId }
+      });
+      return notifySuccess(this, data || { success: true });
+    } catch (err) {
+      console.warn('clearCloudExamDraft error:', err);
+      return notifySuccess(this, { success: true });
+    }
+  },
+
   async saveGlobalAnnouncement(announcementData, adminProfile) {
     try {
       const activeAdmin = getActiveProfile(adminProfile);
@@ -7975,6 +8023,9 @@ const adapterImpl = {
   getBatchFlags: AdminAuditService.getBatchFlags,
   getGlobalAnnouncement: AdminAuditService.getGlobalAnnouncement,
   saveGlobalAnnouncement: AdminAuditService.saveGlobalAnnouncement,
+  getCloudExamDrafts: AdminAuditService.getCloudExamDrafts,
+  saveCloudExamDraft: AdminAuditService.saveCloudExamDraft,
+  clearCloudExamDraft: AdminAuditService.clearCloudExamDraft,
   getFooterConfig: AdminAuditService.getFooterConfig,
   saveFooterConfig: AdminAuditService.saveFooterConfig
 };
@@ -8239,7 +8290,19 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  // Profile-Scoped Client Draft State Helpers
+  // Profile-Scoped Client Draft State Helpers (Local Cache + Cloud Cross-Device Sync)
+  const _draftCloudTimers = {};
+  let _lastCloudDraftSyncAt = 0;
+
+  function isCloudSyncEligibleUser() {
+    return Boolean(
+      currentUserProfile &&
+      currentUserProfile.uuid &&
+      !currentUserProfile.isGuest &&
+      !String(currentUserProfile.uuid).startsWith('guest_')
+    );
+  }
+
   function getProfileDraft(batchId) {
     if (!currentUserProfile || !currentUserProfile.uuid || !batchId) return null;
     try {
@@ -8248,20 +8311,137 @@ if (typeof window !== 'undefined') {
     } catch(e) { return null; }
   }
 
-  function saveProfileDraft(batchId, stateObj) {
-    if (!currentUserProfile || !currentUserProfile.uuid || !batchId) return;
+  function pushDraftToCloud(userId, batchId, draftObj) {
+    if (!userId || !batchId || !draftObj) return;
+    if (typeof google === 'undefined' || !google.script || !google.script.run) return;
     try {
-      const enriched = Object.assign({}, stateObj, {
-        batchId: batchId,
-        lastUpdated: new Date().toISOString()
-      });
-      localStorage.setItem('qs_session_' + currentUserProfile.uuid + '_' + batchId, JSON.stringify(enriched));
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res && res.success && currentUserProfile && currentUserProfile.uuid === userId) {
+            try {
+              const key = 'qs_session_' + userId + '_' + batchId;
+              const raw = localStorage.getItem(key);
+              if (raw) {
+                const cur = JSON.parse(raw);
+                cur._cloudSynced = true;
+                localStorage.setItem(key, JSON.stringify(cur));
+              }
+            } catch(e) {}
+          }
+        })
+        .saveCloudExamDraft(userId, batchId, draftObj);
     } catch(e) {}
+  }
+
+  function saveProfileDraft(batchId, stateObj, syncImmediate = false) {
+    if (!currentUserProfile || !currentUserProfile.uuid || !batchId) return;
+    const userId = currentUserProfile.uuid;
+    const enriched = Object.assign({}, stateObj, {
+      batchId: batchId,
+      lastUpdated: new Date().toISOString()
+    });
+    try {
+      localStorage.setItem('qs_session_' + userId + '_' + batchId, JSON.stringify(enriched));
+    } catch(e) {}
+
+    if (!isCloudSyncEligibleUser()) return;
+    if (_draftCloudTimers[batchId]) {
+      clearTimeout(_draftCloudTimers[batchId]);
+      delete _draftCloudTimers[batchId];
+    }
+    if (syncImmediate) {
+      pushDraftToCloud(userId, batchId, enriched);
+    } else {
+      _draftCloudTimers[batchId] = setTimeout(() => {
+        delete _draftCloudTimers[batchId];
+        pushDraftToCloud(userId, batchId, enriched);
+      }, 2500);
+    }
   }
 
   function clearProfileDraft(batchId) {
     if (!currentUserProfile || !currentUserProfile.uuid || !batchId) return;
-    localStorage.removeItem('qs_session_' + currentUserProfile.uuid + '_' + batchId);
+    const userId = currentUserProfile.uuid;
+    localStorage.removeItem('qs_session_' + userId + '_' + batchId);
+    if (_draftCloudTimers[batchId]) {
+      clearTimeout(_draftCloudTimers[batchId]);
+      delete _draftCloudTimers[batchId];
+    }
+    if (isCloudSyncEligibleUser() && typeof google !== 'undefined' && google.script && google.script.run) {
+      try {
+        google.script.run.clearCloudExamDraft(userId, batchId);
+      } catch(e) {}
+    }
+  }
+
+  function syncCloudDraftsToLocal(force = false) {
+    if (!isCloudSyncEligibleUser()) return;
+    const now = Date.now();
+    if (!force && (now - _lastCloudDraftSyncAt) < 10000) return;
+    _lastCloudDraftSyncAt = now;
+    const userId = currentUserProfile.uuid;
+    if (typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (!res || !res.success || !Array.isArray(res.drafts)) return;
+        if (!currentUserProfile || currentUserProfile.uuid !== userId) return;
+
+        const prefix = 'qs_session_' + userId + '_';
+        const cloudMap = new Map();
+        let changed = false;
+
+        res.drafts.forEach(cd => {
+          if (!cd || !cd.batchId) return;
+          cloudMap.set(cd.batchId, cd);
+          const key = prefix + cd.batchId;
+          let localObj = null;
+          try {
+            const raw = localStorage.getItem(key);
+            if (raw) localObj = JSON.parse(raw);
+          } catch(e) {}
+
+          const cloudTs = cd.lastUpdated ? new Date(cd.lastUpdated).getTime() : 0;
+          const localTs = localObj && localObj.lastUpdated ? new Date(localObj.lastUpdated).getTime() : 0;
+
+          if (!localObj || cloudTs > localTs) {
+            try {
+              localStorage.setItem(key, JSON.stringify(Object.assign({}, cd, { _cloudSynced: true })));
+              changed = true;
+            } catch(e) {}
+          }
+        });
+
+        // Remove local drafts that were previously cloud-synced but cleared/submitted on another device
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(prefix)) {
+            const bId = k.slice(prefix.length);
+            if (!cloudMap.has(bId)) {
+              try {
+                const localObj = JSON.parse(localStorage.getItem(k) || '{}');
+                if (localObj && localObj._cloudSynced) {
+                  keysToRemove.push(k);
+                }
+              } catch(e) {}
+            }
+          }
+        }
+        keysToRemove.forEach(k => {
+          localStorage.removeItem(k);
+          changed = true;
+        });
+
+        if (changed) {
+          if (typeof renderInProgressExams === 'function') renderInProgressExams();
+          if (typeof renderBatches === 'function' && Array.isArray(allBatches) && allBatches.length > 0) {
+            filterBatches();
+            renderMyBatches();
+          }
+        }
+      })
+      .getCloudExamDrafts(userId);
   }
 
   function discardExamDraft(batchId) {
@@ -9147,6 +9327,7 @@ if (typeof window !== 'undefined') {
     // เรนเดอร์ตารางชุดข้อสอบของฉัน และชุดที่ทำค้างไว้
     renderMyBatches();
     renderInProgressExams();
+    syncCloudDraftsToLocal(Boolean(forceRefresh));
     if (allBatches.length === 0 || forceRefresh) {
       loadBatches(false);
     }
@@ -10055,6 +10236,7 @@ if (typeof window !== 'undefined') {
 
     // Load global announcement for Library hero banner
     loadGlobalAnnouncement();
+    syncCloudDraftsToLocal(Boolean(showSpinner));
 
     google.script.run
       .withSuccessHandler(batches => {
@@ -11936,7 +12118,7 @@ if (typeof window !== 'undefined') {
         seconds: examSecondsElapsed,
         currentIndex: currentQuestionIndex,
         revealed: revealedQuestions
-      });
+      }, true);
     }
     stopExamTimer();
     showToast('info', '⏸️ พักการทำข้อสอบแล้ว คุณสามารถทำต่อจากหน้าแดชบอร์ดได้ตลอดเวลา');

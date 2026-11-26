@@ -591,6 +591,83 @@ module.exports = async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
+    // Branch 1.9: Cross-Device Paused Exam Drafts Sync
+    // -------------------------------------------------------------
+    if (flag === 'get_exam_drafts') {
+      const { userId } = body;
+      if (!userId || String(userId).startsWith('guest_')) {
+        return res.status(200).json({ success: true, drafts: [] });
+      }
+      const dRes = await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?user_id=eq.${encodeURIComponent(userId)}&status=like.EXAM_DRAFT:*&select=id,batch_id,status,created_at&order=created_at.desc&limit=50`, { headers });
+      if (!dRes.ok) {
+        return res.status(200).json({ success: true, drafts: [] });
+      }
+      const rows = await dRes.json();
+      const seenBatches = new Set();
+      const drafts = [];
+      (Array.isArray(rows) ? rows : []).forEach(r => {
+        try {
+          const parsed = JSON.parse(String(r.status || '').replace('EXAM_DRAFT:', ''));
+          const bId = parsed.batchId || r.batch_id;
+          if (!bId || seenBatches.has(bId)) return;
+          seenBatches.add(bId);
+          drafts.push(parsed);
+        } catch (e) {}
+      });
+      return res.status(200).json({ success: true, drafts });
+    }
+
+    if (flag === 'save_exam_draft') {
+      const { userId, draftData } = body;
+      const targetBatchId = batchId || draftData?.batchId;
+      if (!userId || String(userId).startsWith('guest_') || !targetBatchId || !draftData) {
+        return res.status(400).json({ error: 'Missing userId, batchId, or draftData' });
+      }
+      // Replace any previous draft row for this user + batch so scan_ledger stays 1 row per paused batch
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?user_id=eq.${encodeURIComponent(userId)}&batch_id=eq.${encodeURIComponent(targetBatchId)}&status=like.EXAM_DRAFT:*`, {
+        method: 'DELETE',
+        headers
+      });
+      const payload = {
+        batchId: targetBatchId,
+        batchName: draftData.batchName || '',
+        totalQuestions: Number(draftData.totalQuestions || 0),
+        answers: draftData.answers || {},
+        seconds: Number(draftData.seconds || 0),
+        currentIndex: Number(draftData.currentIndex || 0),
+        revealed: draftData.revealed || {},
+        lastUpdated: draftData.lastUpdated || new Date().toISOString()
+      };
+      const insRes = await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: userId,
+          batch_id: targetBatchId,
+          questions_scanned: 0,
+          status: 'EXAM_DRAFT:' + JSON.stringify(payload)
+        })
+      });
+      if (!insRes.ok) {
+        const errTxt = await insRes.text();
+        return res.status(500).json({ success: false, error: errTxt });
+      }
+      return res.status(200).json({ success: true, batchId: targetBatchId });
+    }
+
+    if (flag === 'clear_exam_draft') {
+      const { userId } = body;
+      if (!userId || String(userId).startsWith('guest_') || !batchId) {
+        return res.status(200).json({ success: true });
+      }
+      await fetch(`${SUPABASE_URL}/rest/v1/scan_ledger?user_id=eq.${encodeURIComponent(userId)}&batch_id=eq.${encodeURIComponent(batchId)}&status=like.EXAM_DRAFT:*`, {
+        method: 'DELETE',
+        headers
+      });
+      return res.status(200).json({ success: true, batchId });
+    }
+
+    // -------------------------------------------------------------
     // For other operations, batchId is required
     // -------------------------------------------------------------
     if (!batchId) return res.status(400).json({ error: 'Missing batchId' });
