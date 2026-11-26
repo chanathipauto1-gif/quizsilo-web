@@ -490,21 +490,14 @@ module.exports = async function handler(req, res) {
       const inList = cleanIds.map(id => encodeURIComponent(id)).join(',');
       const nowIso = new Date().toISOString();
 
-      const [qRes, bRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/questions?batch_id=in.(${inList})`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({ is_verified: true })
-        }),
-        fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${inList})`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({ is_verified: true, updated_at: nowIso })
-        })
-      ]);
+      const bRes = await fetch(`${SUPABASE_URL}/rest/v1/batches?id=in.(${inList})`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ is_verified: true, updated_at: nowIso })
+      });
 
-      if (!qRes.ok || !bRes.ok) {
-        const errTxt = (!qRes.ok ? await qRes.text() : await bRes.text());
+      if (!bRes.ok) {
+        const errTxt = await bRes.text();
         return res.status(500).json({ success: false, error: errTxt });
       }
 
