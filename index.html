@@ -118,7 +118,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 tracking-tight">QuizSilo</span>
-              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.21.57</span>
+              <span class="hidden md:inline-block text-[10px] px-2 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/70 rounded-full font-bold">BETA 26.11.22.10</span>
             </div>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium tracking-tight -mt-0.5">เพื่อนคู่คิดคนเตรียมสอบ • AI Companion</span>
           </div>
@@ -126,7 +126,7 @@
 
         <!-- Row 1 Right on Mobile / Far Right on Desktop: Mode indicator & Auth Container -->
         <div class="order-2 sm:order-3 flex items-center gap-2">
-          <button id="btn-pwa-install" type="button" onclick="triggerPwaInstall()" class="hidden items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0" title="ติดตั้ง QuizSilo ลงหน้าจอโฮมเหมือนแอป">
+          <button id="btn-pwa-install" type="button" onclick="triggerPwaInstall()" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0" title="ติดตั้ง QuizSilo ลงหน้าจอโฮมเหมือนแอป">
             <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">ติดตั้งแอป</span>
             <span class="sm:hidden">แอป</span>
@@ -17376,11 +17376,12 @@ if (typeof window !== 'undefined') {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
 
-    if (isStandalone) return;
-
-    if (isIos && btnInstall) {
-      btnInstall.classList.remove('hidden');
-      btnInstall.classList.add('inline-flex');
+    if (isStandalone) {
+      if (btnInstall) {
+        btnInstall.classList.add('hidden');
+        btnInstall.classList.remove('inline-flex');
+      }
+      return;
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
